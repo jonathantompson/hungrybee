@@ -1,0 +1,7 @@
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\hungrybee.exe
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\hungrybee.pdb
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\obj\x86\Debug\hungrybee.exe
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\obj\x86\Debug\hungrybee.pdb
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\HBEffect.xnb
