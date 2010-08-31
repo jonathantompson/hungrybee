@@ -15,7 +15,7 @@ namespace hungrybee
 {
     
     /// <summary>
-    /// Main single game class --> Initialized first on startup.
+    /// Main singleton game class --> Initialized first on startup.
     /// Handles main game loop, initialization of devices and sub-systems and game logic
     /// </summary>
     public class HBGame : Microsoft.Xna.Framework.Game
