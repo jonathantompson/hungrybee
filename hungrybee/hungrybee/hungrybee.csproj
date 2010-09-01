@@ -84,6 +84,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HBcamera.cs" />
+    <Compile Include="cameraInterface.cs" />
+    <Compile Include="csvHandle.cs" />
     <Compile Include="HBGameSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HBProgram.cs" />
