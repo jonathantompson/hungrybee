@@ -17,29 +17,30 @@ namespace hungrybee
     /// <summary>
     /// ***********************************************************************
     /// **                             camera                                **
-    /// ** Main Singleton camera class (written for HB but extendable to)    **
-    /// ** other projects                                                    **
+    /// ** Main Singleton camera class (written for HB but extendable to     **
+    /// ** other projects)                                                   **
     /// ***********************************************************************
     /// </summary>
-    class HBcamera : GameComponent, cameraInterface
+    class camera : GameComponent, cameraInterface
     {
-        private HBGame h_HBGame;
+        private game h_game;
 
         /// <summary>
         /// Local Variables
         /// ***********************************************************************
         /// </summary>        
-        private Matrix viewMatrix;
-        private Matrix projectionMatrix;
-        private Viewport viewPort;
+        private Matrix h_viewMatrix;
+        private Matrix h_projectionMatrix;
+        private Viewport h_viewPort;
 
-        private Vector3 cameraPosition;
-        private Vector3 cameraUp;
-        private Vector3 cameraTarget;
+        private Vector3 h_cameraPosition;
+        private Vector3 h_cameraUp;
+        private Vector3 h_cameraForward;
 
-        private float viewAngle;
-        private float nearPlane;
-        private float farPlane;
+
+        private float h_viewAngle;
+        private float h_nearPlane;
+        private float h_farPlane;
 
         /// <summary>
         /// Getter and Setter functions to extend cameraInterface
@@ -47,32 +48,32 @@ namespace hungrybee
         /// </summary>
         public Vector3 Position
         {
-            get { return cameraPosition; }
+            get { return h_cameraPosition; }
         }
         public Vector3 Forward
         {
-            get { return (cameraPosition - cameraTarget); }
+            get { return h_cameraForward; }
         }
         public Vector3 upVector
         {
-            get { return cameraUp; }
+            get { return h_cameraUp; }
         }
         public Matrix ViewMatrix
         {
-            get { return ViewMatrix; }
+            get { return h_viewMatrix; }
         }
         public Matrix ProjectionMatrix
         {
-            get { return ProjectionMatrix; }
+            get { return h_projectionMatrix; }
         }
 
         /// <summary>
         /// Constructor - Just register the cameraInterface services
         /// ***********************************************************************
         /// </summary>
-        public HBcamera(Game game) : base(game)  
+        public camera(game game) : base(game)  
         {
-            h_HBGame = (HBGame)game;
+            h_game = (game)game;
             game.Services.AddService(typeof(cameraInterface), this);
         }
 
@@ -82,10 +83,11 @@ namespace hungrybee
         /// </summary>
         public override void Initialize()
         {
-            cameraPosition = new Vector3(10, 0, 0);
-            cameraTarget = new Vector3(0, 0, 0);
-            cameraUp = new Vector3(0, 1, 0);
+            h_cameraPosition = new Vector3(0, 0, 20);
+            h_cameraForward = Vector3.Forward;          // XNA standard (0,0,-1)
+            h_cameraUp = Vector3.Up;                    // XNA standard (0,1,0)
             this.Resize();
+            base.Initialize();
         }
 
         /// <summary>
@@ -94,11 +96,11 @@ namespace hungrybee
         /// </summary>
         public void Resize()
         {
-            viewAngle = MathHelper.PiOver4;
-            viewPort = h_HBGame.GraphicsDevice.Viewport;
-            nearPlane = 0.5f;
-            farPlane = 100.0f;
-            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(viewAngle, viewPort.AspectRatio, nearPlane, farPlane);
+            h_viewAngle = MathHelper.PiOver4;
+            h_viewPort = h_game.GraphicsDevice.Viewport;
+            h_nearPlane = 0.5f;
+            h_farPlane = 100.0f;
+            h_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(h_viewAngle, h_viewPort.AspectRatio, h_nearPlane, h_farPlane);
         }
 
         /// <summary>
@@ -107,8 +109,8 @@ namespace hungrybee
         /// </summary>
         public override void Update(GameTime gameTime)
         {
-
-            viewMatrix = Matrix.CreateLookAt(cameraPosition, cameraTarget, cameraUp);
+            h_viewMatrix = Matrix.CreateLookAt(h_cameraPosition, h_cameraPosition + h_cameraForward, h_cameraUp);
+            base.Update(gameTime);
         }
     }
 }

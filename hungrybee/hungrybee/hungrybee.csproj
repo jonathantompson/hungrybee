@@ -12,8 +12,8 @@
     <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
     <XnaPlatform>Windows</XnaPlatform>
     <XnaCrossPlatformGroupID>84b520d0-7047-494d-9d18-4409e701c176</XnaCrossPlatformGroupID>
-    <ApplicationIcon>HBGame.ico</ApplicationIcon>
-    <Thumbnail>HBGameThumbnail.png</Thumbnail>
+    <ApplicationIcon>game.ico</ApplicationIcon>
+    <Thumbnail>gameThumbnail.png</Thumbnail>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -84,17 +84,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HBcamera.cs" />
+    <Compile Include="coordCross.cs" />
+    <Compile Include="camera.cs" />
     <Compile Include="cameraInterface.cs" />
     <Compile Include="csvHandle.cs" />
-    <Compile Include="HBGameSettings.cs" />
+    <Compile Include="gameSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="HBProgram.cs" />
-    <Compile Include="HBGame.cs" />
+    <Compile Include="program.cs" />
+    <Compile Include="game.cs" />
+    <Compile Include="skyPlane.cs" />
+    <Compile Include="vertex.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="HBGame.ico" />
-    <Content Include="HBGameThumbnail.png" />
+    <Content Include="game.ico" />
+    <Content Include="gameThumbnail.png" />
   </ItemGroup>
   <ItemGroup>
     <NestedContentProject Include="Content\Content.contentproj">

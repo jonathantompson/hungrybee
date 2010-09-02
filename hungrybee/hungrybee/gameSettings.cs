@@ -16,26 +16,39 @@ namespace hungrybee
 {
     /// <summary>
     /// ***********************************************************************
-    /// **                         HBGameSettings                            **
+    /// **                           gameSettings                            **
     /// ** This is a singleton class to store the application's setup state. **
     /// ** --> Also responsible for reading and writing settings to file.    **
     /// ***********************************************************************
     /// </summary>
-    class HBGameSettings : GameComponent
+    public class gameSettings : GameComponent
     {
         // Local variables
         public int xWindowSize, yWindowSize;
-        private HBGame h_HBGame;
+        private game h_game;
+        public string skyPlaneTextureFile;
+        public string skyPlaneEffectsFile;
+
+        //// ************************************
+        //// *** 1. INSERT MORE SETTINGS HERE ***
+        //// ************************************
 
         /// <summary>
         /// Initializes to default values 
         /// --> Likely these are overwritten later when loading from disk in Initialize() function.
         /// ***********************************************************************
         /// </summary>
-        public HBGameSettings(Game game) : base(game)  
+        public gameSettings(game game) : base(game)  
         {
             xWindowSize = 640; yWindowSize = 480;
-            h_HBGame = (HBGame)game;
+            skyPlaneTextureFile = "skyPlaneTexture";
+            skyPlaneEffectsFile = "skyPlane";
+
+            //// ************************************
+            //// *** 2. INSERT MORE SETTINGS HERE ***
+            //// ************************************
+
+            h_game = (game)game;
         } 
 
         /// <summary>
@@ -48,13 +61,24 @@ namespace hungrybee
             this.ReadSettings();
 
             // Set the window size and call reset of graphics device
-            h_HBGame.getGraphics().PreferredBackBufferWidth = xWindowSize;
-            h_HBGame.getGraphics().PreferredBackBufferHeight = yWindowSize;
-            h_HBGame.getGraphics().ApplyChanges();
+            h_game.GetGraphicsDeviceManager().PreferredBackBufferWidth = xWindowSize;
+            h_game.GetGraphicsDeviceManager().PreferredBackBufferHeight = yWindowSize;
+            h_game.GetGraphicsDeviceManager().ApplyChanges();
 
             // Now write the settings back to disk 
             // (applicable if config.ini doesn't exist and we're building it for the first time)
             this.WriteSettings();
+
+            base.Initialize();
+        }
+
+        /// <summary>
+        /// Update - Nothing to update
+        /// ***********************************************************************
+        /// </summary>
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
         }
 
         /// <summary>
@@ -73,7 +97,7 @@ namespace hungrybee
                 {
                     // Expecting token to contain 2 strings
                     if (curToken.Count != 2)
-                        throw new Exception("HBGameSettings::ReadSettings(): Corrupt settings.csv, expecting 2 to elements per token");
+                        throw new Exception("gameSettings::ReadSettings(): Corrupt settings.csv, expecting 2 to elements per token");
                     switch (curToken[0])
                     {
                         case "xWindowSize":
@@ -82,13 +106,19 @@ namespace hungrybee
                         case "yWindowSize":
                             this.yWindowSize = Convert.ToInt32(curToken[1]);
                             break;
+                        case "skyPlaneTextureFile":
+                            this.skyPlaneTextureFile = curToken[1];
+                            break;
+                        case "skyPlaneEffectsFile":
+                            this.skyPlaneEffectsFile = curToken[1];
+                            break;
 
-                        //// *********************************
-                        //// *** INSERT MORE SETTINGS HERE ***
-                        //// *********************************
+                        //// ************************************
+                        //// *** 3. INSERT MORE SETTINGS HERE ***
+                        //// ************************************
 
                         default:
-                            throw new Exception("HBGameSettings::ReadSettings(): Corrupt settings.csv, setting " + curToken[0] + " is not recognised");
+                            throw new Exception("gameSettings::ReadSettings(): Corrupt settings.csv, setting " + curToken[0] + " is not recognised");
                     }
                 }
                 reader.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
@@ -96,7 +126,7 @@ namespace hungrybee
             else
             {
 #if DEBUG
-                System.Diagnostics.Debug.WriteLine("HBGameSettings::ReadSettings(): The file " + reader.GetFileName() + " could not be read, possibly it doesn't exist"); System.Diagnostics.Debug.Flush();
+                System.Diagnostics.Debug.WriteLine("gameSettings::ReadSettings(): The file " + reader.GetFileName() + " could not be read, possibly it doesn't exist"); System.Diagnostics.Debug.Flush();
 #endif
             }
         }
@@ -111,10 +141,12 @@ namespace hungrybee
 
             writer.WriteNextToken("xWindowSize", this.xWindowSize);
             writer.WriteNextToken("yWindowSize", this.yWindowSize);
+            writer.WriteNextToken("skyPlaneTextureFile", this.skyPlaneTextureFile);
+            writer.WriteNextToken("skyPlaneEffectsFile", this.skyPlaneEffectsFile);
 
-            //// *********************************
-            //// *** INSERT MORE SETTINGS HERE ***
-            //// *********************************
+            //// ************************************
+            //// *** 4. INSERT MORE SETTINGS HERE ***
+            //// ************************************
 
             writer.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
         }

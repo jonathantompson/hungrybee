@@ -17,37 +17,46 @@ namespace hungrybee
     
     /// <summary>
     /// ***********************************************************************
-    /// **                             HBGame                                **
+    /// **                              game                                 **
     /// ** Main singleton game class --> Initialized first on startup.       **
     /// ** --> Handles main game loop, initialization of devices and         **
     /// **     sub-systems and game logic.                                   **
     /// ** USEFULL: http://www.apress.com/book/view/143021855x BOOK SOURCE   **
     /// ***********************************************************************
     /// </summary>
-    public class HBGame : Microsoft.Xna.Framework.Game
+    public class game : Microsoft.Xna.Framework.Game
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
-        Effect HBEffect;                    // Handler to the main HB effect file
-        GameComponent h_GameSettings;     // Handler to the HB Settings (both user and code customizable)
-        GameComponent h_Camera;           // Handler to the HB Camera
+        GraphicsDeviceManager   h_GraphicsDeviceManager;
+        GraphicsDevice          h_GraphicsDevice;           // Handler to the graphics device
+        BasicEffect             h_Effect;           // Handler to the main effect
+        GameComponent           h_GameSettings;     // Handler to the Settings (both user and code customizable)
+        GameComponent           h_Camera;           // Handler to the Camera
+        DrawableGameComponent   h_SkyPlane;         // Handler to the SkyPlane (like a skybox but with one side to save rendering calls)
 
-        public HBGame() // Default constructor
+        coordCross              h_coordCross;       // Handler to the temporary debug class     
+
+        public game() // Default constructor
         {
-            graphics = new GraphicsDeviceManager(this);
+            h_GraphicsDeviceManager = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
-            // Create the GameComponent instances
-            h_GameSettings = new HBGameSettings(this);
-            h_Camera = new HBcamera(this);
+            // Create the GameComponent and DrawableGameComponent instances
+            h_GameSettings = new gameSettings(this);
+            h_Camera = new camera(this);
+            h_SkyPlane = new skyPlane(this);
 
             // Manually specify the update order for interdependancies
             h_GameSettings.UpdateOrder = 0;
             h_Camera.UpdateOrder = 1;
+            h_SkyPlane.UpdateOrder = 2;
+
+            // Manually specify the draw order for DrawableGameComponent
+            h_SkyPlane.DrawOrder = 0;
 
             // Add the new game components
             Components.Add(h_GameSettings);
             Components.Add(h_Camera);
+            Components.Add(h_SkyPlane);
         }
 
         /// <summary>
@@ -59,7 +68,8 @@ namespace hungrybee
         /// </summary>
         protected override void Initialize()
         {
-            base.Initialize(); // Call HBGame.Initilize() then .Initialize for all added components.
+            h_GraphicsDevice = h_GraphicsDeviceManager.GraphicsDevice;
+            base.Initialize(); // Call .Initialize() for all added components.
         }
 
         /// <summary>
@@ -69,9 +79,9 @@ namespace hungrybee
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-            HBEffect = Content.Load<Effect>("HBEffect");
+            h_Effect = new BasicEffect(h_GraphicsDevice, null);
+            h_coordCross = new coordCross(h_GraphicsDevice);
+            base.LoadContent(); // Call .LoadContent() for all added components.
         }
 
         /// <summary>
@@ -91,11 +101,13 @@ namespace hungrybee
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+            // Allows the game to exit --> Later move to keyboard class
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
+                Keyboard.GetState().IsKeyDown(Keys.Escape) || 
+                Keyboard.GetState().IsKeyDown(Keys.Q) )
                 this.Exit();
 
-            base.Update(gameTime);
+            base.Update(gameTime); // Call .Update() for all added components.
         }
 
         /// <summary>
@@ -105,18 +117,36 @@ namespace hungrybee
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
-
+            // Get a pointer to the camera interface
             cameraInterface camera = (cameraInterface)Services.GetService(typeof(cameraInterface));
 
+            h_GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
+
+            base.Draw(gameTime); // RENDER DRAWABLEGAMECOMPONENTs FIRST --> NEED TO RENDER SKYPLANE FIRST
+
+            h_Effect.World = Matrix.Identity;
+            h_Effect.View = camera.ViewMatrix;
+            h_Effect.Projection = camera.ProjectionMatrix;
+            h_Effect.Begin();
+            foreach (EffectPass pass in h_Effect.CurrentTechnique.Passes)
+            {
+                pass.Begin();
+                h_coordCross.DrawUsingPresetEffect();
+                pass.End();
+            }
+            h_Effect.End();
+
             base.Draw(gameTime);
+
         }
 
         /// <summary>
         /// A bunch of "inline" functions (though not supported in C#)
         /// ***********************************************************************
         /// </summary>
-        public GraphicsDeviceManager getGraphics() { return graphics; }
-        public GameComponent getCamera() { return h_Camera; }
+        public GraphicsDeviceManager GetGraphicsDeviceManager() { return h_GraphicsDeviceManager; }
+        public GraphicsDevice GetGraphicsDevice() { return h_GraphicsDevice; }
+        public GameComponent GetCamera() { return h_Camera; }
+        public gameSettings GetGameSettings() { return (gameSettings)h_GameSettings; }
     }
 }

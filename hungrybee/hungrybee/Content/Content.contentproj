@@ -38,10 +38,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HBEffect.fx">
-      <Name>HBEffect</Name>
+    <Compile Include="skyPlane.fx">
+      <Name>skyPlane</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
+    </Compile>
+    <Compile Include="skyPlaneTexture.dds">
+      <Name>skyPlaneTexture</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />

@@ -2,13 +2,22 @@
 <XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline">
   <Asset Type="Pipeline:BuildItemCollection">
     <Item>
-      <Source>HBEffect.fx</Source>
-      <Name>HBEffect</Name>
+      <Source>skyPlane.fx</Source>
+      <Name>skyPlane</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\HBEffect.xnb</Output>
-      <Time>2010-08-31T12:01:58.278056-04:00</Time>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\skyPlane.xnb</Output>
+      <Time>2010-09-02T16:16:09.2340043-04:00</Time>
+    </Item>
+    <Item>
+      <Source>skyPlaneTexture.dds</Source>
+      <Name>skyPlaneTexture</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\skyPlaneTexture.xnb</Output>
+      <Time>2006-09-20T09:51:46-04:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>

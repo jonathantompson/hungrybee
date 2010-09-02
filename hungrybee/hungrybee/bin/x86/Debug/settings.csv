@@ -1,2 +1,4 @@
 xWindowSize,640
 yWindowSize,480
+skyPlaneTextureFile,skyPlaneTexture
+skyPlaneEffectsFile,skyPlane

@@ -254,6 +254,15 @@ namespace hungrybee
 
             return this.WriteNextToken(ref curToken);
         }
+        public bool WriteNextToken(string token0, string token1)
+        {
+            List<string> curToken = new List<string>();
+
+            curToken.Add(token0);
+            curToken.Add(token1);
+
+            return this.WriteNextToken(ref curToken);
+        }
     }
 
 }

@@ -1,1 +1,2 @@
-Content\HBEffect.xnb
+Content\skyPlane.xnb
+Content\skyPlaneTexture.xnb
