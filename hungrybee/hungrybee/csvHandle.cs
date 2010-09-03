@@ -1,13 +1,13 @@
-﻿using System;
+﻿#region using statements
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+#endregion
 
 namespace hungrybee
 {
-
-
     /// <summary>
     /// ***********************************************************************
     /// **                          csvHandle                                **
@@ -16,17 +16,23 @@ namespace hungrybee
     /// </summary>
     public class csvHandle
     {
+        #region Local Variables
         protected string fileName;
         protected bool open;
+        #endregion
 
+        #region Default Constructor - csvHandle()
         public csvHandle()
         {
             open = false;
         }
+        #endregion
 
+        #region Access and Modifier functions
         // "inline" functions (though not supported in C#)
         public bool IsOpen() { return open; }
         public string GetFileName() { return fileName; }
+        #endregion
     }
 
     /// <summary>
@@ -37,16 +43,15 @@ namespace hungrybee
     /// </summary>
     public class csvHandleRead : csvHandle
     {
-        /// <summary>
+        #region Local Variables
         /// Local variables
         /// **********************************************************************
-        /// </summary>
         private StreamReader reader;
+        #endregion
 
-        /// <summary>
+        #region Constructor - csvHandleRead(string fileNameIn)
         /// Constructor to attempt to open the file.  If file exists, open = true;
         /// **********************************************************************
-        /// </summary>
         public csvHandleRead(string fileNameIn)
         {
             fileName = fileNameIn;
@@ -70,32 +75,32 @@ namespace hungrybee
                 }
             }
         }
+        #endregion
 
-        /// <summary>
+        #region Default Destructor
         /// Destructor (close the file if it isn't already
         /// **********************************************************************
-        /// </summary>
         ~csvHandleRead()
         {
             if (reader != null)
                 reader.Close();
         }
+        #endregion
 
-        /// <summary>
-        /// Destructor (close the file if it isn't already
+        #region Close()
+        /// close the file
         /// **********************************************************************
-        /// </summary>
         public void Close()
         {
             open = false;
             if (reader != null)
                 reader.Close();
         }
+        #endregion
 
-        /// <summary>
+        #region ReadNextToken()
         /// ReadNextToken: Parse another csv token, return false if we're at the end
         /// **********************************************************************
-        /// </summary>
         public bool ReadNextToken(ref List<string> tokenArray)
         {
             if (open == false)
@@ -138,6 +143,7 @@ namespace hungrybee
 
             return true;
         }
+        #endregion
     }
 
     /// <summary>
@@ -148,16 +154,15 @@ namespace hungrybee
     /// </summary>
     public class csvHandleWrite : csvHandle
     {
-        /// <summary>
+        #region Local Variables
         /// Local variables
         /// **********************************************************************
-        /// </summary>
         private StreamWriter writer;
+        #endregion
 
-        /// <summary>
+        #region Constructor - csvHandleWrite(string fileNameIn)
         /// Constructor to attempt to open the file.  If file exists, open = true;
         /// **********************************************************************
-        /// </summary>
         public csvHandleWrite(string fileNameIn)
         {
             fileName = fileNameIn;
@@ -179,33 +184,33 @@ namespace hungrybee
                 throw ex_out;
             }
         }
+        #endregion
 
-        /// <summary>
+        #region Default Destructor
         /// Destructor (close the file if it isn't already
         /// **********************************************************************
-        /// </summary>
         ~csvHandleWrite()
         {
             open = false;
             if(writer != null)
                 writer.Close();
         }
+        #endregion
 
-        /// <summary>
+        #region Close()
         /// Close the file if it isn't already
         /// **********************************************************************
-        /// </summary>
         public void Close()
         {
             open = false;
             if (writer != null)
                 writer.Close();
         }
+        #endregion
 
-        /// <summary>
-        /// ReadNextToken: Build another csv token and write it to file
+        #region WriteNextToken(ref List<string> tokenArray)
+        /// WriteNextToken: Build another csv token and write it to file
         /// **********************************************************************
-        /// </summary>
         public bool WriteNextToken(ref List<string> tokenArray)
         {
             if (open == false)
@@ -240,11 +245,11 @@ namespace hungrybee
 
             return true;
         }
+        #endregion
 
-        /// <summary>
+        #region WriteNextToken(string token0, int token1)
         /// WriteNextToken: Build another csv token and write it to file (unformatted input)
         /// **********************************************************************
-        /// </summary>
         public bool WriteNextToken(string token0, int token1)
         {
             List<string> curToken = new List<string>();
@@ -254,6 +259,11 @@ namespace hungrybee
 
             return this.WriteNextToken(ref curToken);
         }
+        #endregion
+
+        #region WriteNextToken(string token0, string token1)
+        /// WriteNextToken: Build another csv token and write it to file (unformatted input)
+        /// **********************************************************************
         public bool WriteNextToken(string token0, string token1)
         {
             List<string> curToken = new List<string>();
@@ -263,6 +273,7 @@ namespace hungrybee
 
             return this.WriteNextToken(ref curToken);
         }
+        #endregion
     }
 
 }

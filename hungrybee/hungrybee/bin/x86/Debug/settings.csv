@@ -2,3 +2,9 @@ xWindowSize,640
 yWindowSize,480
 skyPlaneTextureFile,skyPlaneTexture
 skyPlaneEffectsFile,skyPlane
+renderSettingsIndex,0
+startingGameObjectCapacity,64
+cartoonEffectFile,CartoonEffect
+postprocessEffectFile,PostprocessEffect
+fontFile,arial
+sketchTextureFile,SketchTexture

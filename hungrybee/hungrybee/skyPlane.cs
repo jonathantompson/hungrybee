@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region using statements
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+#endregion
 
 namespace hungrybee
 {
@@ -20,61 +22,59 @@ namespace hungrybee
     /// ** Like a skyBox class, but with only the front side.                **
     /// ***********************************************************************
     /// </summary>
-    class skyPlane : DrawableGameComponent
+    public class skyPlane : GameComponent
     {
-        /// <summary>
+        #region Local Variables
         /// Local Variables
-        /// ***********************************************************************
-        /// </summary>      
+        /// ***********************************************************************    
         private game    h_game;
         VertexBuffer    skyPlaneVertexBuffer;
         TextureCube     skyPlaneTexture;
         Effect          skyPlaneEffect;
+        #endregion
 
-        /// <summary>
+        #region Constructor - skyPlane(game game)
         /// Constructor - Just register the cameraInterface services
         /// ***********************************************************************
-        /// </summary>
         public skyPlane(game game) : base(game)  
         {
             h_game = (game)game;
         }
+        #endregion
 
-        /// <summary>
+        #region Initialize()
         /// Initialize - Nothing to Initialize --> All done in LoadContent()
         /// ***********************************************************************
-        /// </summary>
         public override void Initialize()
         {
             base.Initialize();
         }
+        #endregion
 
-        /// <summary>
+        #region Update()
         /// Update - Nothing to update
         /// ***********************************************************************
-        /// </summary>
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
         }
+        #endregion
 
-        /// <summary>
+        #region LoadContent
         /// LoadContent - Load in the textures and effects file
         /// ***********************************************************************
-        /// </summary>
-        protected override void LoadContent()
+        public void LoadContent()
         {
             skyPlaneTexture = h_game.Content.Load<TextureCube>(h_game.GetGameSettings().skyPlaneTextureFile);
             skyPlaneEffect = h_game.Content.Load<Effect>(h_game.GetGameSettings().skyPlaneEffectsFile);
             CreateSkyPlaneVertexBuffer();
-            base.LoadContent();
         }
+        #endregion
 
-        /// <summary>
+        #region Draw()
         /// Draw - MUST BE DRAWN FIRST.  
         /// ***********************************************************************
-        /// </summary>
-        public override void Draw(GameTime gameTime)
+        public void Draw(GameTime gameTime)
         {
             h_game.GetGraphicsDevice().RenderState.DepthBufferWriteEnable = false;
             skyPlaneEffect.CurrentTechnique = skyPlaneEffect.Techniques["SkyPlane"];
@@ -96,11 +96,11 @@ namespace hungrybee
             skyPlaneEffect.End();
             h_game.GetGraphicsDevice().RenderState.DepthBufferWriteEnable = true;
         }
+        #endregion
 
-        /// <summary>
+        #region CreateSkyPlaneVertexBuffer()
         /// CreateSkyPlaneVertexBuffer - Hard code the verticies
         /// ***********************************************************************
-        /// </summary>
         private void CreateSkyPlaneVertexBuffer()
         {
             Vector3 forwardBottomLeft = new Vector3(-1, -1, -1);
@@ -128,5 +128,6 @@ namespace hungrybee
             skyPlaneVertexBuffer = new VertexBuffer(h_game.GetGraphicsDevice(), vertices.Length * VertexPosition.SizeInBytes, BufferUsage.WriteOnly);
             skyPlaneVertexBuffer.SetData<VertexPosition>(vertices);
         }
+        #endregion
     }
 }

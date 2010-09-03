@@ -1,2 +1,8 @@
 Content\skyPlane.xnb
+Content\CartoonEffect.xnb
+Content\PostprocessEffect.xnb
 Content\skyPlaneTexture.xnb
+Content\SketchTexture.xnb
+Content\Arial.xnb
+Content\Ship.xnb
+Content\ShipDiffuse_0.xnb

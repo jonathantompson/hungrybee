@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region using statements
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+#endregion
 
 namespace hungrybee
 {
@@ -23,38 +25,60 @@ namespace hungrybee
     /// </summary>
     public class gameSettings : GameComponent
     {
-        // Local variables
-        public int xWindowSize, yWindowSize;
+        #region Local Variables
+        // VARIABLES SAVED TO DISK
+        public int      xWindowSize, yWindowSize;
+        public string   skyPlaneTextureFile;
+        public string   skyPlaneEffectsFile;
+        public int      startingGameObjectCapacity;
+        private int     renderSettingsIndex;
+        public string   cartoonEffectFile;
+        public string   postprocessEffectFile;
+        public string   fontFile;
+        public string   sketchTextureFile;
+
+        // VARIABLES NOT SAVED TO DISK
         private game h_game;
-        public string skyPlaneTextureFile;
-        public string skyPlaneEffectsFile;
+        renderSettings[] PresetRenderSettings = {new renderSettings("Cartoon", true, true, 1, 1, false, false, 0, 0, 0),
+                                                 new renderSettings("Pencil", false, true, 0.5f, 0.5f, true, false, 0.1f, 0.3f, 0.05f),
+                                                 new renderSettings("Chunky Monochrome", true, true, 1.5f, 0.5f, true, false, 0, 0.35f, 0),
+                                                 new renderSettings("Colored Hatching", false, true, 0.5f, 0.333f, true, true, 0.2f, 0.5f, 0.075f),
+                                                 new renderSettings("Subtle Edge Enhancement", false, true, 0.5f, 0.5f, false, false, 0, 0, 0),
+                                                 new renderSettings("Nothing Special", false, false, 0, 0, false, false, 0, 0, 0)};  
 
         //// ************************************
         //// *** 1. INSERT MORE SETTINGS HERE ***
         //// ************************************
 
-        /// <summary>
+        #endregion
+
+        #region Constructor - gameSettings(game game)
         /// Initializes to default values 
         /// --> Likely these are overwritten later when loading from disk in Initialize() function.
         /// ***********************************************************************
-        /// </summary>
         public gameSettings(game game) : base(game)  
         {
             xWindowSize = 640; yWindowSize = 480;
             skyPlaneTextureFile = "skyPlaneTexture";
             skyPlaneEffectsFile = "skyPlane";
+            renderSettingsIndex = 0;
+            startingGameObjectCapacity = 64;
+            cartoonEffectFile = "CartoonEffect";
+            postprocessEffectFile = "PostprocessEffect";
+            fontFile = "arial";
+            sketchTextureFile = "SketchTexture";
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
             //// ************************************
 
             h_game = (game)game;
-        } 
+        }
+        #endregion
 
-        /// <summary>
+        #region Initialize()
         /// Perform full initialization and load values from config.csv on disk (if it can be found)
         /// ***********************************************************************
-        /// </summary>
         public override void Initialize()
         {
             // See if we can open the config file and get the info
@@ -64,6 +88,7 @@ namespace hungrybee
             h_game.GetGraphicsDeviceManager().PreferredBackBufferWidth = xWindowSize;
             h_game.GetGraphicsDeviceManager().PreferredBackBufferHeight = yWindowSize;
             h_game.GetGraphicsDeviceManager().ApplyChanges();
+            ((cameraInterface)h_game.GetCamera()).Resize();
 
             // Now write the settings back to disk 
             // (applicable if config.ini doesn't exist and we're building it for the first time)
@@ -71,21 +96,21 @@ namespace hungrybee
 
             base.Initialize();
         }
+        #endregion
 
-        /// <summary>
+        #region Update()
         /// Update - Nothing to update
         /// ***********************************************************************
-        /// </summary>
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
         }
+        #endregion
 
-        /// <summary>
+        #region ReadSettings()
         /// Try reading the config.ini file from disk.  
         /// It may not exist if we're writing it for the first time.
         /// ***********************************************************************
-        /// </summary>
         private void ReadSettings()
         {
             csvHandleRead reader = new csvHandleRead(".\\settings.csv");
@@ -112,6 +137,24 @@ namespace hungrybee
                         case "skyPlaneEffectsFile":
                             this.skyPlaneEffectsFile = curToken[1];
                             break;
+                        case "renderSettingsIndex":
+                            this.renderSettingsIndex = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "startingGameObjectCapacity":
+                            this.startingGameObjectCapacity = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "cartoonEffectFile":
+                            this.cartoonEffectFile = curToken[1];
+                            break;
+                        case "postprocessEffectFile":
+                            this.postprocessEffectFile = curToken[1];
+                            break;
+                        case "fontFile":
+                            this.fontFile = curToken[1];
+                            break;
+                        case "sketchTextureFile":
+                            this.sketchTextureFile = curToken[1];
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -130,11 +173,11 @@ namespace hungrybee
 #endif
             }
         }
+        #endregion
 
-        /// <summary>
+        #region WriteSettings()
         /// Write the config.ini file to disk.  This method should always work
         /// ***********************************************************************
-        /// </summary>
         private void WriteSettings()
         {
             csvHandleWrite writer = new csvHandleWrite(".\\settings.csv");
@@ -143,6 +186,12 @@ namespace hungrybee
             writer.WriteNextToken("yWindowSize", this.yWindowSize);
             writer.WriteNextToken("skyPlaneTextureFile", this.skyPlaneTextureFile);
             writer.WriteNextToken("skyPlaneEffectsFile", this.skyPlaneEffectsFile);
+            writer.WriteNextToken("renderSettingsIndex", this.renderSettingsIndex);
+            writer.WriteNextToken("startingGameObjectCapacity", this.startingGameObjectCapacity);
+            writer.WriteNextToken("cartoonEffectFile", this.cartoonEffectFile);
+            writer.WriteNextToken("postprocessEffectFile", this.postprocessEffectFile);
+            writer.WriteNextToken("fontFile", this.fontFile);
+            writer.WriteNextToken("sketchTextureFile", this.sketchTextureFile);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***
@@ -150,5 +199,10 @@ namespace hungrybee
 
             writer.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
         }
+        #endregion
+
+        #region Access and Modifier functions
+        public renderSettings RenderSettings { get { return PresetRenderSettings[renderSettingsIndex]; } }
+        #endregion
     }
 }

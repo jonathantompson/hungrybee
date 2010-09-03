@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region using statements
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+#endregion
 
 namespace hungrybee
 {
@@ -23,12 +25,11 @@ namespace hungrybee
     /// </summary>
     class camera : GameComponent, cameraInterface
     {
-        private game h_game;
-
-        /// <summary>
+        #region Local Variables
         /// Local Variables
         /// ***********************************************************************
-        /// </summary>        
+        private game h_game;
+
         private Matrix h_viewMatrix;
         private Matrix h_projectionMatrix;
         private Viewport h_viewPort;
@@ -41,11 +42,11 @@ namespace hungrybee
         private float h_viewAngle;
         private float h_nearPlane;
         private float h_farPlane;
+        #endregion
 
-        /// <summary>
+        #region Access and Modifier functions
         /// Getter and Setter functions to extend cameraInterface
         /// ***********************************************************************
-        /// </summary>
         public Vector3 Position
         {
             get { return h_cameraPosition; }
@@ -66,51 +67,67 @@ namespace hungrybee
         {
             get { return h_projectionMatrix; }
         }
+        #endregion
 
-        /// <summary>
+        #region Constructor - camera(game game)
         /// Constructor - Just register the cameraInterface services
         /// ***********************************************************************
-        /// </summary>
         public camera(game game) : base(game)  
         {
             h_game = (game)game;
             game.Services.AddService(typeof(cameraInterface), this);
         }
+        #endregion
 
-        /// <summary>
+        #region Initialize()
         /// Initializes to default values 
         /// ***********************************************************************
-        /// </summary>
         public override void Initialize()
         {
-            h_cameraPosition = new Vector3(0, 0, 20);
-            h_cameraForward = Vector3.Forward;          // XNA standard (0,0,-1)
-            h_cameraUp = Vector3.Up;                    // XNA standard (0,1,0)
+            // ORIGIONAL DEFAULTS
+            //h_cameraPosition = new Vector3(0, 0, 20);
+            //h_cameraForward = Vector3.Forward;          // XNA standard (0,0,-1)
+            //h_cameraUp = Vector3.Up;                    // XNA standard (0,1,0)
+
+
+            h_cameraPosition = new Vector3(3000, 1500, 0);
+            h_cameraForward = new Vector3(-3000, -1500, 0);
+            h_cameraUp = Vector3.Up;
+
             this.Resize();
             base.Initialize();
         }
+        #endregion
 
-        /// <summary>
+        #region Resize()
         /// Reset the Perspective Matrix --> Required only on window resize 
         /// ***********************************************************************
-        /// </summary>
         public void Resize()
         {
             h_viewAngle = MathHelper.PiOver4;
             h_viewPort = h_game.GraphicsDevice.Viewport;
-            h_nearPlane = 0.5f;
-            h_farPlane = 100.0f;
+            h_nearPlane = 1000.0f;
+            h_farPlane = 10000.0f;
             h_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(h_viewAngle, h_viewPort.AspectRatio, h_nearPlane, h_farPlane);
         }
+        #endregion
 
-        /// <summary>
+        #region Update()
         /// Update the camera
         /// ***********************************************************************
-        /// </summary>
         public override void Update(GameTime gameTime)
         {
             h_viewMatrix = Matrix.CreateLookAt(h_cameraPosition, h_cameraPosition + h_cameraForward, h_cameraUp);
             base.Update(gameTime);
         }
+        #endregion
+
+        //Matrix view = Matrix.CreateLookAt(new Vector3(3000, 1500, 0),
+        //                          Vector3.Zero,
+        //                          Vector3.Up);
+
+        //Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
+        //                                                        aspectRatio,
+        //                                                        1000, 10000);
     }
 }

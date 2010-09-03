@@ -1,3 +1,4 @@
+#region using statements
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -6,6 +7,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Storage;
+#endregion
 
 namespace hungrybee
 {
@@ -17,20 +19,26 @@ namespace hungrybee
     /// </summary>
     class coordCross
     {
+        #region Local Variables
+
         private VertexPositionColor[] vertices;
-        private GraphicsDevice device;
-        private BasicEffect basicEffect;
         private VertexDeclaration vertDeclaration;
 
+        #endregion 
+
+        #region Constructor - coordCross(GraphicsDevice device)
+        /// Constructor
+        /// ***********************************************************************
         public coordCross(GraphicsDevice device)
         {
-            this.device = device;
-            basicEffect = new BasicEffect(device, null);
-
             InitVertices();
             vertDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
         }
+        #endregion
 
+        #region InitVerticies()
+        /// InitVertices - Form the verticies by hand
+        /// ***********************************************************************
         private void InitVertices()
         {
             vertices = new VertexPositionColor[30];
@@ -56,30 +64,16 @@ namespace hungrybee
             vertices[16] = new VertexPositionColor(new Vector3(0, 0, -5), Color.White);
             vertices[17] = new VertexPositionColor(new Vector3(0, -0.5f, -4.5f), Color.White);
         }
+        #endregion
 
-        public void Draw(Matrix viewMatrix, Matrix projectionMatrix)
-        {
-            basicEffect.World = Matrix.Identity;
-            basicEffect.View = viewMatrix;
-            basicEffect.Projection = projectionMatrix;
-            basicEffect.VertexColorEnabled = true;
-            basicEffect.Begin();
-            foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
-            {
-                pass.Begin();
-
-                device.VertexDeclaration = vertDeclaration;
-                device.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.LineList, vertices, 0, 9);           
-
-                pass.End();
-            }
-            basicEffect.End();            
-        }
-
-        public void DrawUsingPresetEffect()
+        #region DrawUsingCurrentEffect()
+        /// DrawUsingCurrentEffect - Assuemes higher level function has started a basic effect draw sequence
+        /// ***********************************************************************
+        public void DrawUsingCurrentEffect(GraphicsDevice device)
         {
             device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
-            device.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.LineList, vertices, 0, 9);           
+            device.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.LineList, vertices, 0, 9);
         }
+        #endregion
     }
 }

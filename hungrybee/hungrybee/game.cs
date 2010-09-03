@@ -1,3 +1,4 @@
+#region using statements
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+#endregion
 
 namespace hungrybee
 {
@@ -26,79 +28,92 @@ namespace hungrybee
     /// </summary>
     public class game : Microsoft.Xna.Framework.Game
     {
+        #region Local Variables
         GraphicsDeviceManager   h_GraphicsDeviceManager;
-        GraphicsDevice          h_GraphicsDevice;           // Handler to the graphics device
-        BasicEffect             h_Effect;           // Handler to the main effect
-        GameComponent           h_GameSettings;     // Handler to the Settings (both user and code customizable)
-        GameComponent           h_Camera;           // Handler to the Camera
-        DrawableGameComponent   h_SkyPlane;         // Handler to the SkyPlane (like a skybox but with one side to save rendering calls)
+        GraphicsDevice          h_GraphicsDevice;       
+        GameComponent           h_GameSettings;        
+        GameComponent           h_Camera;               
+        GameComponent           h_RenderManager;        
+        GameComponent           h_SkyPlane;             // The background SkyPlane (like a skybox but with one side to save rendering calls)  
+        GameComponent           h_GameObjectManager;
 
-        coordCross              h_coordCross;       // Handler to the temporary debug class     
+        #endregion
 
+        #region Default Constructor - game()
         public game() // Default constructor
         {
             h_GraphicsDeviceManager = new GraphicsDeviceManager(this);
+            h_GraphicsDeviceManager.MinimumPixelShaderProfile = ShaderProfile.PS_2_0;
             Content.RootDirectory = "Content";
 
-            // Create the GameComponent and DrawableGameComponent instances
+            // Create the GameComponent instances
             h_GameSettings = new gameSettings(this);
             h_Camera = new camera(this);
             h_SkyPlane = new skyPlane(this);
+            h_RenderManager = new renderManager(this);
+            h_GameObjectManager = new gameObjectManager(this);
 
             // Manually specify the update order for interdependancies
-            h_GameSettings.UpdateOrder = 0;
-            h_Camera.UpdateOrder = 1;
-            h_SkyPlane.UpdateOrder = 2;
-
-            // Manually specify the draw order for DrawableGameComponent
-            h_SkyPlane.DrawOrder = 0;
+            h_GameSettings.UpdateOrder      = 0;
+            h_GameObjectManager.UpdateOrder = 1;
+            h_Camera.UpdateOrder            = 2;
+            h_RenderManager.UpdateOrder     = 3;
+            h_SkyPlane.UpdateOrder          = 4;
 
             // Add the new game components
             Components.Add(h_GameSettings);
             Components.Add(h_Camera);
             Components.Add(h_SkyPlane);
+            Components.Add(h_RenderManager);
+            Components.Add(h_GameObjectManager);
         }
+        #endregion
 
-        /// <summary>
+        #region Initialize()
         /// Allows the game to perform any initialization it needs to before starting to run.
         /// This is where it can query for any required services and load any non-graphic
         /// related content.  Calling base.Initialize will enumerate through any components
         /// and initialize them as well.
         /// ***********************************************************************
-        /// </summary>
         protected override void Initialize()
         {
             h_GraphicsDevice = h_GraphicsDeviceManager.GraphicsDevice;
             base.Initialize(); // Call .Initialize() for all added components.
         }
+        #endregion
 
-        /// <summary>
+        #region LoadContent()
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
         /// ***********************************************************************
-        /// </summary>
         protected override void LoadContent()
         {
-            h_Effect = new BasicEffect(h_GraphicsDevice, null);
-            h_coordCross = new coordCross(h_GraphicsDevice);
             base.LoadContent(); // Call .LoadContent() for all added components.
-        }
 
-        /// <summary>
+            // Call LoadContent() for GameDevices that need it done manually
+            ((skyPlane)h_SkyPlane).LoadContent();
+            ((gameObjectManager)h_GameObjectManager).LoadContent(); // MUST BE CALLED BEFORE renderManager.LoadContent()!!
+            ((renderManager)h_RenderManager).LoadContent();
+            
+        }
+        #endregion
+
+        #region UnloadContent()
         /// UnloadContent will be called once per game and is the place to unload
         /// all content.
         /// ***********************************************************************
-        /// </summary>
         protected override void UnloadContent()
         {
+            // Call UnloadContent() for GameDevices that need it done manually
+            ((renderManager)h_RenderManager).UnloadContent();
+            ((gameObjectManager)h_GameObjectManager).UnloadContent();
         }
+        #endregion
 
-        /// <summary>
+        #region Update()
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
         /// ***********************************************************************
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
             // Allows the game to exit --> Later move to keyboard class
@@ -109,44 +124,28 @@ namespace hungrybee
 
             base.Update(gameTime); // Call .Update() for all added components.
         }
-
-        /// <summary>
+        #endregion
+        
+        #region Draw()
         /// This is called when the game should draw itself.
+        /// I don't use ANY DrawableGameComponent instances...  I like to manage them myself
         /// ***********************************************************************
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            // Get a pointer to the camera interface
-            cameraInterface camera = (cameraInterface)Services.GetService(typeof(cameraInterface));
-
-            h_GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
-
-            base.Draw(gameTime); // RENDER DRAWABLEGAMECOMPONENTs FIRST --> NEED TO RENDER SKYPLANE FIRST
-
-            h_Effect.World = Matrix.Identity;
-            h_Effect.View = camera.ViewMatrix;
-            h_Effect.Projection = camera.ProjectionMatrix;
-            h_Effect.Begin();
-            foreach (EffectPass pass in h_Effect.CurrentTechnique.Passes)
-            {
-                pass.Begin();
-                h_coordCross.DrawUsingPresetEffect();
-                pass.End();
-            }
-            h_Effect.End();
-
-            base.Draw(gameTime);
-
+            // Simply send a draw request off to the render manager...
+            ((renderManager)h_RenderManager).Draw(gameTime);
         }
+        #endregion
 
-        /// <summary>
+        #region Access and Modifier functions
         /// A bunch of "inline" functions (though not supported in C#)
         /// ***********************************************************************
-        /// </summary>
         public GraphicsDeviceManager GetGraphicsDeviceManager() { return h_GraphicsDeviceManager; }
         public GraphicsDevice GetGraphicsDevice() { return h_GraphicsDevice; }
         public GameComponent GetCamera() { return h_Camera; }
         public gameSettings GetGameSettings() { return (gameSettings)h_GameSettings; }
+        public skyPlane GetSkyPlane() { return (skyPlane)h_SkyPlane; }
+        public gameObjectManager GetGameObjectManager() { return (gameObjectManager)h_GameObjectManager; }
+        #endregion
     }
 }

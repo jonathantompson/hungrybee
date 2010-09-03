@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region using statements
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+#endregion
 
 namespace hungrybee
 {
@@ -22,11 +24,16 @@ namespace hungrybee
     /// </summary>
     interface cameraInterface
     {
+        #region Access and Modifier functions
         Vector3 Position { get; }
         Vector3 Forward { get; }
         Vector3 upVector { get; }
 
         Matrix ViewMatrix { get; }
         Matrix ProjectionMatrix { get; }
+        #endregion
+
+        // Resize function to be called when window size has changed.
+        void Resize();
     }
 }

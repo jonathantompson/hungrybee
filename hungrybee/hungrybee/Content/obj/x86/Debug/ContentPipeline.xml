@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline">
+<XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline" xmlns:Graphics="Microsoft.Xna.Framework.Graphics" xmlns:Processors="Microsoft.Xna.Framework.Content.Pipeline.Processors">
   <Asset Type="Pipeline:BuildItemCollection">
     <Item>
       <Source>skyPlane.fx</Source>
@@ -11,6 +11,24 @@
       <Time>2010-09-02T16:16:09.2340043-04:00</Time>
     </Item>
     <Item>
+      <Source>CartoonEffect.Fx</Source>
+      <Name>CartoonEffect</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\CartoonEffect.xnb</Output>
+      <Time>2007-11-26T11:33:16-05:00</Time>
+    </Item>
+    <Item>
+      <Source>PostprocessEffect.Fx</Source>
+      <Name>PostprocessEffect</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\PostprocessEffect.xnb</Output>
+      <Time>2007-11-26T11:33:16-05:00</Time>
+    </Item>
+    <Item>
       <Source>skyPlaneTexture.dds</Source>
       <Name>skyPlaneTexture</Name>
       <Importer>TextureImporter</Importer>
@@ -18,6 +36,60 @@
       <Options>None</Options>
       <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\skyPlaneTexture.xnb</Output>
       <Time>2006-09-20T09:51:46-04:00</Time>
+    </Item>
+    <Item>
+      <Source>SketchTexture.bmp</Source>
+      <Name>SketchTexture</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\SketchTexture.xnb</Output>
+      <Time>2007-11-26T11:33:18-05:00</Time>
+    </Item>
+    <Item>
+      <Source>Arial.spritefont</Source>
+      <Name>Arial</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Arial.xnb</Output>
+      <Time>2007-11-26T11:33:16-05:00</Time>
+    </Item>
+    <Item>
+      <Source>Ship.fbx</Source>
+      <Name>Ship</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Ship.xnb</Output>
+      <Time>2007-11-26T11:33:16-05:00</Time>
+      <Dependency>
+        <Key>obj\x86\Debug\Ship_0.xml</Key>
+        <Value>2010-09-03T15:26:30.3478696-04:00</Value>
+      </Dependency>
+      <Request>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\ShipDiffuse_0.xnb</Request>
+    </Item>
+    <Item>
+      <Source>Ship.fbx</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Debug\Ship_0.xml</Output>
+      <Time>2007-11-26T11:33:16-05:00</Time>
+    </Item>
+    <Item>
+      <Source>ShipDiffuse.tga</Source>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Parameters>
+        <Data Key="ColorKeyColor" Type="Graphics:Color">FFFF00FF</Data>
+        <Data Key="ColorKeyEnabled" Type="bool">true</Data>
+        <Data Key="TextureFormat" Type="Processors:TextureProcessorOutputFormat">DxtCompressed</Data>
+        <Data Key="GenerateMipmaps" Type="bool">true</Data>
+        <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
+      </Parameters>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\ShipDiffuse_0.xnb</Output>
+      <Time>2007-11-26T11:33:16-05:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>

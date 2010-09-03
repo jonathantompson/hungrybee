@@ -1,0 +1,5 @@
+﻿1. Get renderer correct -> Fix background and check depths make sense
+2. Check order of scale and translation
+3. Add heightmap for each level
+4. Implement collision routine: bounding spheres are easiest and quickest (collision with heightmap shouldn't be too stressful
+5. Implement player controls: using quaternions to give half distances

@@ -1,6 +1,7 @@
+#region using statements
 using System;
 using System.Runtime.InteropServices;
-
+#endregion
 
 namespace hungrybee
 {
@@ -17,10 +18,9 @@ namespace hungrybee
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern uint MessageBox(IntPtr hWnd, String text, String caption, uint type);
 
-        /// <summary>
+        #region Main()
         /// Main --> Entry Point
         /// ***********************************************************************
-        /// </summary>
         static void Main(string[] args)
         {
             try
@@ -35,6 +35,7 @@ namespace hungrybee
                 program.MessageBox(new IntPtr(0), "ERROR: " + e.ToString(), "Hungry Bee Error",0);  // Wont work on XBOX
             }
         }
+        #endregion
 
     }
 }
