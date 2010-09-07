@@ -36,6 +36,9 @@ namespace hungrybee
         public string   postprocessEffectFile;
         public string   fontFile;
         public string   sketchTextureFile;
+        public float    cameraSpeed;
+        public float    cameraRunningMult;
+        public float    cameraRotationSpeed;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -58,7 +61,7 @@ namespace hungrybee
         /// ***********************************************************************
         public gameSettings(game game) : base(game)  
         {
-            xWindowSize = 640; yWindowSize = 480;
+            xWindowSize = 800; yWindowSize = 600;
             skyPlaneTextureFile = "skyPlaneTexture";
             skyPlaneEffectsFile = "skyPlane";
             renderSettingsIndex = 0;
@@ -67,6 +70,9 @@ namespace hungrybee
             postprocessEffectFile = "PostprocessEffect";
             fontFile = "arial";
             sketchTextureFile = "SketchTexture";
+            cameraSpeed = 0.05f;
+            cameraRunningMult = 4.0f;
+            cameraRotationSpeed = 0.002f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -155,6 +161,15 @@ namespace hungrybee
                         case "sketchTextureFile":
                             this.sketchTextureFile = curToken[1];
                             break;
+                        case "cameraSpeed":
+                            this.cameraSpeed =float.Parse(curToken[1]);
+                            break;
+                        case "cameraRunningMult":
+                            this.cameraRunningMult = float.Parse(curToken[1]);
+                            break;
+                        case "cameraRotationSpeed":
+                            this.cameraRotationSpeed = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -192,6 +207,9 @@ namespace hungrybee
             writer.WriteNextToken("postprocessEffectFile", this.postprocessEffectFile);
             writer.WriteNextToken("fontFile", this.fontFile);
             writer.WriteNextToken("sketchTextureFile", this.sketchTextureFile);
+            writer.WriteNextToken("cameraSpeed", this.cameraSpeed);
+            writer.WriteNextToken("cameraRunningMult", this.cameraRunningMult);
+            writer.WriteNextToken("cameraRotationSpeed", this.cameraRotationSpeed);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

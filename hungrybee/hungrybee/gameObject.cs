@@ -30,11 +30,11 @@ namespace hungrybee
         public Model model;
         string modelFile;
 
-        Vector2 Position; // X and Y (no movement in Z plane for 2.5D)
-        float Rotation; // In radians
+        protected Vector2 Position; // X and Y (no movement in Z plane for 2.5D)
+        protected float Rotation; // In radians
 
-        Matrix rot, trans, scale, world;
-        bool dirtyWorldMatrix; // Only perform matrix multiplication when we need to
+        protected Matrix rot, trans, scale, world;
+        protected bool dirtyWorldMatrix; // Only perform matrix multiplication when we need to
 
         #endregion
 
@@ -74,6 +74,66 @@ namespace hungrybee
         public void LoadContent()
         {
             model = h_game.Content.Load<Model>(modelFile);
+
+            // All meshes in the model share the same vertex buffer: Get the vertex data
+            ModelMesh mesh = model.Meshes[0];
+            ModelMeshPart part = mesh.MeshParts[0];
+            VertexElement[] vertexElements = part.VertexDeclaration.GetVertexElements();
+            int sizeInBytes = part.VertexStride;
+            VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / part.VertexStride];
+            mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices); 
+
+            // Calculate the Center of Mass
+            Vector3 COM = Vector3.Zero;
+            for (int curVertex = 0; curVertex < vertices.Length; curVertex++)
+            {
+                COM += vertices[curVertex].Position;
+            }
+            COM = COM / vertices.Length;
+
+            // Offset each vertex position data with the -COM
+            for (int curVertex = 0; curVertex < vertices.Length; curVertex++)
+                vertices[curVertex].Position -= COM;
+
+            // Find the Max/Min in each direction
+            float MaxX = vertices[0].Position.X;
+            float MinX = vertices[0].Position.X;
+            float MaxY = vertices[0].Position.Y;
+            float MinY = vertices[0].Position.Y;
+            float MaxZ = vertices[0].Position.Z;
+            float MinZ = vertices[0].Position.Z;
+            for (int curVertex = 1; curVertex < vertices.Length; curVertex++)
+            {
+                if (vertices[curVertex].Position.X > MaxX)
+                    MaxX = vertices[curVertex].Position.X;
+                if (vertices[curVertex].Position.X < MinX)
+                    MinX = vertices[curVertex].Position.X;
+                if (vertices[curVertex].Position.Y > MaxY)
+                    MaxY = vertices[curVertex].Position.Y;
+                if (vertices[curVertex].Position.Y < MinY)
+                    MinY = vertices[curVertex].Position.Y;
+                if (vertices[curVertex].Position.Z > MaxZ)
+                    MaxZ = vertices[curVertex].Position.Z;
+                if (vertices[curVertex].Position.Z < MinZ)
+                    MinZ = vertices[curVertex].Position.Z;
+            }
+            float Multratio = 1.0f;
+            // If X span is largest, scale by this ratio
+            if ((MaxX - MinX) > (MaxY - MinY) && (MaxX - MinX) > (MaxZ - MinZ))
+                Multratio = Math.Abs((MaxX - MinX) / MinX);
+            if ((MaxY - MinY) > (MaxX - MinX) && (MaxY - MinY) > (MaxZ - MinZ))
+                Multratio = Math.Abs((MaxY - MinY) / MinY);
+            if ((MaxZ - MinZ) > (MaxX - MinX) && (MaxZ - MinZ) > (MaxY - MinY))
+                Multratio = 1.0f / Math.Abs((MaxZ - MinZ));
+
+            // Scale all the vertex Positions by this value (so that Max - Min = 1 for every model)
+            for (int curVertex = 0; curVertex < vertices.Length; curVertex++)
+            {
+                vertices[curVertex].Position *= Multratio;
+            }
+
+            // Now copy the new vertex data back
+            mesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices); 
         }
         #endregion
 

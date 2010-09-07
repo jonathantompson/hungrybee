@@ -1,10 +1,13 @@
-xWindowSize,640
-yWindowSize,480
+xWindowSize,800
+yWindowSize,600
 skyPlaneTextureFile,skyPlaneTexture
 skyPlaneEffectsFile,skyPlane
-renderSettingsIndex,0
+renderSettingsIndex,5
 startingGameObjectCapacity,64
 cartoonEffectFile,CartoonEffect
 postprocessEffectFile,PostprocessEffect
 fontFile,arial
 sketchTextureFile,SketchTexture
+cameraSpeed,0.05
+cameraRunningMult,10
+cameraRotationSpeed,0.001

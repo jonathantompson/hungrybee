@@ -35,6 +35,8 @@ namespace hungrybee
         public playerGameObject(game game, string modelfile) : base(game, modelfile)
         {
             health = 0;
+            //scale = Matrix.CreateScale(10.0f);
+            //dirtyWorldMatrix = true;
         }
         #endregion
     }

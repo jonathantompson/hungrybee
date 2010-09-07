@@ -274,6 +274,20 @@ namespace hungrybee
             return this.WriteNextToken(ref curToken);
         }
         #endregion
+
+        #region WriteNextToken(string token0, float token1)
+        /// WriteNextToken: Build another csv token and write it to file (unformatted input)
+        /// **********************************************************************
+        public bool WriteNextToken(string token0, float token1)
+        {
+            List<string> curToken = new List<string>();
+
+            curToken.Add(token0);
+            curToken.Add(String.Format("{0}", token1));
+
+            return this.WriteNextToken(ref curToken);
+        }
+        #endregion
     }
 
 }

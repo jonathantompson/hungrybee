@@ -118,8 +118,7 @@ namespace hungrybee
         {
             // Allows the game to exit --> Later move to keyboard class
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
-                Keyboard.GetState().IsKeyDown(Keys.Escape) || 
-                Keyboard.GetState().IsKeyDown(Keys.Q) )
+                Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
 
             base.Update(gameTime); // Call .Update() for all added components.
