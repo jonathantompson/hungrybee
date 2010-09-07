@@ -29,7 +29,7 @@ namespace hungrybee
         // VARIABLES SAVED TO DISK
         public int      xWindowSize, yWindowSize;
         public string   skyPlaneTextureFile;
-        public string   skyPlaneEffectsFile;
+        public float    skyPlaneScale;
         public int      startingGameObjectCapacity;
         private int     renderSettingsIndex;
         public string   cartoonEffectFile;
@@ -46,8 +46,8 @@ namespace hungrybee
                                                  new renderSettings("Pencil", false, true, 0.5f, 0.5f, true, false, 0.1f, 0.3f, 0.05f),
                                                  new renderSettings("Chunky Monochrome", true, true, 1.5f, 0.5f, true, false, 0, 0.35f, 0),
                                                  new renderSettings("Colored Hatching", false, true, 0.5f, 0.333f, true, true, 0.2f, 0.5f, 0.075f),
-                                                 new renderSettings("Subtle Edge Enhancement", false, true, 0.5f, 0.5f, false, false, 0, 0, 0),
-                                                 new renderSettings("Nothing Special", false, false, 0, 0, false, false, 0, 0, 0)};  
+                                                 new renderSettings("Cartoon and Shading", true, true, 1, 1, true, true, 0.1f, 0.3f, 0),
+                                                 new renderSettings("Nothing", false, false, 0, 0, false, false, 0, 0, 0)};  
 
         //// ************************************
         //// *** 1. INSERT MORE SETTINGS HERE ***
@@ -62,9 +62,9 @@ namespace hungrybee
         public gameSettings(game game) : base(game)  
         {
             xWindowSize = 800; yWindowSize = 600;
-            skyPlaneTextureFile = "skyPlaneTexture";
-            skyPlaneEffectsFile = "skyPlane";
-            renderSettingsIndex = 0;
+            skyPlaneTextureFile = "clouds"; //skyPlaneTextureFile = "clouds_resize";
+            skyPlaneScale = 1.75f;
+            renderSettingsIndex = 4;
             startingGameObjectCapacity = 64;
             cartoonEffectFile = "CartoonEffect";
             postprocessEffectFile = "PostprocessEffect";
@@ -140,8 +140,8 @@ namespace hungrybee
                         case "skyPlaneTextureFile":
                             this.skyPlaneTextureFile = curToken[1];
                             break;
-                        case "skyPlaneEffectsFile":
-                            this.skyPlaneEffectsFile = curToken[1];
+                        case "skyPlaneScale":
+                            this.skyPlaneScale = float.Parse(curToken[1]);
                             break;
                         case "renderSettingsIndex":
                             this.renderSettingsIndex = Convert.ToInt32(curToken[1]);
@@ -200,7 +200,7 @@ namespace hungrybee
             writer.WriteNextToken("xWindowSize", this.xWindowSize);
             writer.WriteNextToken("yWindowSize", this.yWindowSize);
             writer.WriteNextToken("skyPlaneTextureFile", this.skyPlaneTextureFile);
-            writer.WriteNextToken("skyPlaneEffectsFile", this.skyPlaneEffectsFile);
+            writer.WriteNextToken("skyPlaneScale", this.skyPlaneScale);
             writer.WriteNextToken("renderSettingsIndex", this.renderSettingsIndex);
             writer.WriteNextToken("startingGameObjectCapacity", this.startingGameObjectCapacity);
             writer.WriteNextToken("cartoonEffectFile", this.cartoonEffectFile);

@@ -1,10 +1,10 @@
-Content\skyPlane.xnb
 Content\CartoonEffect.xnb
 Content\PostprocessEffect.xnb
-Content\skyPlaneTexture.xnb
 Content\SketchTexture.xnb
 Content\Arial.xnb
 Content\Ship.xnb
-Content\small_bee.xnb
 Content\ShipDiffuse_0.xnb
-Content\little_bee2.xnb
+Content\clouds_resize.xnb
+Content\clouds.xnb
+Content\heightmap.xnb
+Content\Grass.xnb

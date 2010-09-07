@@ -156,9 +156,6 @@ namespace hungrybee
                 h_game.GetGameObjectManager().DrawModels(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
             }
 
-            // Draw the SkyPlane
-            // h_game.GetSkyPlane().Draw(gameTime);
-
             // If we are doing edge detection and/or pencil sketch processing, we
             // need to draw the model into a special rendertarget which can then be
             // fed into the postprocessing shader. Otherwise can just draw it
@@ -176,6 +173,9 @@ namespace hungrybee
                 effectTechniqueName = "Toon";
             else
                 effectTechniqueName = "Lambert";
+
+            // Draw the SkyPlane
+            h_game.GetSkyPlane().Draw(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix);
 
             // Draw the models
             h_game.GetGameObjectManager().DrawModels(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);

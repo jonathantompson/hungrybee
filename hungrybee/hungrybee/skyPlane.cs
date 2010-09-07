@@ -27,10 +27,13 @@ namespace hungrybee
         #region Local Variables
         /// Local Variables
         /// ***********************************************************************    
-        private game    h_game;
-        VertexBuffer    skyPlaneVertexBuffer;
-        TextureCube     skyPlaneTexture;
-        Effect          skyPlaneEffect;
+        private game h_game;
+        VertexBuffer skyPlaneVertexBuffer;
+        Texture2D skyPlaneTexture;
+        BasicEffect skyPlaneEffect;
+        VertexDeclaration vertexDec;
+        Matrix skyViewMat;
+        float skyPlaneScale;
         #endregion
 
         #region Constructor - skyPlane(game game)
@@ -39,6 +42,8 @@ namespace hungrybee
         public skyPlane(game game) : base(game)  
         {
             h_game = (game)game;
+            skyViewMat = Matrix.Identity;
+            skyPlaneScale = 1.0f;
         }
         #endregion
 
@@ -65,36 +70,48 @@ namespace hungrybee
         /// ***********************************************************************
         public void LoadContent()
         {
-            skyPlaneTexture = h_game.Content.Load<TextureCube>(h_game.GetGameSettings().skyPlaneTextureFile);
-            skyPlaneEffect = h_game.Content.Load<Effect>(h_game.GetGameSettings().skyPlaneEffectsFile);
+            skyPlaneTexture = h_game.Content.Load<Texture2D>(h_game.GetGameSettings().skyPlaneTextureFile);
+            skyPlaneScale = h_game.GetGameSettings().skyPlaneScale;
+            skyPlaneEffect = new BasicEffect(h_game.GetGraphicsDevice(), null);
             CreateSkyPlaneVertexBuffer();
+            vertexDec = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPositionTexture.VertexElements);
         }
         #endregion
 
         #region Draw()
         /// Draw - MUST BE DRAWN FIRST.  
         /// ***********************************************************************
-        public void Draw(GameTime gameTime)
+        public void Draw(GraphicsDevice device, Matrix view, Matrix projection)
         {
             h_game.GetGraphicsDevice().RenderState.DepthBufferWriteEnable = false;
-            skyPlaneEffect.CurrentTechnique = skyPlaneEffect.Techniques["SkyPlane"];
-            skyPlaneEffect.Parameters["xWorld"].SetValue(Matrix.CreateTranslation(((camera)h_game.GetCamera()).Position));
-            skyPlaneEffect.Parameters["xView"].SetValue(((camera)h_game.GetCamera()).ViewMatrix);
-            skyPlaneEffect.Parameters["xProjection"].SetValue(((camera)h_game.GetCamera()).ProjectionMatrix);
-            skyPlaneEffect.Parameters["xTexture"].SetValue(skyPlaneTexture);
+
+            h_game.GetGraphicsDevice().SamplerStates[0].AddressU = TextureAddressMode.Clamp;
+            h_game.GetGraphicsDevice().SamplerStates[0].AddressV = TextureAddressMode.Clamp;
+
+            skyPlaneEffect.World = Matrix.Identity;
+            skyViewMat = view;
+            skyViewMat.M41 = 0; skyViewMat.M42 = 0; skyViewMat.M43 = -1; // Place skyPlane a constant offset from camera
+            skyPlaneEffect.View = skyViewMat;
+            skyPlaneEffect.Projection = projection;
             skyPlaneEffect.Begin();
+            skyPlaneEffect.Texture = skyPlaneTexture;
+            skyPlaneEffect.TextureEnabled = true;
             foreach (EffectPass pass in skyPlaneEffect.CurrentTechnique.Passes)
             {
                 pass.Begin();
 
-                h_game.GetGraphicsDevice().VertexDeclaration = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPosition.VertexElements);
-                h_game.GetGraphicsDevice().Vertices[0].SetSource(skyPlaneVertexBuffer, 0, VertexPosition.SizeInBytes);
+                h_game.GetGraphicsDevice().VertexDeclaration = vertexDec;
+                h_game.GetGraphicsDevice().Vertices[0].SetSource(skyPlaneVertexBuffer, 0, VertexPositionTexture.SizeInBytes);
                 h_game.GetGraphicsDevice().DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
                 pass.End();
             }
             skyPlaneEffect.End();
+
             h_game.GetGraphicsDevice().RenderState.DepthBufferWriteEnable = true;
+
+            h_game.GetGraphicsDevice().SamplerStates[0].AddressU = TextureAddressMode.Wrap;
+            h_game.GetGraphicsDevice().SamplerStates[0].AddressV = TextureAddressMode.Wrap;
         }
         #endregion
 
@@ -103,30 +120,30 @@ namespace hungrybee
         /// ***********************************************************************
         private void CreateSkyPlaneVertexBuffer()
         {
-            Vector3 forwardBottomLeft = new Vector3(-1, -1, -1);
-            Vector3 forwardBottomRight = new Vector3(1, -1, -1);
-            Vector3 forwardUpperLeft = new Vector3(-1, 1, -1);
-            Vector3 forwardUpperRight = new Vector3(1, 1, -1);
+            Vector3 Zoffset = new Vector3(0, 0, -0.5f);
+            Vector3 DL = new Vector3(-0.5f, -0.5f, 0) * skyPlaneScale + Zoffset;      // Down Left
+            Vector3 UR = new Vector3(0.5f, 0.5f, 0) * skyPlaneScale + Zoffset;        // Upper Right
+            Vector3 UL = new Vector3(-0.5f, 0.5f, 0) * skyPlaneScale + Zoffset;       // Upper Left
+            Vector3 DR = new Vector3(0.5f, -0.5f, 0) * skyPlaneScale + Zoffset;       // Down Right
 
-            Vector3 backBottomLeft = new Vector3(-1, -1, 1);
-            Vector3 backBottomRight = new Vector3(1, -1, 1);
-            Vector3 backUpperLeft = new Vector3(-1, 1, 1);
-            Vector3 backUpperRight = new Vector3(1, 1, 1);
+            Vector2 texDR = new Vector2(1, 1);        // Texture Down Right
+            Vector2 texUL = new Vector2(0, 0);        // Texture Upper Left
+            Vector2 texDL = new Vector2(0, 1);        // Texture Down Left
+            Vector2 texUR = new Vector2(1, 0);        // Texture Upper Right
 
-            VertexPosition[] vertices = new VertexPosition[6];
+            VertexPositionTexture[] vertices = new VertexPositionTexture[6];
             int i = 0;
+            // Triangle 1
+            vertices[i++] = new VertexPositionTexture(DL, texDL);
+            vertices[i++] = new VertexPositionTexture(UL, texUL);
+            vertices[i++] = new VertexPositionTexture(UR, texUR);
+            // Triangle 2
+            vertices[i++] = new VertexPositionTexture(DL, texDL);
+            vertices[i++] = new VertexPositionTexture(UR, texUR);
+            vertices[i++] = new VertexPositionTexture(DR, texDR);
 
-            //face in front of the camera
-            vertices[i++] = new VertexPosition(forwardBottomLeft);
-            vertices[i++] = new VertexPosition(forwardUpperLeft);
-            vertices[i++] = new VertexPosition(forwardUpperRight);
-
-            vertices[i++] = new VertexPosition(forwardBottomLeft);
-            vertices[i++] = new VertexPosition(forwardUpperRight);
-            vertices[i++] = new VertexPosition(forwardBottomRight);
-
-            skyPlaneVertexBuffer = new VertexBuffer(h_game.GetGraphicsDevice(), vertices.Length * VertexPosition.SizeInBytes, BufferUsage.WriteOnly);
-            skyPlaneVertexBuffer.SetData<VertexPosition>(vertices);
+            skyPlaneVertexBuffer = new VertexBuffer(h_game.GetGraphicsDevice(), vertices.Length * VertexPositionTexture.SizeInBytes, BufferUsage.WriteOnly);
+            skyPlaneVertexBuffer.SetData<VertexPositionTexture>(vertices);
         }
         #endregion
     }

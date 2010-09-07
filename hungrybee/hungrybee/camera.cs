@@ -37,10 +37,12 @@ namespace hungrybee
         private Vector3 h_cameraPosition;
         private Vector3 h_cameraUp;
         private Vector3 h_cameraForward;
+        private Vector3 h_originalCameraUp;
+        private Vector3 h_originalCameraForward;
 
+        float leftrightRot;
+        float updownRot;
         private Matrix h_cameraRotation;
-        private float h_cameraRotationLeft;
-        private float h_cameraRotationForward;
 
         private float h_viewAngle;
         private float h_nearPlane;
@@ -99,17 +101,19 @@ namespace hungrybee
         public override void Initialize()
         {
             h_cameraPosition = new Vector3(0, 0, 10);
-            h_cameraForward = Vector3.Forward;
-            h_cameraUp = Vector3.Up;
+            h_originalCameraForward = Vector3.Forward;
+            h_cameraForward = h_originalCameraForward;
+            h_originalCameraUp = Vector3.Up;
+            h_cameraUp = h_originalCameraUp;
             h_cameraRotation = Matrix.Identity;
+            leftrightRot = 0.0f;
+            updownRot = 0.0f;
             h_running = false;
             h_cameraSpeed = h_game.GetGameSettings().cameraSpeed;
             h_cameraRunningMult = h_game.GetGameSettings().cameraRunningMult;
             h_cameraRotationSpeed = h_game.GetGameSettings().cameraRotationSpeed;
             Mouse.SetPosition(h_game.Window.ClientBounds.Width / 2, h_game.Window.ClientBounds.Height / 2);
             oldMouseState = Mouse.GetState();
-            h_cameraRotationLeft = 0.0f;
-            h_cameraRotationForward = 0.0f;
 
             this.Resize();
             base.Initialize();
@@ -150,23 +154,21 @@ namespace hungrybee
             currentMouseState = Mouse.GetState();
             if (currentMouseState != oldMouseState)
             {
-                // Need to rotate about axis along the screen
-                direction = Vector3.Cross(h_cameraForward, h_cameraUp);
-                direction = Vector3.Normalize(direction);
-                h_cameraRotation = Matrix.CreateFromAxisAngle(direction, -1.0f * h_cameraRotationSpeed*(currentMouseState.Y - oldMouseState.Y));
+                // Only allow camera controls when leftControl is down
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
+                {
+                    leftrightRot -= 1.0f * h_cameraRotationSpeed * (currentMouseState.X - oldMouseState.X);
+                    updownRot -= 1.0f * h_cameraRotationSpeed * (currentMouseState.Y - oldMouseState.Y);
+                    Mouse.SetPosition(h_game.Window.ClientBounds.Width / 2, h_game.Window.ClientBounds.Height / 2);
+                }
 
-                // Need to rotate about up axis
-                direction = Vector3.Normalize(h_cameraUp);
-                h_cameraRotation = h_cameraRotation * Matrix.CreateFromAxisAngle(direction, -1.0f * h_cameraRotationSpeed * (currentMouseState.X - oldMouseState.X));
+                h_cameraRotation = Matrix.CreateRotationX(updownRot) * Matrix.CreateRotationY(leftrightRot);
 
                 // Now rotate the up and forward directions
-                h_cameraForward = Vector3.Transform(h_cameraForward, h_cameraRotation);
-                h_cameraUp = Vector3.Transform(h_cameraUp, h_cameraRotation);
+                h_cameraForward = Vector3.Transform(h_originalCameraForward, h_cameraRotation);
+                h_cameraUp = Vector3.Transform(h_originalCameraUp, h_cameraRotation);
 
-                // Reset the mouse state for next frame and move the mouse back to the center
-                Mouse.SetPosition(h_game.Window.ClientBounds.Width / 2, h_game.Window.ClientBounds.Height / 2);
             }
-            
         }
         #endregion
 
@@ -185,41 +187,45 @@ namespace hungrybee
 
             float mov_scale = (h_running ? h_cameraRunningMult : 1.0f) * h_cameraSpeed;
 
-            // Move front or back
-            if (keyState.IsKeyDown(Keys.W))
+            // Only enable camera movement when Left Control is down
+            if (keyState.IsKeyDown(Keys.LeftControl))
             {
-                h_cameraPosition += normForward * mov_scale;
-            }
-            if (keyState.IsKeyDown(Keys.S))
-            {
-                h_cameraPosition -= normForward * mov_scale;
-            }
+                // Move front or back
+                if (keyState.IsKeyDown(Keys.W))
+                {
+                    h_cameraPosition += normForward * mov_scale;
+                }
+                if (keyState.IsKeyDown(Keys.S))
+                {
+                    h_cameraPosition -= normForward * mov_scale;
+                }
 
-            // Move left or right
-            if (keyState.IsKeyDown(Keys.A))
-            {
-                direction = Vector3.Cross(normForward, h_cameraUp);
-                direction = Vector3.Normalize(direction); 
-                h_cameraPosition -= direction * mov_scale;
-            }
-            if (keyState.IsKeyDown(Keys.D))
-            {
-                direction = Vector3.Cross(normForward, h_cameraUp);
-                direction = Vector3.Normalize(direction); 
-                h_cameraPosition += direction * mov_scale;
-            }
+                // Move left or right
+                if (keyState.IsKeyDown(Keys.A))
+                {
+                    direction = Vector3.Cross(normForward, h_cameraUp);
+                    direction = Vector3.Normalize(direction);
+                    h_cameraPosition -= direction * mov_scale;
+                }
+                if (keyState.IsKeyDown(Keys.D))
+                {
+                    direction = Vector3.Cross(normForward, h_cameraUp);
+                    direction = Vector3.Normalize(direction);
+                    h_cameraPosition += direction * mov_scale;
+                }
 
-            // Move up or down
-            direction = Vector3.Normalize(h_cameraUp);
-            if (keyState.IsKeyDown(Keys.Q))
-            {
-                direction = Vector3.Normalize(h_cameraUp); 
-                h_cameraPosition += direction * mov_scale;
-            }
-            if (keyState.IsKeyDown(Keys.Z))
-            {
+                // Move up or down
                 direction = Vector3.Normalize(h_cameraUp);
-                h_cameraPosition -= direction * mov_scale;
+                if (keyState.IsKeyDown(Keys.Q))
+                {
+                    direction = Vector3.Normalize(h_cameraUp);
+                    h_cameraPosition += direction * mov_scale;
+                }
+                if (keyState.IsKeyDown(Keys.Z))
+                {
+                    direction = Vector3.Normalize(h_cameraUp);
+                    h_cameraPosition -= direction * mov_scale;
+                }
             }
         }
         #endregion

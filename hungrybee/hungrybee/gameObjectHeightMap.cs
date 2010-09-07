@@ -1,0 +1,266 @@
+﻿#region using statements
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.GamerServices;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
+using Microsoft.Xna.Framework.Net;
+using Microsoft.Xna.Framework.Storage;
+#endregion
+
+namespace hungrybee
+{
+    /// <summary>
+    /// ***********************************************************************
+    /// **                           heightMap                               **
+    /// ** This is a class to store the data for the heightmap and render it **
+    /// ***********************************************************************
+    /// </summary>
+    class gameObjectHeightMap : gameObject
+    {
+        #region Local Variables
+        /// Local Variables
+        /// ***********************************************************************    
+        private game h_game;
+
+        Texture2D heightMapTexture;
+        string heightMapFile;
+        string heightMapTextureFile;
+        float[,] heightMapData;
+        VertexDeclaration heightMapVertexDeclaration;
+        VertexBuffer heightMapVertexBuffer;
+        IndexBuffer heightMapIndexBuffer;
+
+        BasicEffect heightMapEffect;
+        #endregion
+
+        #region Constructor
+        public gameObjectHeightMap(game game, string file, string textureFile) : base(game, null)
+        {
+            h_game = game;
+            heightMapFile = file;
+            heightMapTextureFile = textureFile;
+        }
+        #endregion
+
+        #region LoadContent
+        /// LoadContent - Load in the textures and initialize the heightmap
+        /// ***********************************************************************
+        public override void LoadContent()
+        {
+            // Load in the texture data from file
+            Texture2D heightMap = h_game.Content.Load<Texture2D>(heightMapFile);
+            heightMapTexture = h_game.Content.Load<Texture2D>("grass");
+
+            // Create a basic effect
+            heightMapEffect = new BasicEffect(h_game.GetGraphicsDevice(), null);
+
+            // Parse the heightMap data, creating the verticies, indicies and Normals
+            heightMapData = LoadHeightData(heightMap);
+            heightMapVertexDeclaration = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPositionNormalTexture.VertexElements);
+            VertexPositionNormalTexture[] terrainVertices = CreateTerrainVertices();
+            int[] terrainIndices = CreateTerrainIndices();
+            terrainVertices = GenerateNormalsForTriangleStrip(terrainVertices, terrainIndices);
+
+            // Initialize the vertex and index buffers
+            CreateBuffers(terrainVertices, terrainIndices);
+            
+        }
+        #endregion
+
+        #region LoadContent()
+        /// LoadContent - Load in the textures and initialize the heightmap
+        /// ***********************************************************************
+        public override void DrawUsingCurrentEffect(GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
+        {
+            //draw terrain
+            int width = heightMapData.GetLength(0);
+            int height = heightMapData.GetLength(1);
+            heightMapEffect.World = Matrix.Identity;
+            heightMapEffect.View = ((camera)h_game.GetCamera()).ViewMatrix;
+            heightMapEffect.Projection = ((camera)h_game.GetCamera()).ProjectionMatrix;
+            heightMapEffect.Texture = heightMapTexture;
+            heightMapEffect.TextureEnabled = true;
+
+            heightMapEffect.EnableDefaultLighting();
+            heightMapEffect.DirectionalLight0.Direction = new Vector3(1, -1, 1);
+            heightMapEffect.DirectionalLight0.Enabled = true;
+            heightMapEffect.AmbientLightColor = new Vector3(0.3f, 0.3f, 0.3f);
+            heightMapEffect.DirectionalLight1.Enabled = false;
+            heightMapEffect.DirectionalLight2.Enabled = false;
+            heightMapEffect.SpecularColor = new Vector3(0, 0, 0);
+
+            heightMapEffect.Begin();
+            foreach (EffectPass pass in heightMapEffect.CurrentTechnique.Passes)
+            {
+                pass.Begin();
+
+                device.Vertices[0].SetSource(heightMapVertexBuffer, 0, VertexPositionNormalTexture.SizeInBytes);
+                device.Indices = heightMapIndexBuffer;
+                device.VertexDeclaration = heightMapVertexDeclaration;
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleStrip, 0, 0, width * height, 0, width * 2 * (height - 1) - 2);
+
+                pass.End();
+            }
+            heightMapEffect.End();
+        }
+        #endregion
+
+        #region ChangeEffectUsedByModel()
+        /// ChangeEffectUsedByModel - Change the effect being used
+        /// ***********************************************************************
+        public override void ChangeEffectUsedByModel(Effect replacementEffect)
+        {
+            // Empty, don't override yet
+        }
+        #endregion
+
+        #region LoadHeightData()
+        /// LoadHeightData - Load in the textures and initialize the heightmap
+        /// ***********************************************************************
+        private static float[,] LoadHeightData(Texture2D heightMap)
+        {
+            float minimumHeight = 255;
+            float maximumHeight = 0;
+
+            int width = heightMap.Width;
+            int height = heightMap.Height;
+
+            Color[] heightMapColors = new Color[width * height];
+            heightMap.GetData<Color>(heightMapColors);
+
+            float[,] heightData = new float[width, height];
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                {
+                    heightData[x, y] = heightMapColors[x + y * width].R;
+                    if (heightData[x, y] < minimumHeight) minimumHeight = heightData[x, y];
+                    if (heightData[x, y] > maximumHeight) maximumHeight = heightData[x, y];
+                }
+
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                    heightData[x, y] = (heightData[x, y] - minimumHeight) / (maximumHeight - minimumHeight) * 30.0f;
+
+            return heightData;
+        }
+        #endregion
+
+        #region CreateTerrainVertices()
+        /// CreateTerrainVertices - Create the verticies from the heightmap data
+        /// ***********************************************************************
+        private VertexPositionNormalTexture[] CreateTerrainVertices()
+        {
+            int width = heightMapData.GetLength(0);
+            int height = heightMapData.GetLength(1);
+            VertexPositionNormalTexture[] terrainVertices = new VertexPositionNormalTexture[width * height];
+
+            int i = 0;
+            for (int z = 0; z < height; z++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Vector3 position = new Vector3(x, heightMapData[x, z], -z);
+                    Vector3 normal = new Vector3(0, 0, 1);
+                    Vector2 texCoord = new Vector2((float)x / 30.0f, (float)z / 30.0f);
+
+                    terrainVertices[i++] = new VertexPositionNormalTexture(position, normal, texCoord);
+                }
+            }
+
+            return terrainVertices;
+        }
+        #endregion
+
+        #region CreateTerrainIndices()
+        /// CreateTerrainIndices - Create the indicies from the heightmap data
+        /// ***********************************************************************
+        private int[] CreateTerrainIndices()
+        {
+            int width = heightMapData.GetLength(0);
+            int height = heightMapData.GetLength(1);
+
+            int[] terrainIndices = new int[(width) * 2 * (height - 1)];
+
+            int i = 0;
+            int z = 0;
+            while (z < height - 1)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    terrainIndices[i++] = x + z * width;
+                    terrainIndices[i++] = x + (z + 1) * width;
+                }
+                z++;
+
+                if (z < height - 1)
+                {
+                    for (int x = width - 1; x >= 0; x--)
+                    {
+                        terrainIndices[i++] = x + (z + 1) * width;
+                        terrainIndices[i++] = x + z * width;
+                    }
+                }
+                z++;
+            }
+
+            return terrainIndices;
+        }
+        #endregion
+
+        #region GenerateNormalsForTriangleStrip()
+        /// GenerateNormalsForTriangleStrip - Create the Normals from the heightmap data
+        /// ***********************************************************************
+        private static VertexPositionNormalTexture[] GenerateNormalsForTriangleStrip(VertexPositionNormalTexture[] vertices, int[] indices)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+                vertices[i].Normal = new Vector3(0, 0, 0);
+
+            bool swappedWinding = false;
+            for (int i = 2; i < indices.Length; i++)
+            {
+                Vector3 firstVec = vertices[indices[i - 1]].Position - vertices[indices[i]].Position;
+                Vector3 secondVec = vertices[indices[i - 2]].Position - vertices[indices[i]].Position;
+                Vector3 normal = Vector3.Cross(firstVec, secondVec);
+                normal.Normalize();
+
+                if (swappedWinding)
+                    normal *= -1;
+
+                if (!float.IsNaN(normal.X))
+                {
+                    vertices[indices[i]].Normal += normal;
+                    vertices[indices[i - 1]].Normal += normal;
+                    vertices[indices[i - 2]].Normal += normal;
+                }
+
+                swappedWinding = !swappedWinding;
+            }
+
+            for (int i = 0; i < vertices.Length; i++)
+                vertices[i].Normal.Normalize();
+
+            return vertices;
+        }
+        #endregion
+
+        #region CreateBuffers()
+        /// CreateBuffers - Initialize the heightmap buffers
+        /// ***********************************************************************
+        private void CreateBuffers(VertexPositionNormalTexture[] vertices, int[] indices)
+        {
+            heightMapVertexBuffer = new VertexBuffer(h_game.GetGraphicsDevice(), VertexPositionNormalTexture.SizeInBytes * vertices.Length, BufferUsage.WriteOnly);
+            heightMapVertexBuffer.SetData(vertices);
+
+            heightMapIndexBuffer = new IndexBuffer(h_game.GetGraphicsDevice(), typeof(int), indices.Length, BufferUsage.WriteOnly);
+            heightMapIndexBuffer.SetData(indices);
+        }
+        #endregion
+    }
+}

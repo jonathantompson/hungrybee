@@ -30,6 +30,8 @@ namespace hungrybee
         game h_game;
         List<gameObject> h_GameObjects;      // Handler to the list of game objects
 
+        int numPlayers, numHeightMaps;
+
         #endregion
 
         #region Constructor - gameObjectManager(game game)
@@ -39,6 +41,8 @@ namespace hungrybee
         {
             h_game = (game)game;
             h_GameObjects = new List<gameObject>();
+            numPlayers = 0;
+            numHeightMaps = 0;
         }
         #endregion
 
@@ -110,7 +114,23 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        curObject = new playerGameObject(h_game, curToken[1]);
+                        if (numPlayers == 0 || curToken.Count != 3 )
+                        {
+                            curObject = new gameObjectPlayer(h_game, curToken[1]);
+                            numPlayers += 1;
+                        }
+                        else
+                            throw new Exception("gameObjectManager::LoadContent(): Cannot load more than one player object!");
+                        break;
+
+                    case "heightMap":
+                        if (numHeightMaps == 0 || curToken.Count != 2)
+                        {
+                            curObject = new gameObjectHeightMap(h_game, curToken[1], curToken[2]);
+                            numHeightMaps += 1;
+                        }
+                        else
+                            throw new Exception("gameObjectManager::LoadContent(): Cannot load more than one heightMap object!");
                         break;
 
                     //// ************************************
@@ -121,11 +141,11 @@ namespace hungrybee
                         throw new Exception("gameObjectManager::LoadContent(): Corrupt Level_x.csv, setting " + curToken[0] + " is not recognised");
                 }
 
+                // Append the newly created object to the list
+                h_GameObjects.Add(curObject);
                 // Load the content of the current object
                 curObject.LoadContent();
 
-                // Append the newly created object to the list
-                h_GameObjects.Add(curObject);
             }
             reader.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
         }
