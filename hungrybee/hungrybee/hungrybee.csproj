@@ -95,10 +95,12 @@
     <Compile Include="gameSettings.cs" />
     <Compile Include="gameObjectPlayer.cs" />
     <Compile Include="gameObjectHeightMap.cs" />
-    <Compile Include="renderSettings.cs" />
+    <Compile Include="physicsManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="program.cs" />
     <Compile Include="game.cs" />
+    <Compile Include="rboDerivative.cs" />
+    <Compile Include="rboState.cs" />
     <Compile Include="renderManager.cs" />
     <Compile Include="skyPlane.cs" />
     <Compile Include="vertex.cs" />

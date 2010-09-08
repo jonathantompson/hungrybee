@@ -1,4 +1,4 @@
 //,heightMap, heightMapFile, heightMapTextureFile, [xmin,ymin,zmin], [xmax,ymax,zmax]
 heightMap,false,heightmap,Grass,-8,-5,-5,8,-2,5
-//,player, modelfile, scale
-player,Ship,2.5
+//,player, modelfile, scale, acceleration rate, decceleration rate
+player,Ship,75,1.0,1.0

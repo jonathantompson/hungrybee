@@ -22,7 +22,7 @@ namespace hungrybee
     /// ** Game object with a mesh instance to be drawn                      **
     /// ***********************************************************************
     /// </summary>
-    class gameObject
+    public class gameObject
     {
         #region Local Variables
 
@@ -30,12 +30,12 @@ namespace hungrybee
         public Model model;
         string modelFile;
         Matrix[] modelTransforms;
+        float modelScaleToNormalizeSize;
 
-        protected Vector2 Position; // X and Y (no movement in Z plane for 2.5D)
-        protected float Rotation; // In radians
-
-        protected Matrix rot, trans, scale, world;
-        protected bool dirtyWorldMatrix; // Only perform matrix multiplication when we need to
+        public rboState state;
+        public rboState prevState;
+        public float maxVel;
+        public bool movable; // Does the object react to RK4 integrator and collision response
 
         #endregion
 
@@ -44,28 +44,22 @@ namespace hungrybee
         /// ***********************************************************************
         public gameObject(game game, string modelfile) : base()
         {
-            Position = new Vector2(0.0f, 0.0f);
-            Rotation = 0.0f;
+            state = new rboState();
+            prevState = new rboState();
+            maxVel = float.PositiveInfinity;
+            movable = false;
             h_game = game;
             modelFile = modelfile;
-            rot = Matrix.Identity;
-            trans = Matrix.Identity;
-            scale = Matrix.Identity;
-            world = Matrix.Identity;
-            dirtyWorldMatrix = false;
+            modelScaleToNormalizeSize = 1.0f;
         }
         #endregion
 
         #region Update(GameTime gameTime)
         /// Update - If we've moved the object then update the world transform
         /// ***********************************************************************
-        public void Update(GameTime gameTime)
+        public virtual void Update(GameTime gameTime)
         {
-            if (dirtyWorldMatrix == true)
-            {
-                world = trans * rot * scale;
-                dirtyWorldMatrix = false;
-            }
+            // Nothing to update
         }
         #endregion
 
@@ -78,7 +72,13 @@ namespace hungrybee
             model = XNAUtils.LoadModelWithBoundingSphere(ref modelTransforms, modelFile, h_game.Content);
 
             // ScaleModel(model); // ScaleModel() function no longer in use!  Now scaling transform instead.
-            modelTransforms = XNAUtils.AutoScaleModelTransform(ref model, 1.0f);
+            modelTransforms = XNAUtils.AutoScaleModelTransform(ref model, 1.0f, ref modelScaleToNormalizeSize);
+
+            // Calculate moment of Inertia from bounding sphere:
+            BoundingSphere bSphere = (BoundingSphere)model.Tag;
+            state.Itensor = XNAUtils.CalculateItensorFromBoundingSphere(bSphere, state.mass);
+            state.InvItensor = Matrix.Invert(state.Itensor);
+            
         }
         #endregion
 
@@ -107,7 +107,7 @@ namespace hungrybee
                     // Specify which effect technique to use.
                     effect.CurrentTechnique = effect.Techniques[effectTechniqueName];
 
-                    Matrix localWorld = transforms[mesh.ParentBone.Index] * world;
+                    Matrix localWorld = transforms[mesh.ParentBone.Index] * model.Root.Transform;
 
                     effect.Parameters["World"].SetValue(localWorld);
                     effect.Parameters["View"].SetValue(view);
@@ -165,7 +165,7 @@ namespace hungrybee
         #endregion
 
         #region ScaleModel()
-        /// ScaleModel - Scales the actual model verticies --> No longer in use!
+        /// ScaleModel - Scales the actual model verticies --> NO LONGER USED!
         /// ***********************************************************************
         public static void ScaleModel(Model model)
         {
@@ -228,6 +228,15 @@ namespace hungrybee
 
             // Now copy the new vertex data back
             mesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices);
+        }
+        #endregion
+
+        #region MatrixCreateScale(Vector3 Scale)
+        /// MatrixCreateScale - Create a scale matrix, but also add in the normalization factor
+        /// ***********************************************************************
+        public Matrix CreateScale(Vector3 Scale)
+        {
+            return Matrix.CreateScale(Vector3.Multiply(Scale, modelScaleToNormalizeSize));
         }
         #endregion
     }

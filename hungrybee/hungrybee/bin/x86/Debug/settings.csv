@@ -11,3 +11,4 @@ sketchTextureFile,SketchTexture
 cameraSpeed,0.05
 cameraRunningMult,4
 cameraRotationSpeed,0.002
+EPSILON,1E-08

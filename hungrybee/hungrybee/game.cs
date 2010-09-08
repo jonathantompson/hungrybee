@@ -36,6 +36,7 @@ namespace hungrybee
         GameComponent           h_RenderManager;        
         GameComponent           h_SkyPlane;             // The background SkyPlane (like a skybox but with one side to save rendering calls)  
         GameComponent           h_GameObjectManager;
+        GameComponent           h_PhysicsManager;
 
         #endregion
 
@@ -52,6 +53,7 @@ namespace hungrybee
             h_SkyPlane = new skyPlane(this);
             h_RenderManager = new renderManager(this);
             h_GameObjectManager = new gameObjectManager(this);
+            h_PhysicsManager = new physicsManager(this);
 
             // Manually specify the update order for interdependancies
             h_GameSettings.UpdateOrder      = 0;
@@ -59,6 +61,7 @@ namespace hungrybee
             h_Camera.UpdateOrder            = 2;
             h_RenderManager.UpdateOrder     = 3;
             h_SkyPlane.UpdateOrder          = 4;
+            h_PhysicsManager.UpdateOrder    = 5;
 
             // Add the new game components
             Components.Add(h_GameSettings);
@@ -66,6 +69,7 @@ namespace hungrybee
             Components.Add(h_SkyPlane);
             Components.Add(h_RenderManager);
             Components.Add(h_GameObjectManager);
+            Components.Add(h_PhysicsManager);
         }
         #endregion
 
@@ -145,6 +149,7 @@ namespace hungrybee
         public gameSettings GetGameSettings() { return (gameSettings)h_GameSettings; }
         public skyPlane GetSkyPlane() { return (skyPlane)h_SkyPlane; }
         public gameObjectManager GetGameObjectManager() { return (gameObjectManager)h_GameObjectManager; }
+        public physicsManager GetPhysicsManager() { return (physicsManager)h_PhysicsManager; }
         #endregion
     }
 }

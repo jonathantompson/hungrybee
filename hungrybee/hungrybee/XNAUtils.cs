@@ -159,18 +159,30 @@ namespace hungrybee
             return new BoundingBox(p1, p2);
         }
 
-        public static Matrix[] AutoScaleModelTransform(ref Model model, float requestedSize)
+        public static Matrix[] AutoScaleModelTransform(ref Model model, float requestedSize, ref float scalingFactor)
         {
             BoundingSphere bSphere = (BoundingSphere)model.Tag;
             float originalSize = bSphere.Radius * 2;
-            float scalingFactor = requestedSize / originalSize;
+            scalingFactor = requestedSize / originalSize;
 
-            model.Root.Transform = model.Root.Transform * Matrix.CreateScale(scalingFactor);
+            // EDIT: TOMPSON - Done later
+            // model.Root.Transform = model.Root.Transform * Matrix.CreateScale(scalingFactor);
 
             Matrix[] modelTransforms = new Matrix[model.Bones.Count];
             model.CopyAbsoluteBoneTransformsTo(modelTransforms);
 
             return modelTransforms;
+        }
+
+        // Jonno Tompson Code
+        // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
+        public static Matrix CalculateItensorFromBoundingSphere(BoundingSphere bSphere, float mass)
+        {
+            Matrix Itensor = Matrix.Identity;
+            float diagValue = (2.0f / 3.0f) * mass * (bSphere.Radius) * (bSphere.Radius);
+            Itensor.M11 = diagValue; Itensor.M22 = diagValue; Itensor.M33 = diagValue;
+
+            return Itensor;
         }
     }
 }

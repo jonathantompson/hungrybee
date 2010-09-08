@@ -39,6 +39,7 @@ namespace hungrybee
         public float    cameraSpeed;
         public float    cameraRunningMult;
         public float    cameraRotationSpeed;
+        public float    EPSILON;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -73,6 +74,7 @@ namespace hungrybee
             cameraSpeed = 0.05f;
             cameraRunningMult = 4.0f;
             cameraRotationSpeed = 0.002f;
+            EPSILON = 0.00000001f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -170,6 +172,9 @@ namespace hungrybee
                         case "cameraRotationSpeed":
                             this.cameraRotationSpeed = float.Parse(curToken[1]);
                             break;
+                        case "EPSILON":
+                            this.EPSILON = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -210,6 +215,7 @@ namespace hungrybee
             writer.WriteNextToken("cameraSpeed", this.cameraSpeed);
             writer.WriteNextToken("cameraRunningMult", this.cameraRunningMult);
             writer.WriteNextToken("cameraRotationSpeed", this.cameraRotationSpeed);
+            writer.WriteNextToken("EPSILON", this.EPSILON);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

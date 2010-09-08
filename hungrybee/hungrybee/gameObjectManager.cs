@@ -28,7 +28,7 @@ namespace hungrybee
         #region Local Variables
 
         game h_game;
-        List<gameObject> h_GameObjects;      // Handler to the list of game objects
+        public List<gameObject> h_GameObjects;      // Handler to the list of game objects
 
         int numPlayers, numHeightMaps;
 
@@ -55,13 +55,12 @@ namespace hungrybee
         }
         #endregion
 
-        #region Update()
+        #region Update() - Update accelerations for physicsManager
         /// Perform initialization - Nothing to initialize
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
             // enumerate through each element in the list and update them
-            // Just enumerate through each element in the list and draw them
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
             {
@@ -114,11 +113,13 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 3 )
+                        if (numPlayers == 0 && curToken.Count == 5 )
                         {
                             curObject = new gameObjectPlayer(h_game, 
                                                              curToken[1],
-                                                             float.Parse(curToken[2]));
+                                                             float.Parse(curToken[2]),
+                                                             float.Parse(curToken[3]),
+                                                             float.Parse(curToken[4]));
                             numPlayers += 1;
                         }
                         else
