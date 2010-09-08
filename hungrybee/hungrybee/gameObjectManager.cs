@@ -86,7 +86,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region LoadContent
+        #region LoadContent()
         /// LoadContent - Reserve List capacity and load in the first level
         /// ***********************************************************************
         public void LoadContent()
@@ -114,23 +114,33 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 || curToken.Count != 3 )
+                        if (numPlayers == 0 && curToken.Count == 3 )
                         {
-                            curObject = new gameObjectPlayer(h_game, curToken[1]);
+                            curObject = new gameObjectPlayer(h_game, 
+                                                             curToken[1],
+                                                             float.Parse(curToken[2]));
                             numPlayers += 1;
                         }
                         else
-                            throw new Exception("gameObjectManager::LoadContent(): Cannot load more than one player object!");
+                            throw new Exception("gameObjectManager::LoadContent(): Error reading player settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
                         break;
 
                     case "heightMap":
-                        if (numHeightMaps == 0 || curToken.Count != 2)
+                        if (numHeightMaps == 0 && curToken.Count == 10)
                         {
-                            curObject = new gameObjectHeightMap(h_game, curToken[1], curToken[2]);
+                            curObject = new gameObjectHeightMap(h_game,
+                                                                bool.Parse(curToken[1]),
+                                                                curToken[2],
+                                                                curToken[3],
+                                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
                             numHeightMaps += 1;
                         }
                         else
-                            throw new Exception("gameObjectManager::LoadContent(): Cannot load more than one heightMap object!");
+                            throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}",levelNumber) + ".csv");
+                        break;
+                    case "//": // Comment
+                        curObject = null;
                         break;
 
                     //// ************************************
@@ -141,10 +151,13 @@ namespace hungrybee
                         throw new Exception("gameObjectManager::LoadContent(): Corrupt Level_x.csv, setting " + curToken[0] + " is not recognised");
                 }
 
-                // Append the newly created object to the list
-                h_GameObjects.Add(curObject);
-                // Load the content of the current object
-                curObject.LoadContent();
+                if (curObject != null)
+                {
+                    // Append the newly created object to the list
+                    h_GameObjects.Add(curObject);
+                    // Load the content of the current object
+                    curObject.LoadContent();
+                }
 
             }
             reader.Close(); // Destructor would do this anyway once out of scope, but just to be safe.

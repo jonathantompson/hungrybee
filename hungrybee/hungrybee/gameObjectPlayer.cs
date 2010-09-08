@@ -27,15 +27,18 @@ namespace hungrybee
     {
         #region Local Variables
 
-        // Nothing yet
+        game h_game;
         // int playerHealth;
 
         #endregion
 
-        #region Constructor
-        public gameObjectPlayer(game game, string modelfile) : base(game, modelfile)
+        #region Constructor - gameObjectPlayer(game game, string modelfile, float scale) : base(game, modelfile)
+        public gameObjectPlayer(game game, string modelfile, float _scale)
+            : base(game, modelfile)
         {
-            // Nothing yet
+            h_game = game;
+            scale = Matrix.CreateScale(_scale);
+            dirtyWorldMatrix = true;
         }
         #endregion
     }

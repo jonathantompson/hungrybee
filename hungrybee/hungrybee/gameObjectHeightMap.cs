@@ -37,15 +37,24 @@ namespace hungrybee
         VertexBuffer heightMapVertexBuffer;
         IndexBuffer heightMapIndexBuffer;
 
+        Vector3 minDim;
+        Vector3 maxDim;
+
+        bool heightMapFromFile;
+
         BasicEffect heightMapEffect;
         #endregion
 
-        #region Constructor
-        public gameObjectHeightMap(game game, string file, string textureFile) : base(game, null)
+        #region Constructor - gameObjectHeightMap(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
+        public gameObjectHeightMap(game game, bool fromFile, string file, string textureFile, Vector3 min, Vector3 max)
+            : base(game, null)
         {
             h_game = game;
+            heightMapFromFile = fromFile;
             heightMapFile = file;
             heightMapTextureFile = textureFile;
+            minDim = min;
+            maxDim = max;
         }
         #endregion
 
@@ -54,23 +63,33 @@ namespace hungrybee
         /// ***********************************************************************
         public override void LoadContent()
         {
-            // Load in the texture data from file
-            Texture2D heightMap = h_game.Content.Load<Texture2D>(heightMapFile);
-            heightMapTexture = h_game.Content.Load<Texture2D>("grass");
+            if (heightMapFromFile)
+            {
+                // Load in the texture data from file and process the raw data
+                Texture2D heightMap = h_game.Content.Load<Texture2D>(heightMapFile);
+                // Parse the heightMap data, creating the verticies
+                heightMapData = LoadHeightDataFromFile(heightMap);
+            }
+            else
+            {
+                // Create heightMap data from some function
+                heightMapData = LoadHeightDataFromFunction();
+            }
 
             // Create a basic effect
             heightMapEffect = new BasicEffect(h_game.GetGraphicsDevice(), null);
 
-            // Parse the heightMap data, creating the verticies, indicies and Normals
-            heightMapData = LoadHeightData(heightMap);
+            // Parse the heightMap data, creating the indicies and Normals
             heightMapVertexDeclaration = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPositionNormalTexture.VertexElements);
             VertexPositionNormalTexture[] terrainVertices = CreateTerrainVertices();
             int[] terrainIndices = CreateTerrainIndices();
             terrainVertices = GenerateNormalsForTriangleStrip(terrainVertices, terrainIndices);
+                        
+            // Load the texture file
+            heightMapTexture = h_game.Content.Load<Texture2D>("grass");
 
             // Initialize the vertex and index buffers
             CreateBuffers(terrainVertices, terrainIndices);
-            
         }
         #endregion
 
@@ -121,10 +140,10 @@ namespace hungrybee
         }
         #endregion
 
-        #region LoadHeightData()
-        /// LoadHeightData - Load in the textures and initialize the heightmap
+        #region LoadHeightDataFromFile()
+        /// LoadHeightDataFromFile - Load in the textures and initialize the heightmap from a texture file
         /// ***********************************************************************
-        private static float[,] LoadHeightData(Texture2D heightMap)
+        private float[,] LoadHeightDataFromFile(Texture2D heightMap)
         {
             float minimumHeight = 255;
             float maximumHeight = 0;
@@ -144,9 +163,39 @@ namespace hungrybee
                     if (heightData[x, y] > maximumHeight) maximumHeight = heightData[x, y];
                 }
 
+            float y_start = minDim.Y;
+            float y_spacing = (maxDim.Y - minDim.Y);
             for (int x = 0; x < width; x++)
                 for (int y = 0; y < height; y++)
-                    heightData[x, y] = (heightData[x, y] - minimumHeight) / (maximumHeight - minimumHeight) * 30.0f;
+                    heightData[x, y] = ((heightData[x, y] - minimumHeight) / (maximumHeight - minimumHeight)) *y_spacing + y_start;
+
+            return heightData;
+        }
+        #endregion
+
+        #region LoadHeightDataFromFunction()
+        /// LoadHeightDataFromFunction - Load in the textures and initialize the heightmap from a predefined function
+        /// ***********************************************************************
+        private float[,] LoadHeightDataFromFunction()
+        {
+
+            Texture2D heightMap = h_game.Content.Load<Texture2D>(heightMapFile);
+
+            int width = 128;
+            int height = 128;
+
+            float[,] heightData = new float[width, height];
+
+            float y_start = minDim.Y;
+            float y_spacing = (maxDim.Y - minDim.Y);
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    float funcVal = (float)Math.Sin(((double)y / (double)width) * Math.PI);
+                    heightData[x, y] = funcVal * y_spacing + y_start;
+                }
+            }
 
             return heightData;
         }
@@ -157,17 +206,21 @@ namespace hungrybee
         /// ***********************************************************************
         private VertexPositionNormalTexture[] CreateTerrainVertices()
         {
-            int width = heightMapData.GetLength(0);
-            int height = heightMapData.GetLength(1);
-            VertexPositionNormalTexture[] terrainVertices = new VertexPositionNormalTexture[width * height];
+            int dataWidth = heightMapData.GetLength(0);
+            int dataHeight = heightMapData.GetLength(1);
+            VertexPositionNormalTexture[] terrainVertices = new VertexPositionNormalTexture[dataWidth * dataHeight];
 
             int i = 0;
-            for (int z = 0; z < height; z++)
+            float z_start = maxDim.Z;
+            float x_start = minDim.X;
+            float z_spacing = (minDim.Z - maxDim.Z) / dataHeight;
+            float x_spacing = (maxDim.X - minDim.X) / dataHeight;
+            for (int z = 0; z < dataHeight; z++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < dataWidth; x++)
                 {
-                    Vector3 position = new Vector3(x, heightMapData[x, z], -z);
-                    Vector3 normal = new Vector3(0, 0, 1);
+                    Vector3 position = new Vector3(x_start + x_spacing * x, heightMapData[x, z], z_start + z_spacing * z);
+                    Vector3 normal = new Vector3(0, 0, 1); // To be found later
                     Vector2 texCoord = new Vector2((float)x / 30.0f, (float)z / 30.0f);
 
                     terrainVertices[i++] = new VertexPositionNormalTexture(position, normal, texCoord);

@@ -1,4 +1,3 @@
 ﻿2. Check order of scale and translation
-3. Add heightmap for each level --> Make a nice hightmap and debug weird shading (maybe need to make a model instance)
 4. Implement collision routine: bounding spheres are easiest and quickest (collision with heightmap shouldn't be too stressful
 5. Implement player controls: using quaternions to give half distances

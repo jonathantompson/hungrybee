@@ -1,2 +1,4 @@
-heightMap,heightmap,Grass
-player,Ship
+//,heightMap, heightMapFile, heightMapTextureFile, [xmin,ymin,zmin], [xmax,ymax,zmax]
+heightMap,false,heightmap,Grass,-8,-5,-5,8,-2,5
+//,player, modelfile, scale
+player,Ship,2.5

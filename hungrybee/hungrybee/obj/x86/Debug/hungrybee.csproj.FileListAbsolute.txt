@@ -10,14 +10,11 @@ C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hu
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Arial.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Ship.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\ShipDiffuse_0.xnb
-C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\skyPlane.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\CartoonEffect.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\PostprocessEffect.xnb
-C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\skyPlaneTexture.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\SketchTexture.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Arial.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Ship.xnb
-C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\small_bee.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\ShipDiffuse_0.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\hungrybee.exe
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\hungrybee.pdb
@@ -25,8 +22,11 @@ C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\ob
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\obj\x86\Debug\hungrybee.exe
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\obj\x86\Debug\hungrybee.pdb
-C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\little_bee2.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\clouds_resize.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\clouds.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\heightmap.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Grass.xnb
+C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\clouds_resize.xnb
+C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\clouds.xnb
+C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\heightmap.xnb
+C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Grass.xnb
