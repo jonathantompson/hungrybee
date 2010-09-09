@@ -59,7 +59,8 @@ namespace hungrybee
             this.linearVel = state.linearVel;
             this.spin = state.spin;
             // Get force and torque at time & deltaTime - TO DO LATER
-            this.force = new Vector3(0,-9.81f,0);
+            //this.force = new Vector3(0,-9.81f,0);
+            this.force = new Vector3(0,0,0);
             this.torque = Vector3.Zero;
         }
         #endregion
@@ -72,7 +73,8 @@ namespace hungrybee
             this.linearVel = state.linearVel;
             this.spin = state.spin;
             // Get force and torque at time & deltaTime - TO DO LATER
-            this.force = new Vector3(0,-9.81f, 0);
+            //this.force = new Vector3(0,-9.81f, 0);
+            this.force = new Vector3(0, 0, 0);
             this.torque = Vector3.Zero;
         }
         #endregion
