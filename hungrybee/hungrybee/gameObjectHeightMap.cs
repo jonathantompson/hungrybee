@@ -27,7 +27,6 @@ namespace hungrybee
         #region Local Variables
         /// Local Variables
         /// ***********************************************************************    
-        private game h_game;
 
         Texture2D heightMapTexture;
         string heightMapFile;
@@ -49,7 +48,6 @@ namespace hungrybee
         public gameObjectHeightMap(game game, bool fromFile, string file, string textureFile, Vector3 min, Vector3 max)
             : base(game, null)
         {
-            h_game = game;
             heightMapFromFile = fromFile;
             heightMapFile = file;
             heightMapTextureFile = textureFile;
@@ -66,7 +64,7 @@ namespace hungrybee
             if (heightMapFromFile)
             {
                 // Load in the texture data from file and process the raw data
-                Texture2D heightMap = h_game.Content.Load<Texture2D>(heightMapFile);
+                Texture2D heightMap = base.h_game.Content.Load<Texture2D>(heightMapFile);
                 // Parse the heightMap data, creating the verticies
                 heightMapData = LoadHeightDataFromFile(heightMap);
             }
@@ -77,33 +75,43 @@ namespace hungrybee
             }
 
             // Create a basic effect
-            heightMapEffect = new BasicEffect(h_game.GetGraphicsDevice(), null);
+            heightMapEffect = new BasicEffect(base.h_game.GetGraphicsDevice(), null);
 
             // Parse the heightMap data, creating the indicies and Normals
-            heightMapVertexDeclaration = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPositionNormalTexture.VertexElements);
+            heightMapVertexDeclaration = new VertexDeclaration(base.h_game.GetGraphicsDevice(), VertexPositionNormalTexture.VertexElements);
             VertexPositionNormalTexture[] terrainVertices = CreateTerrainVertices();
             int[] terrainIndices = CreateTerrainIndices();
             terrainVertices = GenerateNormalsForTriangleStrip(terrainVertices, terrainIndices);
                         
             // Load the texture file
-            heightMapTexture = h_game.Content.Load<Texture2D>("grass");
+            heightMapTexture = base.h_game.Content.Load<Texture2D>("grass");
 
             // Initialize the vertex and index buffers
             CreateBuffers(terrainVertices, terrainIndices);
+
+            // Create the AABB and mark object as using AABB for collision detection
+            base.boundingObjType = boundingObjType.AABB;
+            BoundingBox bBox = XNAUtils.CreateBoxFromVerticies(terrainVertices);
+            base.boundingObj = (Object)bBox;
+
+            // Calculate the Itensor --> Not really required since floor doesn't move, but anyway
+            base.state.Itensor = XNAUtils.CalculateItensorFromBoundingBox(bBox, base.state.mass);
+            base.state.InvItensor = Matrix.Invert(base.state.Itensor);
+
         }
         #endregion
 
         #region LoadContent()
         /// LoadContent - Load in the textures and initialize the heightmap
         /// ***********************************************************************
-        public override void DrawUsingCurrentEffect(GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
+        public override void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {
             //draw terrain
             int width = heightMapData.GetLength(0);
             int height = heightMapData.GetLength(1);
             heightMapEffect.World = Matrix.Identity;
-            heightMapEffect.View = ((camera)h_game.GetCamera()).ViewMatrix;
-            heightMapEffect.Projection = ((camera)h_game.GetCamera()).ProjectionMatrix;
+            heightMapEffect.View = ((camera)base.h_game.GetCamera()).ViewMatrix;
+            heightMapEffect.Projection = ((camera)base.h_game.GetCamera()).ProjectionMatrix;
             heightMapEffect.Texture = heightMapTexture;
             heightMapEffect.TextureEnabled = true;
 
@@ -179,7 +187,7 @@ namespace hungrybee
         private float[,] LoadHeightDataFromFunction()
         {
 
-            Texture2D heightMap = h_game.Content.Load<Texture2D>(heightMapFile);
+            Texture2D heightMap = base.h_game.Content.Load<Texture2D>(heightMapFile);
 
             int width = 128;
             int height = 128;
@@ -308,10 +316,10 @@ namespace hungrybee
         /// ***********************************************************************
         private void CreateBuffers(VertexPositionNormalTexture[] vertices, int[] indices)
         {
-            heightMapVertexBuffer = new VertexBuffer(h_game.GetGraphicsDevice(), VertexPositionNormalTexture.SizeInBytes * vertices.Length, BufferUsage.WriteOnly);
+            heightMapVertexBuffer = new VertexBuffer(base.h_game.GetGraphicsDevice(), VertexPositionNormalTexture.SizeInBytes * vertices.Length, BufferUsage.WriteOnly);
             heightMapVertexBuffer.SetData(vertices);
 
-            heightMapIndexBuffer = new IndexBuffer(h_game.GetGraphicsDevice(), typeof(int), indices.Length, BufferUsage.WriteOnly);
+            heightMapIndexBuffer = new IndexBuffer(base.h_game.GetGraphicsDevice(), typeof(int), indices.Length, BufferUsage.WriteOnly);
             heightMapIndexBuffer.SetData(indices);
         }
         #endregion

@@ -26,16 +26,22 @@ namespace hungrybee
     {
         #region Local Variables
 
-        game h_game;
+        public game h_game;
         public Model model;
         string modelFile;
         Matrix[] modelTransforms;
         float modelScaleToNormalizeSize;
 
+        public boundingObjType boundingObjType;
+        public Object boundingObj;
+
         public rboState state;
         public rboState prevState;
+        public rboState drawState;
         public float maxVel;
         public bool movable; // Does the object react to RK4 integrator and collision response
+
+        public List<force> forceList;
 
         #endregion
 
@@ -46,11 +52,15 @@ namespace hungrybee
         {
             state = new rboState();
             prevState = new rboState();
+            drawState = new rboState();
             maxVel = float.PositiveInfinity;
             movable = false;
             h_game = game;
             modelFile = modelfile;
             modelScaleToNormalizeSize = 1.0f;
+            forceList = new List<force>(game.GetGameSettings().forceListCapacity);
+            boundingObjType = boundingObjType.UNDEFINED;
+
         }
         #endregion
 
@@ -69,23 +79,29 @@ namespace hungrybee
         public virtual void LoadContent()
         {
             // Load the model from file
+            
             model = XNAUtils.LoadModelWithBoundingSphere(ref modelTransforms, modelFile, h_game.Content);
 
             // ScaleModel(model); // ScaleModel() function no longer in use!  Now scaling transform instead.
-            modelTransforms = XNAUtils.AutoScaleModelTransform(ref model, 1.0f, ref modelScaleToNormalizeSize);
+            modelTransforms = XNAUtils.AutoScaleModelTransform(ref model, 1.0f, ref modelScaleToNormalizeSize); 
+            // NOTE: bounding sphere wont change, only obj->world transform
+
+            // Mark this object as using a bounding sphere for collision detection and store the sphere
+            BoundingSphere bSphere = (BoundingSphere)model.Tag;
+            boundingObjType = boundingObjType.SPHERE;
+            boundingObj = (Object)bSphere;
 
             // Calculate moment of Inertia from bounding sphere:
-            BoundingSphere bSphere = (BoundingSphere)model.Tag;
             state.Itensor = XNAUtils.CalculateItensorFromBoundingSphere(bSphere, state.mass);
             state.InvItensor = Matrix.Invert(state.Itensor);
-            
+
         }
         #endregion
 
         #region DrawUsingCurrentEffect()
         /// DrawUsingCurrentEffect - Assuemes higher level function has started the correct effect draw sequence
         /// ***********************************************************************
-        public virtual void DrawUsingCurrentEffect(GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
+        public virtual void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {
             // Set suitable renderstates for drawing a 3D model.
             RenderState renderState = h_game.GetGraphicsDevice().RenderState;
@@ -94,10 +110,17 @@ namespace hungrybee
             renderState.AlphaTestEnable = false;
             renderState.DepthBufferEnable = true;
 
-            // Look up the bone transform matrices.
-            Matrix[] transforms = new Matrix[model.Bones.Count];
+            // Calculate the object's transform from state variables --> Need to do lerp and slerp between states
+            float percentInterp = gameTime.ElapsedGameTime.Seconds / (state.time - prevState.time);
+            drawState.scale = Interp(prevState.scale, state.scale, percentInterp);
+            drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
+            drawState.pos = Interp(prevState.pos, state.pos, percentInterp);
+            model.Root.Transform = CreateScale(drawState.scale) *
+                                   Matrix.CreateFromQuaternion(state.orient) *
+                                   Matrix.CreateTranslation(state.pos);
 
-            model.CopyAbsoluteBoneTransformsTo(transforms);
+            // Look up the bone transform matrices.
+            model.CopyAbsoluteBoneTransformsTo(modelTransforms);
 
             // Draw the model.
             foreach (ModelMesh mesh in model.Meshes)
@@ -107,7 +130,7 @@ namespace hungrybee
                     // Specify which effect technique to use.
                     effect.CurrentTechnique = effect.Techniques[effectTechniqueName];
 
-                    Matrix localWorld = transforms[mesh.ParentBone.Index] * model.Root.Transform;
+                    Matrix localWorld = modelTransforms[mesh.ParentBone.Index] * model.Root.Transform;
 
                     effect.Parameters["World"].SetValue(localWorld);
                     effect.Parameters["View"].SetValue(view);
@@ -237,6 +260,35 @@ namespace hungrybee
         public Matrix CreateScale(Vector3 Scale)
         {
             return Matrix.CreateScale(Vector3.Multiply(Scale, modelScaleToNormalizeSize));
+        }
+        #endregion
+
+        #region GetForceTorque()
+        /// GetForceTorque - Get the force and torque for each object to be used in the integrator
+        /// ***********************************************************************
+        public virtual void GetForceTorque(ref Vector3 force, ref Vector3 torque, ref rboState rboState, float time)
+        {
+            // Nothing to do by default, just zero out vectors.
+            force.X = 0.0f; force.Y = 0.0f; force.Z = 0.0f;
+            torque.X = 0.0f; torque.Y = 0.0f; torque.Z = 0.0f;
+
+            // Step through the forceList adding each force and removeing ones that have expired
+            // List<>.Enumerator is a read-only interface... Step through the list manually
+            for (int curForce = 0; curForce < forceList.Count; curForce++)
+            {
+                force += forceList[curForce].GetForce(ref rboState, time);
+            }
+        }
+        #endregion
+
+        #region Interpolation Routines
+        public static float Interp(float start, float end, float percentInterp)
+        {
+            return (end - start) * percentInterp + start;
+        }
+        public static Vector3 Interp(Vector3 start, Vector3 end, float percentInterp)
+        {
+            return (end - start) * percentInterp + start;
         }
         #endregion
     }

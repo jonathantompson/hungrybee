@@ -184,5 +184,53 @@ namespace hungrybee
 
             return Itensor;
         }
+
+        // Jonno Tompson Code
+        // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
+        public static Matrix CalculateItensorFromBoundingBox(BoundingBox bBox, float mass)
+        {
+            Matrix Itensor = Matrix.Identity;
+            float width     = bBox.Max.X - bBox.Min.X;
+            float height    = bBox.Max.Y - bBox.Min.Y;
+            float depth     = bBox.Max.Z - bBox.Min.Z;
+            Itensor.M11 = (1.0f / 12.0f) * mass * ((height * height) + (depth * depth));
+            Itensor.M22 = (1.0f / 12.0f) * mass * ((width * width) + (depth * depth));
+            Itensor.M22 = (1.0f / 12.0f) * mass * ((width * width) + (height * height));
+
+            return Itensor;
+        }
+
+        // Jonno Tompson Code
+        // Calculate Min and Max verticies and return a BoundingBox
+        public static BoundingBox CreateBoxFromVerticies(VertexPositionNormalTexture[] verticies)
+        {
+            Vector3 min = new Vector3();
+            Vector3 max = new Vector3();
+
+            // Initialize the min and max verticies to the first point
+            min.X = verticies[0].Position.X; min.Y = verticies[0].Position.Y; min.Z = verticies[0].Position.Z;
+            max.X = verticies[0].Position.X; max.Y = verticies[0].Position.Y; max.Z = verticies[0].Position.Z;
+
+            // Now try and find the min and max verticies
+            for (int curVertex = 0; curVertex < verticies.Length; curVertex++)
+            {
+                if (min.X > verticies[curVertex].Position.X)
+                    min.X = verticies[curVertex].Position.X;
+                if (min.Y > verticies[curVertex].Position.Y)
+                    min.Y = verticies[curVertex].Position.Y;
+                if (min.Z > verticies[curVertex].Position.Z)
+                    min.Z = verticies[curVertex].Position.Z;
+
+                if (max.X < verticies[curVertex].Position.X)
+                    max.X = verticies[curVertex].Position.X;
+                if (max.Y < verticies[curVertex].Position.Y)
+                    max.Y = verticies[curVertex].Position.Y;
+                if (max.Z < verticies[curVertex].Position.Z)
+                    max.Z = verticies[curVertex].Position.Z;
+            }
+
+            BoundingBox retVal = new BoundingBox(min, max);
+            return retVal;
+        }
     }
 }

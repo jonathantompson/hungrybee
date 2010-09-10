@@ -153,7 +153,7 @@ namespace hungrybee
                 h_game.GetGraphicsDevice().Clear(Color.Black);
 
                 // Draw the models
-                h_game.GetGameObjectManager().DrawModels(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
+                h_game.GetGameObjectManager().DrawModels(gameTime, h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
             }
 
             // If we are doing edge detection and/or pencil sketch processing, we
@@ -178,7 +178,7 @@ namespace hungrybee
             h_game.GetSkyPlane().Draw(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix);
 
             // Draw the models
-            h_game.GetGameObjectManager().DrawModels(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);
+            h_game.GetGameObjectManager().DrawModels(gameTime, h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);
 
             // Run the postprocessing filter over the scene that we just rendered.
             if (h_game.GetGameSettings().RenderSettings.EnableEdgeDetect || h_game.GetGameSettings().RenderSettings.EnableSketch)

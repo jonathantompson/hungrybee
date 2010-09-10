@@ -32,6 +32,7 @@ namespace hungrybee
         public Quaternion orient;
         public Vector3 angularMom;
         public Vector3 scale; // Scale in X, Y and Z
+        public float time;
 
         // Derived RBO quantities
         public Vector3 linearVel;

@@ -40,6 +40,8 @@ namespace hungrybee
         public float    cameraRunningMult;
         public float    cameraRotationSpeed;
         public float    EPSILON;
+        public int      forceListCapacity;
+        public float    physicsMinVel;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -75,6 +77,8 @@ namespace hungrybee
             cameraRunningMult = 4.0f;
             cameraRotationSpeed = 0.002f;
             EPSILON = 0.00000001f;
+            forceListCapacity = 4;
+            physicsMinVel = 0.0001f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -175,6 +179,12 @@ namespace hungrybee
                         case "EPSILON":
                             this.EPSILON = float.Parse(curToken[1]);
                             break;
+                        case "forceListCapacity":
+                            this.forceListCapacity = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "physicsMinVel":
+                            this.physicsMinVel = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -216,6 +226,8 @@ namespace hungrybee
             writer.WriteNextToken("cameraRunningMult", this.cameraRunningMult);
             writer.WriteNextToken("cameraRotationSpeed", this.cameraRotationSpeed);
             writer.WriteNextToken("EPSILON", this.EPSILON);
+            writer.WriteNextToken("forceListCapacity", this.forceListCapacity);
+            writer.WriteNextToken("physicsMinVel", this.physicsMinVel);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

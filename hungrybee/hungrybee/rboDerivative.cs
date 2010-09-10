@@ -48,37 +48,36 @@ namespace hungrybee
         #region Evaluate() - Evaluate Piecewise derivative
         /// Evaluate() - Evaluate derivative values (1 Euler step) at t+dt
         /// ***********************************************************************
-        public void Evaluate(rboState state, float time, float deltaTime, rboDerivative derivative)
+        public void Evaluate(rboState state, rboState initialState, float time, float deltaTime, rboDerivative derivative, gameObject rboObject)
         {
-            state.pos += derivative.linearVel * deltaTime;
-            state.linearMom += derivative.force * deltaTime;
-            state.orient += derivative.spin * deltaTime;
-            state.angularMom += derivative.torque * deltaTime;
+            state.pos           = initialState.pos          + derivative.linearVel * deltaTime;
+            state.linearMom     = initialState.linearMom    + derivative.force * deltaTime;
+            state.orient        = initialState.orient       + derivative.spin * deltaTime;
+            state.angularMom    = initialState.angularMom   + derivative.torque * deltaTime;
             state.RecalculateDerivedQuantities();
 
             this.linearVel = state.linearVel;
+            //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.GetGameSettings().physicsMinVel, rboObject.maxVel);
+
             this.spin = state.spin;
-            // Get force and torque at time & deltaTime - TO DO LATER
-            //this.force = new Vector3(0,-9.81f,0);
-            this.force = new Vector3(0,0,0);
-            this.torque = Vector3.Zero;
+            // Get force and torque from rboObject at time & deltaTime
+            rboObject.GetForceTorque(ref this.force, ref this.torque, ref state, time);
+
         }
         #endregion
 
         #region Evaluate() - Evaluate single derivative
         /// Evaluate() - Evaluate derivative values (1 Euler step) at t+dt
         /// ***********************************************************************
-        public void Evaluate(rboState state, float time)
+        public void Evaluate(rboState state, float time, gameObject rboObject)
         {
             this.linearVel = state.linearVel;
+            //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.GetGameSettings().physicsMinVel, rboObject.maxVel);
+
             this.spin = state.spin;
-            // Get force and torque at time & deltaTime - TO DO LATER
-            //this.force = new Vector3(0,-9.81f, 0);
-            this.force = new Vector3(0, 0, 0);
-            this.torque = Vector3.Zero;
+            // Get force and torque from rboObject at time & deltaTime
+            rboObject.GetForceTorque(ref this.force, ref this.torque, ref state, time);
         }
         #endregion
     }
-
-
 }

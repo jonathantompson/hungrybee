@@ -27,25 +27,35 @@ namespace hungrybee
     {
         #region Local Variables
 
-        game h_game;
-        float playerAcceleration;
-        float playerDecceleration;
-        float playerHealth;
+        public float acceleration;
+        public float stoppingTime;
+        public float playerHealth;
+
+        public force forceSlowDown;
+        public force forcePlayerInput;
 
         #endregion
 
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, float _scale, float _playerAcceleration, float _playerDecelleration)
+        public gameObjectPlayer(game game, string modelfile, float _scale, float _acceleration, float _stoppingTime, float _maxVel)
             : base(game, modelfile)
         {
-            h_game = game;
             state.scale = new Vector3(_scale, _scale, _scale);
-            playerAcceleration = _playerAcceleration;
-            playerDecceleration = _playerDecelleration;
+            acceleration = _acceleration;
+            stoppingTime = _stoppingTime;
             playerHealth = 100.0f;
             movable = true;
+            base.maxVel = _maxVel;
+
+            // Setup the force structures to describe movement
+            forceSlowDown = new forceSlowDown();
+            forcePlayerInput = new forcePlayerInput(Vector3.Zero);
+
+            // Add the force structures to the forceList for enumeration at runtime
+            base.forceList.Add(forceSlowDown);
+            base.forceList.Add(forcePlayerInput);
         }
         #endregion
 
@@ -58,38 +68,57 @@ namespace hungrybee
             base.Update(gameTime);
 
             // Get player input
-            GetPlayerInput();
+            GetPlayerInput(gameTime);
         }
         #endregion
 
         #region GetPlayerInput()
         /// GetPlayerInput() - Move the player and set the desired orientation
         /// ***********************************************************************
-        public void GetPlayerInput()
+        public void GetPlayerInput(GameTime gameTime)
         {
             // Zero out the acceleration
+            bool keyPressed = false;
             Vector3 acc;
             acc.X = 0.0f; acc.Y = 0.0f; acc.Z = 0.0f;
 
             KeyboardState keyState = Keyboard.GetState();
-            if (keyState.IsKeyDown(Keys.Up))
-                acc.Y += playerAcceleration;
+            if (keyState.IsKeyDown(Keys.Up) && !keyState.IsKeyDown(Keys.Down)) // Ignore case when both keys are pressed
+            {
+                acc.Y += acceleration;
+                keyPressed = true;
+            }
 
-            if (keyState.IsKeyDown(Keys.Down))
-                acc.Y -= playerAcceleration;
+            if (keyState.IsKeyDown(Keys.Down) && !keyState.IsKeyDown(Keys.Up)) // Ignore case when both keys are pressed
+            {
+                acc.Y -= acceleration;
+                keyPressed = true;
+            }
 
-            if (keyState.IsKeyDown(Keys.Left))
-                acc.X -= playerAcceleration;
+            if (keyState.IsKeyDown(Keys.Left) && !keyState.IsKeyDown(Keys.Right)) // Ignore case when both keys are pressed
+            {
+                acc.X -= acceleration;
+                keyPressed = true;
+            }
 
-            if (keyState.IsKeyDown(Keys.Right))
-                acc.X += playerAcceleration;
+            if (keyState.IsKeyDown(Keys.Right) && !keyState.IsKeyDown(Keys.Left)) // Ignore case when both keys are pressed
+            {
+                acc.X += acceleration;
+                keyPressed = true;
+            }
 
-            // If there's no player input, slow the player down to a stop
-            if (acc.X < h_game.GetGameSettings().EPSILON && acc.Y < h_game.GetGameSettings().EPSILON)
-                acc = state.linearVel * (-1.0f) * playerDecceleration;
-
-            // Calculate force
-
+            // If there's no player input, slow the player down to a stop in the desired amount of time
+            if (!keyPressed)
+            {
+                ((forceSlowDown)forceSlowDown).SetStopTime((float)gameTime.TotalGameTime.TotalSeconds + stoppingTime);
+                ((forcePlayerInput)forcePlayerInput).SetAcceleration(Vector3.Zero);
+            }
+            // Otherwise add the acceleration and remove the decelleration
+            else
+            {
+                ((forceSlowDown)forceSlowDown).SetStopTime(0.0f);
+                ((forcePlayerInput)forcePlayerInput).SetAcceleration(acc);
+            }
         }
         #endregion
     }

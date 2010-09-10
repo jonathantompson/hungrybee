@@ -1,3 +1,4 @@
-﻿1. Put together RK4 integrator for gameObjects --> Debug.  Constant acceleration, velocity is fine, but distance is all screwed up (should be ideal if constant)
-2. Implement player controls: using quaternions to give half distances and RK4 integrator
-3. Implement collision routine: bounding spheres are easiest and quickest (collision with heightmap shouldn't be too stressful
+﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
+2. Implement collision routine: bounding spheres are easiest and quickest (collision with heightmap shouldn't be too stressful
+3. Implement player controls: using quaternions to give half distances and RK4 integrator
+4. Load the fucking models in...  Having lots of difficulty

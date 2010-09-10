@@ -16,6 +16,10 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace hungrybee
 {
+    #region enum types
+    public enum boundingObjType { UNDEFINED, SPHERE, AABB };
+    #endregion
+
     /// <summary>
     /// ***********************************************************************
     /// **                          physicsManager                           **
@@ -23,6 +27,7 @@ namespace hungrybee
     /// ** sphere collision detection                                        **
     /// ***********************************************************************
     /// </summary>
+    /// 
     public class physicsManager : GameComponent
     {
         #region Local Variables
@@ -30,8 +35,8 @@ namespace hungrybee
         // Local variables
         private game h_game;
         rboDerivative D1, D2, D3, D4;
-
         #endregion
+
 
         #region Constructor - renderManager(game game)
         /// Initializes to default values
@@ -67,6 +72,7 @@ namespace hungrybee
             // Coarse Collision detection
 
             // Fine Collision detection
+            // This might be useful: http://nehe.gamedev.net/data/lessons/lesson.asp?lesson=30
 
             // Resolve Collisions
 
@@ -91,32 +97,32 @@ namespace hungrybee
 
                 // Copy: prevState = state
                 rboState.CopyStateQuantitiesAtoB(curObject.state, curObject.prevState);
+                curObject.prevState.time = time;
 
                 if (curObject.movable)
                 {
                     // Calculate piecewise derivatives
-                    D1.Evaluate(curObject.state, time);
-                    D2.Evaluate(curObject.state, time, 0.5f * deltaTime, D1);
-                    D3.Evaluate(curObject.state, time, 0.5f * deltaTime, D2);
-                    D4.Evaluate(curObject.state, time, 1.0f * deltaTime, D3);
+                    float halfDeltaTime = 0.5f * deltaTime;
+                    D1.Evaluate(curObject.state, time, curObject);
+                    D2.Evaluate(curObject.state, curObject.prevState, time + halfDeltaTime, halfDeltaTime, D1, curObject);
+                    D3.Evaluate(curObject.state, curObject.prevState, time + halfDeltaTime, halfDeltaTime, D2, curObject);
+                    D4.Evaluate(curObject.state, curObject.prevState, time + deltaTime, deltaTime, D3, curObject);
 
                     // Calculate rbo State quantities from forth order interpolation of piecewise derivatives
-                    curObject.state.pos         = curObject.prevState.pos + 
-                                                  (1.0f / 6.0f) * deltaTime * (D1.linearVel + 2.0f * (D2.linearVel + D3.linearVel) + D4.linearVel);
-                    curObject.state.linearMom   = curObject.prevState.linearMom + 
-                                                  (1.0f / 6.0f) * deltaTime * (D1.force + 2.0f * (D2.force + D3.force) + D4.force);
-                    curObject.state.orient      = curObject.prevState.orient + 
-                                                  Quaternion.Multiply(D1.spin + Quaternion.Multiply((D2.spin + D3.spin), 2.0f) + D4.spin, (1.0f / 6.0f) * deltaTime);
-                    curObject.state.angularMom  = curObject.prevState.angularMom + 
-                                                  (1.0f / 6.0f) * deltaTime * (D1.torque + 2.0f * (D2.torque + D3.torque) + D4.torque);
+                    float sixthDeltaTime = deltaTime / 6.0f;
+                    curObject.state.pos         = curObject.prevState.pos +
+                                                  sixthDeltaTime * (D1.linearVel + 2.0f * (D2.linearVel + D3.linearVel) + D4.linearVel);
+                    curObject.state.linearMom   = curObject.prevState.linearMom +
+                                                  sixthDeltaTime * (D1.force + 2.0f * (D2.force + D3.force) + D4.force);
+                    curObject.state.orient      = curObject.prevState.orient +
+                                                  Quaternion.Multiply(D1.spin + Quaternion.Multiply((D2.spin + D3.spin), 2.0f) + D4.spin, sixthDeltaTime);
+                    curObject.state.angularMom  = curObject.prevState.angularMom +
+                                                  sixthDeltaTime * (D1.torque + 2.0f * (D2.torque + D3.torque) + D4.torque);
 
                     // Calculate rbo Derived quantities
                     curObject.state.RecalculateDerivedQuantities();
-
-                    // Calculate the object's transform from state variables
-                    curObject.model.Root.Transform = curObject.CreateScale(curObject.state.scale) *
-                                                     Matrix.CreateFromQuaternion(curObject.state.orient) *
-                                                     Matrix.CreateTranslation(curObject.state.pos);
+                    curObject.state.time = time + deltaTime;
+                    // physicsManager.ClipVelocity(ref curObject.state.linearVel, h_game.GetGameSettings().physicsMinVel, curObject.maxVel);
                 }
             }
             base.Update(gameTime);
@@ -126,6 +132,20 @@ namespace hungrybee
         #endregion
 
 
+        #region ClipVelocity()
+        /// ClipVelocity() - Clip the velocity to 0 or maxVel
+        /// ***********************************************************************
+        public static void ClipVelocity(ref Vector3 velocity, float minVel, float maxVel)
+        {
+            // Clip velocity at max and nin value
+            float magVel = (float)Math.Sqrt(Vector3.Dot(velocity, velocity));
+            if (magVel > maxVel)
+                velocity = Vector3.Normalize(velocity) * maxVel;
+            else if (magVel < minVel)
+                velocity = Vector3.Zero;
+            // else velocity is ok, so do nothing
+        }
+        #endregion
     }
 
 }

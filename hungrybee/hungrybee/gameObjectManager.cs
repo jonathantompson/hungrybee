@@ -113,13 +113,14 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 5 )
+                        if (numPlayers == 0 && curToken.Count == 6 )
                         {
                             curObject = new gameObjectPlayer(h_game, 
                                                              curToken[1],
                                                              float.Parse(curToken[2]),
                                                              float.Parse(curToken[3]),
-                                                             float.Parse(curToken[4]));
+                                                             float.Parse(curToken[4]),
+                                                             float.Parse(curToken[5]));
                             numPlayers += 1;
                         }
                         else
@@ -168,13 +169,13 @@ namespace hungrybee
         #region DrawModels()
         /// DrawModels - For each drawableGameObject draw the models
         /// ***********************************************************************
-        public void DrawModels(GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
+        public void DrawModels(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {
             // Just enumerate through each element in the list and draw them
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
             {
-                ListEnum.Current.DrawUsingCurrentEffect(device, view, projection, effectTechniqueName);
+                ListEnum.Current.DrawUsingCurrentEffect(gameTime, device, view, projection, effectTechniqueName);
             }
         }
         #endregion

@@ -86,10 +86,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="collisionUtils.cs" />
     <Compile Include="coordCross.cs" />
     <Compile Include="camera.cs" />
     <Compile Include="cameraInterface.cs" />
     <Compile Include="csvHandle.cs" />
+    <Compile Include="force.cs" />
     <Compile Include="gameObject.cs" />
     <Compile Include="gameObjectManager.cs" />
     <Compile Include="gameSettings.cs" />
