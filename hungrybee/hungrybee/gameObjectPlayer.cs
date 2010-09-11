@@ -46,7 +46,7 @@ namespace hungrybee
             acceleration = _acceleration;
             stoppingTime = _stoppingTime;
             playerHealth = 100.0f;
-            movable = true;
+            base.movable = true;
             base.maxVel = _maxVel;
 
             // Setup the force structures to describe movement

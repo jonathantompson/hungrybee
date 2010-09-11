@@ -42,6 +42,7 @@ namespace hungrybee
         public float    EPSILON;
         public int      forceListCapacity;
         public float    physicsMinVel;
+        public float    gravity;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -79,6 +80,7 @@ namespace hungrybee
             EPSILON = 0.00000001f;
             forceListCapacity = 4;
             physicsMinVel = 0.0001f;
+            gravity = 0.981f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -185,6 +187,9 @@ namespace hungrybee
                         case "physicsMinVel":
                             this.physicsMinVel = float.Parse(curToken[1]);
                             break;
+                        case "gravity":
+                            this.gravity = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -228,6 +233,7 @@ namespace hungrybee
             writer.WriteNextToken("EPSILON", this.EPSILON);
             writer.WriteNextToken("forceListCapacity", this.forceListCapacity);
             writer.WriteNextToken("physicsMinVel", this.physicsMinVel);
+            writer.WriteNextToken("gravity", this.gravity);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

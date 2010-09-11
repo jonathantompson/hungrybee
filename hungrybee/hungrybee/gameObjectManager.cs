@@ -30,7 +30,7 @@ namespace hungrybee
         game h_game;
         public List<gameObject> h_GameObjects;      // Handler to the list of game objects
 
-        int numPlayers, numHeightMaps;
+        int numPlayers, numHeightMaps, numEnemys;
 
         #endregion
 
@@ -41,8 +41,7 @@ namespace hungrybee
         {
             h_game = (game)game;
             h_GameObjects = new List<gameObject>();
-            numPlayers = 0;
-            numHeightMaps = 0;
+            numPlayers = 0; numHeightMaps = 0; numEnemys = 0;
         }
         #endregion
 
@@ -75,12 +74,22 @@ namespace hungrybee
         /// ***********************************************************************
         public void ChangeEffectUsedByModels(Effect replacementEffect)
         {
-            // enumerate through each element in the list and update them
-            // Just enumerate through each element in the list and draw them
+            // some help
+
+            // enumerate through each model element in the loaded content and change its effects
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
             {
-                ListEnum.Current.ChangeEffectUsedByModel(replacementEffect);
+                try
+                {
+                    ListEnum.Current.ChangeEffectUsedByModel(replacementEffect);
+                }
+                catch(Exception ex_in)
+                {
+                    // I expect to catch an exception here if we're tyring to change the model effects twice
+                    // This happens when two game objects share the same model content
+                    // This is a shitty solution --> But only performed once on startup
+                }
             }
         }
         #endregion
@@ -141,7 +150,23 @@ namespace hungrybee
                         else
                             throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}",levelNumber) + ".csv");
                         break;
+                    case "enemy":
+                        if (curToken.Count == 7)
+                        {
+                            curObject = new gameObjectEnemy(h_game,
+                                                            curToken[1],
+                                                            float.Parse(curToken[2]),
+                                                            float.Parse(curToken[3]),
+                                                            new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])));
+                            numEnemys += 1;
+                        }
+                        else
+                            throw new Exception("gameObjectManager::LoadContent(): Error reading enemy settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        break;
                     case "//": // Comment
+                        curObject = null;
+                        break;
+                    case "": // Empty line
                         curObject = null;
                         break;
 
@@ -185,6 +210,45 @@ namespace hungrybee
         /// ***********************************************************************
         public void UnloadContent()
         {
+        }
+        #endregion
+
+        #region SpanGameObjectPhysicsDebug()
+        /// SpanGameObjectPhysicsDebug - create and initialize a debug object
+        /// ***********************************************************************
+        public gameObject SpawnGameObjectPhysicsDebug(gameObject inputObject)
+        {
+            gameObject newObj = new gameObjectPhysicsDebug(h_game,
+                                                           inputObject.boundingObjType,
+                                                           inputObject.boundingObj,
+                                                           inputObject);
+            newObj.LoadContent();
+            return newObj;
+        }
+        #endregion
+
+        #region SpawnCollidables()
+        /// SpawnCollidables - create and initialize all debug objects
+        /// Will create multiple objects if called multiple times --> ONLY CALL ONCE
+        /// ***********************************************************************
+        public void SpawnCollidables()
+        {
+            // Just enumerate through each element in the list and spawn a debug object to a new list
+            // Cannot enumerate and add to the list at the same time (list must be constant when using enumerators)
+            List<gameObject> newGameObjects = new List<gameObject>();
+            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                if(ListEnum.Current.boundingObjType != boundingObjType.UNDEFINED)
+                    newGameObjects.Add(SpawnGameObjectPhysicsDebug(ListEnum.Current));
+            }
+
+            // Now merge the lists
+            ListEnum = newGameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                h_GameObjects.Add(ListEnum.Current);
+            }
         }
         #endregion
 

@@ -35,6 +35,8 @@ namespace hungrybee
         // Local variables
         private game h_game;
         rboDerivative D1, D2, D3, D4;
+        private static bool pauseGame = false;
+
         #endregion
 
 
@@ -67,12 +69,32 @@ namespace hungrybee
         public override void Update(GameTime gameTime)
         {
             // Take RK4 Step for each object in h_game.gameObjectManager
-            TakeRK4Step(gameTime, h_game.GetGameObjectManager().h_GameObjects);
+            if (!pauseGame) 
+                TakeRK4Step(gameTime, h_game.GetGameObjectManager().h_GameObjects);
 
             // Coarse Collision detection
 
             // Fine Collision detection
             // This might be useful: http://nehe.gamedev.net/data/lessons/lesson.asp?lesson=30
+            // Also useful: http://www.realtimerendering.com/intersections.html
+
+            // *******************************
+            // ********** TEST CODE **********
+            // *******************************
+            float Tcollision = 0.0f;
+            bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[0], 
+                                                       h_game.GetGameObjectManager().h_GameObjects[1],
+                                                       ref Tcollision);
+            if (!pauseGame && retVal) // if we haven't yet paused and there is a collision
+            {
+                pauseGame = true;
+                h_game.GetGameObjectManager().SpawnCollidables();
+            }
+
+            // *******************************
+            // ******** END TEST CODE ********
+            // *******************************
+
 
             // Resolve Collisions
 
@@ -96,7 +118,7 @@ namespace hungrybee
                 curObject = ListEnum.Current;
 
                 // Copy: prevState = state
-                rboState.CopyStateQuantitiesAtoB(curObject.state, curObject.prevState);
+                rboState.CopyDynamicQuantitiesAtoB(ref curObject.state, ref curObject.prevState);
                 curObject.prevState.time = time;
 
                 if (curObject.movable)

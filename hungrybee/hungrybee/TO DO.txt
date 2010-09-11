@@ -2,3 +2,8 @@
 2. Implement collision routine: bounding spheres are easiest and quickest (collision with heightmap shouldn't be too stressful
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
+5. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
+
+
+// Might help load the models: http://forums.xna.com/forums/p/37798/220378.aspx
+// I think textures are getting fucked up

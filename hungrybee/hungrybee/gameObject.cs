@@ -30,7 +30,7 @@ namespace hungrybee
         public Model model;
         string modelFile;
         Matrix[] modelTransforms;
-        float modelScaleToNormalizeSize;
+        public float modelScaleToNormalizeSize;
 
         public boundingObjType boundingObjType;
         public Object boundingObj;
@@ -95,6 +95,8 @@ namespace hungrybee
             state.Itensor = XNAUtils.CalculateItensorFromBoundingSphere(bSphere, state.mass);
             state.InvItensor = Matrix.Invert(state.Itensor);
 
+            // Make sure both starting states are equal
+            rboState.CopyAtoB(ref state, ref prevState);   
         }
         #endregion
 
@@ -116,8 +118,8 @@ namespace hungrybee
             drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
             drawState.pos = Interp(prevState.pos, state.pos, percentInterp);
             model.Root.Transform = CreateScale(drawState.scale) *
-                                   Matrix.CreateFromQuaternion(state.orient) *
-                                   Matrix.CreateTranslation(state.pos);
+                                   Matrix.CreateFromQuaternion(drawState.orient) *
+                                   Matrix.CreateTranslation(drawState.pos);
 
             // Look up the bone transform matrices.
             model.CopyAbsoluteBoneTransformsTo(modelTransforms);
@@ -130,7 +132,7 @@ namespace hungrybee
                     // Specify which effect technique to use.
                     effect.CurrentTechnique = effect.Techniques[effectTechniqueName];
 
-                    Matrix localWorld = modelTransforms[mesh.ParentBone.Index] * model.Root.Transform;
+                    Matrix localWorld = modelTransforms[mesh.ParentBone.Index];
 
                     effect.Parameters["World"].SetValue(localWorld);
                     effect.Parameters["View"].SetValue(view);

@@ -94,6 +94,8 @@
     <Compile Include="force.cs" />
     <Compile Include="gameObject.cs" />
     <Compile Include="gameObjectManager.cs" />
+    <Compile Include="gameObjectEnemy.cs" />
+    <Compile Include="gameObjectPhysicsDebug.cs" />
     <Compile Include="gameSettings.cs" />
     <Compile Include="gameObjectPlayer.cs" />
     <Compile Include="gameObjectHeightMap.cs" />

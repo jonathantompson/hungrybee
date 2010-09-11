@@ -1,4 +1,10 @@
+//, NOTE NO SPACES
+
+//,player, modelfile, scale, acceleration rate, desired stopping time, max velocity
+player,Ship,1.0,10.0,0.2,10.0
+
+//,enemy, modelfile, scale, max velocity, [Pos.x, Pos.y, Pos.z]
+enemy,Ship,1.0,10.0,0.0,2.0,0.0
+
 //,heightMap, heightMapFile, heightMapTextureFile, [xmin,ymin,zmin], [xmax,ymax,zmax]
 heightMap,false,heightmap,Grass,-8,-5,-5,8,-2,5
-//,player, modelfile, scale, acceleration rate, desired stopping time, max velocity
-player,Ship,100,10.0,0.2,10.0

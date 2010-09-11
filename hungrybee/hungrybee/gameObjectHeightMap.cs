@@ -56,7 +56,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region LoadContent
+        #region LoadContent()
         /// LoadContent - Load in the textures and initialize the heightmap
         /// ***********************************************************************
         public override void LoadContent()
@@ -98,10 +98,12 @@ namespace hungrybee
             base.state.Itensor = XNAUtils.CalculateItensorFromBoundingBox(bBox, base.state.mass);
             base.state.InvItensor = Matrix.Invert(base.state.Itensor);
 
+            // Make sure both starting states are equal
+            rboState.CopyAtoB(ref state, ref prevState);   
         }
         #endregion
 
-        #region LoadContent()
+        #region DrawUsingCurrentEffect()
         /// LoadContent - Load in the textures and initialize the heightmap
         /// ***********************************************************************
         public override void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
