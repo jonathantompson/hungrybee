@@ -28,10 +28,13 @@ namespace hungrybee
         static Vector3 objBCenter_t0 = new Vector3();
         static Vector3 objACenter_t1 = new Vector3();
         static Vector3 objBCenter_t1 = new Vector3();
+        static Vector3 objBMin_t0 = new Vector3();
+        static Vector3 objBMax_t0 = new Vector3();
+        static Vector3[] aabbverticies = new Vector3[8];
+        static BoundingBox minkowskiAABB = new BoundingBox();
+
         static float objARadius_t0 = 0.0f;
         static float objBRadius_t0 = 0.0f;
-
-        static float EPSILON = 0.0000000001f;
 
         #region testCollision()
         /// testCollision() - Just grab input objects and send them to their proper functions
@@ -44,6 +47,10 @@ namespace hungrybee
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on UNDEFINED object types (maybe forgot to initialize objects?)");
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
                 return collisionUtils.testCollisionSphereSphere(objA, objB, ref Tcollision);
+            else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
+                return collisionUtils.testCollisionSphereAABB(objA, objB, ref Tcollision);
+            else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
+                return collisionUtils.testCollisionSphereAABB(objB, objA, ref Tcollision);
             else
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on unrecognized object types");
         }
@@ -61,13 +68,13 @@ namespace hungrybee
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
             objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
-            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
-            objACenter_t0 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t0);
-            objBCenter_t0 = Vector3.Transform(((BoundingSphere)objB.boundingObj).Center, objBMat_t0);
-
             objAMat_t1 = objA.CreateScale(objA.state.scale) * Matrix.CreateFromQuaternion(objA.state.orient) * Matrix.CreateTranslation(objA.state.pos);
-            objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
+            objACenter_t0 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t0);
             objACenter_t1 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t1);
+            
+            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
+            objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
+            objBCenter_t0 = Vector3.Transform(((BoundingSphere)objB.boundingObj).Center, objBMat_t0);
             objBCenter_t1 = Vector3.Transform(((BoundingSphere)objB.boundingObj).Center, objBMat_t1);
 
             // Scale radius by the largest scale factor (may be non-uniform), then by gameObject normalization factor
@@ -142,5 +149,102 @@ namespace hungrybee
             }
         }
         #endregion
+
+        #region testCollisionSphereAABB()
+        /// testCollisionSphereSphere() - Test whether a swept sphere collides with a stationary AABB between prevState and state
+        /// A FEW ASSUMPTIONS:  1. Scale factor is constant between frames.
+        ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
+        /// Code derived from: Pages 228-229 Real Time Collision Detection, Christer Ericson
+        /// ***********************************************************************
+        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref float Tcollision) // objA is a sphere, objB is an AABB
+        {
+            // Bring the sphere into common world coordinates to find the center points at t0 and t1
+            // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
+            objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
+            objACenter_t0 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t0);
+            objARadius_t0 = ((BoundingSphere)objA.boundingObj).Radius *                                                     // Origional radius
+                            Math.Max(Math.Max(objA.prevState.scale.X, objA.prevState.scale.Y), objA.prevState.scale.Z) *    // Scale factor
+                            objA.modelScaleToNormalizeSize;                                                                 // Normalization factor
+            Vector3 objADisplacement = objA.state.pos - objA.prevState.pos;
+
+            // OBB is defined in object coords --> Bring into world coords by wrapping another AABB around the rotated box
+            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
+            UpdateBoundingBox((BoundingBox)objB.boundingObj, objBMat_t0, ref objBMin_t0, ref objBMax_t0);
+            Vector3 objBDisplacement = objB.state.pos - objB.prevState.pos;
+
+            // B may be moving, subtract dx_B from dx_A and perform algorithm w.r.t B.
+            Vector3 displacement = objADisplacement - objBDisplacement;
+
+            // Now perform the algorithm described on pages 228-229 (compare ray against minkowski sum of sphere + AABB)
+            // Computer the AABB resulting from expanding AABB by sphere radius r
+            minkowskiAABB.Min.X = objBMin_t0.X - objARadius_t0;
+            minkowskiAABB.Min.Y = objBMin_t0.Y - objARadius_t0;
+            minkowskiAABB.Min.Z = objBMin_t0.Z - objARadius_t0;
+            minkowskiAABB.Max.X = objBMax_t0.X + objARadius_t0;
+            minkowskiAABB.Max.Y = objBMax_t0.Y + objARadius_t0;
+            minkowskiAABB.Max.Z = objBMax_t0.Z + objARadius_t0;
+
+            // Intersect ray against expanded minkowskiAABB. Exit with no intersection if ray misses minkowskiAABB.
+            // Otherwise get intersection point p and time t as result
+            Vector3 point;
+            if (!testCollisionRayAABB(objACenter_t0, displacement, minkowskiAABB, ref Tcollision, ref point))
+                return false;
+
+            // TO DO *********************** (!q#$%@#%^!#$^@$%^!#$%^!#^ ADD THE REST
+
+            return false;
+        }
+        #endregion
+
+        #region UpdateBoundingBox()
+        /// UpdateBoundingBox() - Rotate the bounding box and fix the AABB coordinates
+        /// --> Simply wrap the AABB in another AABB --> Least space efficient by fastest.
+        /// ***********************************************************************
+        public static void UpdateBoundingBox(BoundingBox origBox,  Matrix mat, ref Vector3 newMin, ref Vector3 newMax)
+        {
+            // transform all 8 points and find min and max extents
+            // This is the dumbest method but it works
+            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Max.Y; aabbverticies[0].Z = origBox.Max.Z;  // left top back      - + +
+            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Max.Y; aabbverticies[1].Z = origBox.Max.Z;  // right top back     + + +
+            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // left top front     - + -
+            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // right top front    + + -
+
+            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Min.Y; aabbverticies[0].Z = origBox.Max.Z;  // left bottom back   - - +
+            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Min.Y; aabbverticies[1].Z = origBox.Max.Z;  // right bottom back  + - +
+            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // left bottom front  - - -
+            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // right bottom front + - -
+
+            newMin = newMax = aabbverticies[0];
+
+            for (int i = 0; i < 8; i++)
+            {
+                aabbverticies[i] = Vector3.Transform(aabbverticies[i], mat);
+                if (aabbverticies[i].X < newMin.X)
+                    newMin.X = aabbverticies[i].X;
+                if (aabbverticies[i].Y < newMin.Y)
+                    newMin.Y = aabbverticies[i].Y;
+                if (aabbverticies[i].Z < newMin.Z)
+                    newMin.Z = aabbverticies[i].Z;
+
+                if (aabbverticies[i].X > newMax.X)
+                    newMax.X = aabbverticies[i].X;
+                if (aabbverticies[i].Y > newMax.Y)
+                    newMax.Y = aabbverticies[i].Y;
+                if (aabbverticies[i].Z > newMax.Z)
+                    newMax.Z = aabbverticies[i].Z;
+            }
+        }
+        #endregion
+
+        #region testCollisionRayAABB()
+        /// testCollisionRayAABB() - Test whether a ray intersects an AABB
+        /// Code derived from: Pages 179-181 Real Time Collision Detection, Christer Ericson
+        /// ***********************************************************************
+        protected static bool testCollisionRayAABB(Vector3 p, Vector3 d, BoundingBox AABB, ref float Tcollision, ref Vector3 q)
+        {
+            // TO DO *********************** (!q#$%@#%^!#$^@$%^!#$%^!#^ ADD THE REST
+        }
+        #endregion
+
     }
 }
