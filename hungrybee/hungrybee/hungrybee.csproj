@@ -107,6 +107,7 @@
     <Compile Include="rboState.cs" />
     <Compile Include="renderManager.cs" />
     <Compile Include="skyPlane.cs" />
+    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="vertex.cs" />
     <Compile Include="XNAUtils.cs" />
   </ItemGroup>

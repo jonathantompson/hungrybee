@@ -19,6 +19,115 @@ namespace hungrybee
     /// </summary>
     public static class XNAUtils
     {
+        // Jonno Tompson Code
+        public static float GetAABBVolume(BoundingBox bBox)
+        {
+            return (bBox.Max.X - bBox.Min.X) * (bBox.Max.Y - bBox.Min.Y) * (bBox.Max.Z - bBox.Min.Z);
+        }
+
+        // Jonno Tompson Code
+        public static float GetSphereVolume(BoundingSphere bSphere)
+        {
+            return 2.0f * (float)Math.PI * bSphere.Radius * bSphere.Radius;
+        }
+
+        // Jonno Tompson Code
+        // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
+        public static Matrix CalculateItensorFromBoundingSphere(BoundingSphere bSphere, float mass)
+        {
+            Matrix Itensor = Matrix.Identity;
+            float diagValue = (2.0f / 3.0f) * mass * (bSphere.Radius) * (bSphere.Radius);
+            Itensor.M11 = diagValue; Itensor.M22 = diagValue; Itensor.M33 = diagValue;
+
+            return Itensor;
+        }
+
+        // Jonno Tompson Code
+        // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
+        public static Matrix CalculateItensorFromBoundingBox(BoundingBox bBox, float mass)
+        {
+            Matrix Itensor = Matrix.Identity;
+            float width = bBox.Max.X - bBox.Min.X;
+            float height = bBox.Max.Y - bBox.Min.Y;
+            float depth = bBox.Max.Z - bBox.Min.Z;
+            Itensor.M11 = (1.0f / 12.0f) * mass * ((height * height) + (depth * depth));
+            Itensor.M22 = (1.0f / 12.0f) * mass * ((width * width) + (depth * depth));
+            Itensor.M22 = (1.0f / 12.0f) * mass * ((width * width) + (height * height));
+
+            return Itensor;
+        }
+
+        // Jonno Tompson Code
+        // Calculate Min and Max verticies and return a BoundingBox
+        public static BoundingBox CreateAABBFromVerticies(VertexPositionNormalTexture[] verticies)
+        {
+            Vector3 min = new Vector3();
+            Vector3 max = new Vector3();
+
+            // Initialize the min and max verticies to the first point
+            min.X = verticies[0].Position.X; min.Y = verticies[0].Position.Y; min.Z = verticies[0].Position.Z;
+            max.X = verticies[0].Position.X; max.Y = verticies[0].Position.Y; max.Z = verticies[0].Position.Z;
+
+            // Now try and find the min and max verticies
+            for (int curVertex = 0; curVertex < verticies.Length; curVertex++)
+            {
+                if (min.X > verticies[curVertex].Position.X)
+                    min.X = verticies[curVertex].Position.X;
+                if (min.Y > verticies[curVertex].Position.Y)
+                    min.Y = verticies[curVertex].Position.Y;
+                if (min.Z > verticies[curVertex].Position.Z)
+                    min.Z = verticies[curVertex].Position.Z;
+
+                if (max.X < verticies[curVertex].Position.X)
+                    max.X = verticies[curVertex].Position.X;
+                if (max.Y < verticies[curVertex].Position.Y)
+                    max.Y = verticies[curVertex].Position.Y;
+                if (max.Z < verticies[curVertex].Position.Z)
+                    max.Z = verticies[curVertex].Position.Z;
+            }
+
+            BoundingBox retVal = new BoundingBox(min, max);
+            return retVal;
+        }
+
+        // Jonno Tompson Code
+        // Calculate Min and Max verticies and return a BoundingBox
+        public static BoundingBox CreateAABBFromModel(Model model)
+        {
+            BoundingBox retVal = new BoundingBox();
+
+            Matrix []m_transforms = new Matrix[model.Bones.Count];
+            model.CopyAbsoluteBoneTransformsTo(m_transforms);
+
+            foreach (ModelMesh mesh in model.Meshes)
+            {
+                VertexPositionNormalTexture[] vertices=
+                    new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / mesh.MeshParts[0].VertexStride];
+
+                mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+
+                // Find min, max xyz for this mesh - assumes will be centred on 0,0,0 as BB is initialised to 0,0,0
+                Vector3 min = vertices[0].Position;
+                Vector3 max = vertices[0].Position;
+
+                for (int i = 1; i < vertices.Length; i++)
+                {
+                    min = Vector3.Min(min, vertices[i].Position);
+                    max = Vector3.Max(max, vertices[i].Position);
+                }                
+
+                // We need to take into account the fact that the mesh may have a bone transform
+                min = Vector3.Transform(min, m_transforms[mesh.ParentBone.Index]);
+                max = Vector3.Transform(max, m_transforms[mesh.ParentBone.Index]);
+
+                // Now expand main bb by this mesh's box
+               retVal.Min = Vector3.Min(retVal.Min, min);
+               retVal.Max = Vector3.Max(retVal.Max, max);
+            }
+
+            return retVal;
+        }
+
         public static BoundingBox TransformBoundingBox(BoundingBox origBox, Matrix matrix)
         {
             Vector3 origCorner1 = origBox.Min;
@@ -174,63 +283,6 @@ namespace hungrybee
             return modelTransforms;
         }
 
-        // Jonno Tompson Code
-        // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
-        public static Matrix CalculateItensorFromBoundingSphere(BoundingSphere bSphere, float mass)
-        {
-            Matrix Itensor = Matrix.Identity;
-            float diagValue = (2.0f / 3.0f) * mass * (bSphere.Radius) * (bSphere.Radius);
-            Itensor.M11 = diagValue; Itensor.M22 = diagValue; Itensor.M33 = diagValue;
 
-            return Itensor;
-        }
-
-        // Jonno Tompson Code
-        // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
-        public static Matrix CalculateItensorFromBoundingBox(BoundingBox bBox, float mass)
-        {
-            Matrix Itensor = Matrix.Identity;
-            float width     = bBox.Max.X - bBox.Min.X;
-            float height    = bBox.Max.Y - bBox.Min.Y;
-            float depth     = bBox.Max.Z - bBox.Min.Z;
-            Itensor.M11 = (1.0f / 12.0f) * mass * ((height * height) + (depth * depth));
-            Itensor.M22 = (1.0f / 12.0f) * mass * ((width * width) + (depth * depth));
-            Itensor.M22 = (1.0f / 12.0f) * mass * ((width * width) + (height * height));
-
-            return Itensor;
-        }
-
-        // Jonno Tompson Code
-        // Calculate Min and Max verticies and return a BoundingBox
-        public static BoundingBox CreateBoxFromVerticies(VertexPositionNormalTexture[] verticies)
-        {
-            Vector3 min = new Vector3();
-            Vector3 max = new Vector3();
-
-            // Initialize the min and max verticies to the first point
-            min.X = verticies[0].Position.X; min.Y = verticies[0].Position.Y; min.Z = verticies[0].Position.Z;
-            max.X = verticies[0].Position.X; max.Y = verticies[0].Position.Y; max.Z = verticies[0].Position.Z;
-
-            // Now try and find the min and max verticies
-            for (int curVertex = 0; curVertex < verticies.Length; curVertex++)
-            {
-                if (min.X > verticies[curVertex].Position.X)
-                    min.X = verticies[curVertex].Position.X;
-                if (min.Y > verticies[curVertex].Position.Y)
-                    min.Y = verticies[curVertex].Position.Y;
-                if (min.Z > verticies[curVertex].Position.Z)
-                    min.Z = verticies[curVertex].Position.Z;
-
-                if (max.X < verticies[curVertex].Position.X)
-                    max.X = verticies[curVertex].Position.X;
-                if (max.Y < verticies[curVertex].Position.Y)
-                    max.Y = verticies[curVertex].Position.Y;
-                if (max.Z < verticies[curVertex].Position.Z)
-                    max.Z = verticies[curVertex].Position.Z;
-            }
-
-            BoundingBox retVal = new BoundingBox(min, max);
-            return retVal;
-        }
     }
 }

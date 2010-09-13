@@ -48,7 +48,7 @@ namespace hungrybee
         #region Constructor DrawableGameObject(game game, string ModelFile)
         /// Constructor - World transform is identity by default
         /// ***********************************************************************
-        public gameObject(game game, string modelfile) : base()
+        public gameObject(game game, string modelfile, boundingObjType objType ) : base()
         {
             state = new rboState();
             prevState = new rboState();
@@ -59,8 +59,7 @@ namespace hungrybee
             modelFile = modelfile;
             modelScaleToNormalizeSize = 1.0f;
             forceList = new List<force>(game.GetGameSettings().forceListCapacity);
-            boundingObjType = boundingObjType.UNDEFINED;
-
+            boundingObjType = objType;
         }
         #endregion
 
@@ -79,21 +78,42 @@ namespace hungrybee
         public virtual void LoadContent()
         {
             // Load the model from file
-            
             model = XNAUtils.LoadModelWithBoundingSphere(ref modelTransforms, modelFile, h_game.Content);
 
             // ScaleModel(model); // ScaleModel() function no longer in use!  Now scaling transform instead.
             modelTransforms = XNAUtils.AutoScaleModelTransform(ref model, 1.0f, ref modelScaleToNormalizeSize); 
             // NOTE: bounding sphere wont change, only obj->world transform
 
-            // Mark this object as using a bounding sphere for collision detection and store the sphere
+            // Grab the Bounding sphere data
             BoundingSphere bSphere = (BoundingSphere)model.Tag;
-            boundingObjType = boundingObjType.SPHERE;
-            boundingObj = (Object)bSphere;
 
-            // Calculate moment of Inertia from bounding sphere:
-            state.Itensor = XNAUtils.CalculateItensorFromBoundingSphere(bSphere, state.mass);
-            state.InvItensor = Matrix.Invert(state.Itensor);
+            // Create a Bounding Box
+            BoundingBox bBox = XNAUtils.CreateAABBFromModel(model);
+
+            // Choose the bounding volume that has the smallest volume...
+            if( boundingObjType == boundingObjType.UNDEFINED )
+                if (XNAUtils.GetSphereVolume(bSphere) < XNAUtils.GetAABBVolume(bBox))
+                    boundingObjType = boundingObjType.SPHERE;
+                else
+                    boundingObjType = boundingObjType.AABB;
+
+            switch (boundingObjType)
+            {
+                case (boundingObjType.SPHERE):
+                    boundingObj = (Object)bSphere;
+                    // Calculate moment of Inertia from bounding sphere:
+                    state.Itensor = XNAUtils.CalculateItensorFromBoundingSphere(bSphere, state.mass);
+                    state.InvItensor = Matrix.Invert(state.Itensor);
+                    break;
+                case (boundingObjType.AABB):
+                    boundingObj = (Object)bBox;
+                    // Calculate moment of Inertia from bounding box:
+                    state.Itensor = XNAUtils.CalculateItensorFromBoundingBox(bBox, state.mass);
+                    state.InvItensor = Matrix.Invert(state.Itensor);
+                    break;
+                default:
+                    throw new Exception("gameObject::LoadContent() - Something went wrong setting up bounding object");
+            }
 
             // Make sure both starting states are equal
             rboState.CopyAtoB(ref state, ref prevState);   
@@ -113,7 +133,10 @@ namespace hungrybee
             renderState.DepthBufferEnable = true;
 
             // Calculate the object's transform from state variables --> Need to do lerp and slerp between states
-            float percentInterp = gameTime.ElapsedGameTime.Seconds / (state.time - prevState.time);
+            float deltaT = state.time - prevState.time;
+            float percentInterp = 0.0f;
+            if (deltaT > 0.0f)
+                percentInterp = gameTime.ElapsedGameTime.Seconds / deltaT;
             drawState.scale = Interp(prevState.scale, state.scale, percentInterp);
             drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
             drawState.pos = Interp(prevState.pos, state.pos, percentInterp);

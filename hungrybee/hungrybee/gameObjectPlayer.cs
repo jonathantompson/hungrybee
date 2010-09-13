@@ -39,8 +39,8 @@ namespace hungrybee
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, float _scale, float _acceleration, float _stoppingTime, float _maxVel)
-            : base(game, modelfile)
+        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, float _acceleration, float _stoppingTime, float _maxVel)
+            : base(game, modelfile, _objType)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
             acceleration = _acceleration;

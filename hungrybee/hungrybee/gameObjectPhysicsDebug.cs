@@ -35,7 +35,6 @@ namespace hungrybee
 
         BasicEffect effect;
         Matrix world;
-        rboState drawState;
 
         gameObject attachedGameObject;
         boundingObjType objType;
@@ -45,7 +44,7 @@ namespace hungrybee
 
         #region Constructor - gameObjectPhysicsDebug(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
         public gameObjectPhysicsDebug(game game, boundingObjType _objType, Object _obj, gameObject _attachedGameObject)
-            : base(game, null)
+            : base(game, null, _objType)
         {
             objType = _objType;
             obj = _obj;
@@ -54,7 +53,6 @@ namespace hungrybee
             vertexDeclaration = null;
             numLines = 0;
             world = Matrix.Identity;
-            drawState = new rboState();
         }
         #endregion
 
@@ -144,7 +142,10 @@ namespace hungrybee
         {
             // Create a world matrix which is from the attachedGameObject
             // This is probably redundant since we're drawing both the game object and the debug object --> But it's ok for debug types
-            float percentInterp = gameTime.ElapsedGameTime.Seconds / (attachedGameObject.state.time - attachedGameObject.prevState.time);
+            float percentInterp = 0.0f;
+            float deltaT = attachedGameObject.state.time - attachedGameObject.prevState.time;
+            if(deltaT > 0.0f)
+                percentInterp = gameTime.ElapsedGameTime.Seconds / deltaT;
             drawState.scale = Interp(attachedGameObject.prevState.scale, attachedGameObject.state.scale, percentInterp);
             drawState.orient = Quaternion.Slerp(attachedGameObject.prevState.orient, attachedGameObject.state.orient, percentInterp);
             drawState.pos = Interp(attachedGameObject.prevState.pos, attachedGameObject.state.pos, percentInterp);

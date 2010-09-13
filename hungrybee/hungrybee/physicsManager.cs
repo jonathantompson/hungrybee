@@ -27,7 +27,6 @@ namespace hungrybee
     /// ** sphere collision detection                                        **
     /// ***********************************************************************
     /// </summary>
-    /// 
     public class physicsManager : GameComponent
     {
         #region Local Variables
@@ -82,9 +81,11 @@ namespace hungrybee
             // ********** TEST CODE **********
             // *******************************
             float Tcollision = 0.0f;
+            Vector3 point = Vector3.Zero;
             bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[0], 
                                                        h_game.GetGameObjectManager().h_GameObjects[1],
-                                                       ref Tcollision);
+                                                       ref Tcollision,
+                                                       ref point);
             if (!pauseGame && retVal) // if we haven't yet paused and there is a collision
             {
                 pauseGame = true;

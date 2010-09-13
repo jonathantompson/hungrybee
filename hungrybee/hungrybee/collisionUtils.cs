@@ -12,47 +12,243 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+using ExtensionMethods;
 #endregion
 
 namespace hungrybee
 {
 
+    /// <summary>
+    /// **********************************************************************************
+    /// **                          collisionUtils                                      **
+    /// ** Static library of collision detection routines.  A LOT of code here isn't    ** 
+    /// ** mine.  Particularly the lower-level bounding volume intersection tests. The  **
+    /// ** sources that were used are:                                                  **
+    /// ** David Eberly's Geometric Tools (Sphere Vs. Box)                              **
+    /// ** Gamasutra article: Simple Intersection Tests For Games (Sphere Vs. Sphere)   **
+    /// ** ALL TESTS ARE SWEPT VOLUME TESTS.  There should be NO tunnelling between     **
+    /// ** frames & for each collision a point and a normalized time [0,1] is returned. **
+    /// **********************************************************************************
+    /// </summary>
     class collisionUtils
     {
         // Temporary variables to avoid continuous allocation and deallocation on the stack
         static Matrix objAMat_t0 = new Matrix();
         static Matrix objBMat_t0 = new Matrix();
+        static Matrix objBMatInt_t0 = new Matrix();
         static Matrix objAMat_t1 = new Matrix();
         static Matrix objBMat_t1 = new Matrix();
         static Vector3 objACenter_t0 = new Vector3();
         static Vector3 objBCenter_t0 = new Vector3();
         static Vector3 objACenter_t1 = new Vector3();
         static Vector3 objBCenter_t1 = new Vector3();
+        static Vector3[] aabbverticies = new Vector3[8];
+        static Vector3 objAMin_t0 = new Vector3();
+        static Vector3 objAMax_t0 = new Vector3();
         static Vector3 objBMin_t0 = new Vector3();
         static Vector3 objBMax_t0 = new Vector3();
-        static Vector3[] aabbverticies = new Vector3[8];
-        static BoundingBox minkowskiAABB = new BoundingBox();
+        static float[] Ea = new float[3];
+        static float[] Eb = new float[3];
 
         static float objARadius_t0 = 0.0f;
         static float objBRadius_t0 = 0.0f;
 
+        static float EPSILON = 0.00000000000001f;
+
         #region testCollision()
         /// testCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
-        public static bool testCollision(gameObject objA, gameObject objB, ref float Tcollision )
+        public static bool testCollision(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point )
         {
             // Big dumb if else chain
             // --> Probably data directed programming would be better here, but not too many types
             if (objA.boundingObjType == boundingObjType.UNDEFINED || objB.boundingObjType == boundingObjType.UNDEFINED)
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on UNDEFINED object types (maybe forgot to initialize objects?)");
+
+            // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.testCollisionSphereSphere(objA, objB, ref Tcollision);
+                return collisionUtils.testCollisionSphereSphere(objA, objB, ref Tcollision, ref point);
+
+            // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.testCollisionSphereAABB(objA, objB, ref Tcollision);
+                return collisionUtils.testCollisionSphereAABB(objA, objB, ref Tcollision, ref point);
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.testCollisionSphereAABB(objB, objA, ref Tcollision);
+                return collisionUtils.testCollisionSphereAABB(objB, objA, ref Tcollision, ref point);
+
+            // Inputs are: AABB
+            else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
+                return collisionUtils.testCollisionAABBAABB(objA, objB, ref Tcollision, ref point);
+
             else
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on unrecognized object types");
+        }
+        #endregion
+
+        #region testCollisionAABBAABB()
+        /// testCollisionAABBAABB() - Test whether a swept AABB collides with another AABB between prevState and state
+        /// A FEW ASSUMPTIONS:  1. Scale factor is constant between frames.
+        ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
+        /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
+        /// ***********************************************************************
+        protected static bool testCollisionAABBAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point) // objA is a sphere, objB is an AABB
+        {
+            BoundingBox mBox1 = (BoundingBox)objA.boundingObj;
+            BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
+
+            // Move the bounding boxes into world frame and update their size --> Boxes may grow
+            objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
+            UpdateBoundingBox(mBox1, objAMat_t0, ref objAMin_t0, ref objAMax_t0);
+            Vector3 velA = objA.state.pos - objA.prevState.pos;
+            objACenter_t0 = 0.5f * (objAMax_t0 + objAMin_t0);
+
+            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
+            UpdateBoundingBox(mBox2, objBMat_t0, ref objBMin_t0, ref objBMax_t0);
+            Vector3 velB = objB.state.pos - objB.prevState.pos;
+            objBCenter_t0 = 0.5f * (objBMax_t0 + objBMin_t0);
+
+            // Algorithm uses half-width extents, so get them:
+            Ea[0] = 0.5f * (objAMax_t0.X - objAMin_t0.X);
+            Ea[1] = 0.5f * (objAMax_t0.Y - objAMin_t0.Y);
+            Ea[2] = 0.5f * (objAMax_t0.Z - objAMin_t0.Z);
+            Eb[0] = 0.5f * (objBMax_t0.X - objBMin_t0.X);
+            Eb[1] = 0.5f * (objBMax_t0.Y - objBMin_t0.Y);
+            Eb[2] = 0.5f * (objBMax_t0.Z - objBMin_t0.Z);
+
+            // Continue with the algorithm in: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
+            Vector3 v = velB - velA; // Revative velocity in normalized time
+            Vector3 u_0 = new Vector3(0.0f, 0.0f, 0.0f); // first times of overlap along each axis
+            Vector3 u_1 = new Vector3(1.0f, 1.0f, 1.0f); // last times of overlap along each axis
+
+            //check if they were overlapping on the previous frame
+            if (testCollisionAABBAABBStatic(objACenter_t0, objBCenter_t0, Ea, Eb))
+            {
+                point = Vector3.Zero;
+                Tcollision = 0.0f;
+                throw new Exception("CollisionUtils::testCollisionAABBAABB() - AABBs were overlapping at the start! Check starting conditions");
+            }
+
+            if (v.Mag() < EPSILON) // If the velocity is zero we've done enough
+                return false;
+
+            //find the possible first and last times of overlap along each axis
+            for (int i = 0; i < 3; i++)
+            {
+                if (objAMax_t0.GetAt(i) < objBMin_t0.GetAt(i) && v.GetAt(i) < 0)
+                {
+                    u_0.SetAt(i,(objAMax_t0.GetAt(i) - objBMin_t0.GetAt(i)) / v.GetAt(i));
+                }
+
+                else if (objBMax_t0.GetAt(i) < objAMin_t0.GetAt(i) && v.GetAt(i) > 0)
+                {
+                    u_0.SetAt(i,(objAMin_t0.GetAt(i) - objBMax_t0.GetAt(i)) / v.GetAt(i));
+                }
+
+                if (objBMax_t0.GetAt(i) > objAMin_t0.GetAt(i) && v.GetAt(i) < 0)
+                {
+                    u_1.SetAt(i,(objAMin_t0.GetAt(i) - objBMax_t0.GetAt(i)) / v.GetAt(i));
+                }
+
+                else if (objAMax_t0.GetAt(i) > objBMin_t0.GetAt(i) && v.GetAt(i) > 0)
+                {
+                    u_1.SetAt(i,(objAMax_t0.GetAt(i) - objBMin_t0.GetAt(i)) / v.GetAt(i));
+                }
+
+            }
+
+
+            float u0 = Max(u_0.X, Max(u_0.Y, u_0.Z)); //possible first time of overlap
+            float u1 = Min(u_1.X, Min(u_1.Y, u_1.Z)); //possible last time of overlap
+
+            //they could have only collided if the first time of overlap occurred before the last time of overlap
+            if (u0 <= u1)
+            {
+                Tcollision = u0;
+                //*********************************
+                //*********** TEMP CODE ***********
+                //*********************************
+                throw new Exception("TO DO: FIND OUT HOW TO GET THE POINT OF COLLISION");
+                //*********************************
+                //*********** TEMP CODE ***********
+                //*********************************
+                return true;
+            }
+            else
+                return false;
+
+        }
+        #endregion
+
+        #region testCollisionAABBAABBStatic()
+        protected static bool testCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float [] Ea, float [] Eb)
+        {
+            Vector3 T = Pb - Pa;
+            return ((float)Math.Abs(T.X)) <= (Ea[0] + Eb[0]) &&
+                   ((float)Math.Abs(T.Y)) <= (Ea[1] + Eb[1]) &&
+                   ((float)Math.Abs(T.Z)) <= (Ea[2] + Eb[2]); // All three regions must be overlapping (otherwise there's a seperating axis)
+        }
+        #endregion
+
+        #region Max(float x, float y)
+        /// Just return the largest - throw an exception if both are the same value
+        /// ***********************************************************************
+        protected static float Max(float x, float y)
+        {
+            if (x >= y)
+                return x;
+            else
+                return y;
+        }
+        #endregion
+
+        #region Min(float x, float y)
+        /// Just return the largest - throw an exception if both are the same value
+        /// ***********************************************************************
+        protected static float Min(float x, float y)
+        {
+            if (x < y)
+                return x;
+            else
+                return y;
+        }
+        #endregion
+
+        #region UpdateBoundingBox()
+        /// UpdateBoundingBox() - Rotate the bounding box and fix the AABB coordinates
+        /// --> Simply wrap the AABB in another AABB --> Least space efficient by fastest.
+        /// ***********************************************************************
+        protected static void UpdateBoundingBox(BoundingBox origBox, Matrix mat, ref Vector3 newMin, ref Vector3 newMax)
+        {
+            // transform all 8 points and find min and max extents
+            // This is the dumbest method but it works
+            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Max.Y; aabbverticies[0].Z = origBox.Max.Z;  // left top back      - + +
+            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Max.Y; aabbverticies[1].Z = origBox.Max.Z;  // right top back     + + +
+            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // left top front     - + -
+            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // right top front    + + -
+
+            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Min.Y; aabbverticies[0].Z = origBox.Max.Z;  // left bottom back   - - +
+            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Min.Y; aabbverticies[1].Z = origBox.Max.Z;  // right bottom back  + - +
+            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // left bottom front  - - -
+            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // right bottom front + - -
+
+            newMin = newMax = Vector3.Transform(aabbverticies[0], mat);
+
+            for (int i = 1; i < 8; i++)
+            {
+                aabbverticies[i] = Vector3.Transform(aabbverticies[i], mat);
+                if (aabbverticies[i].X < newMin.X)
+                    newMin.X = aabbverticies[i].X;
+                if (aabbverticies[i].Y < newMin.Y)
+                    newMin.Y = aabbverticies[i].Y;
+                if (aabbverticies[i].Z < newMin.Z)
+                    newMin.Z = aabbverticies[i].Z;
+
+                if (aabbverticies[i].X > newMax.X)
+                    newMax.X = aabbverticies[i].X;
+                if (aabbverticies[i].Y > newMax.Y)
+                    newMax.Y = aabbverticies[i].Y;
+                if (aabbverticies[i].Z > newMax.Z)
+                    newMax.Z = aabbverticies[i].Z;
+            }
         }
         #endregion
 
@@ -63,7 +259,7 @@ namespace hungrybee
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page2
         /// NOTE: There are faster methods to perform this test --> to avoid sqrt calls AND to avoid floating point accuracy issues for large velocities
         /// ***********************************************************************
-        protected static bool testCollisionSphereSphere(gameObject objA, gameObject objB, ref float Tcollision )
+        protected static bool testCollisionSphereSphere(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point)
         {
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
@@ -86,7 +282,7 @@ namespace hungrybee
                             Math.Max(Math.Max(objB.prevState.scale.X, objB.prevState.scale.Y), objB.prevState.scale.Z) *    // Scale factor
                             objB.modelScaleToNormalizeSize;                                                                 // Normalization factor
 
-            // Find the velocity by gettting change in position and devide by time (V' = dx' / dt)
+            // Find the velocities
             Vector3 va = objACenter_t1 - objACenter_t0; // Vector from A0 to A1
             Vector3 vb = objBCenter_t1 - objBCenter_t0; // Vector from B0 to B1
             Vector3 AB = objBCenter_t0 - objACenter_t0; // Vector from A0 to B0
@@ -96,13 +292,15 @@ namespace hungrybee
             float b = Vector3.Dot(2 * vab, AB);
             float c = Vector3.Dot(AB, AB) - rab * rab;
 
-            // Check if they're currently overlapping
+            // Check if they're currently overlapping --> We actually don't want this.  It means that there are two points of collision
             if ( Vector3.Dot(AB,AB) <= rab * rab )
             {
-                Tcollision = 0.0f;
-                return true;
+                // Tcollision = 0.0f;
+                // return true;
+                throw new Exception("collisionUtils::testCollisionSphereSphere() Spheres are already overlapping at t=0.0f, check start vals");
             }
 
+            bool retVal = false;
             float t0 = 0.0f, t1 = 0.0f;
             if ( QuadraticFormula( a, b, c, ref t0, ref t1 ) )
             {
@@ -111,7 +309,7 @@ namespace hungrybee
                     if( t0 >= 0.0f && t0 <= 1.0f) // t0 is within 0-->1
                     {
                     Tcollision = t0 * ( objA.state.time - objA.prevState.time) + objA.prevState.time;
-                    return true;
+                    retVal = true;
                     }
                 }
                 else 
@@ -119,13 +317,24 @@ namespace hungrybee
                     if (t1 >= 0.0f && t1 <= 1.0f)  // t1 occured first and is within 0-->1
                     {
                     Tcollision = t1 * ( objA.state.time - objA.prevState.time) + objA.prevState.time;
-                    return true;
+                    retVal = true;
                     }
                 }
             }
 
-            // Otherwise no contact
-            return false;
+            // Calculate the point of contact if it exists
+            if (retVal)
+            {
+                // Get the two centers at collision time
+                objACenter_t1 = objACenter_t0 + va * Tcollision;  // Reuse t1 variables to save stack (or heap) space
+                objBCenter_t1 = objBCenter_t0 + va * Tcollision;
+                AB = objBCenter_t1 - objACenter_t1; // Vector from the center of A to the center of B at the time of collision
+                Vector3.Normalize(AB);
+                point = objACenter_t1 + AB * objARadius_t0; // Center is along the vector between the two centers, at a distance of the radius
+                return true;
+            }
+            else
+                return false;
         }
         #endregion
 
@@ -154,97 +363,721 @@ namespace hungrybee
         /// testCollisionSphereSphere() - Test whether a swept sphere collides with a stationary AABB between prevState and state
         /// A FEW ASSUMPTIONS:  1. Scale factor is constant between frames.
         ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
-        /// Code derived from: Pages 228-229 Real Time Collision Detection, Christer Ericson
+        /// I tried code derived from: Pages 228-229 Real Time Collision Detection, Christer Ericson --> But it didn't work
+        /// I also tried http://www.gamedev.net/community/forums/topic.asp?topic_id=335465 (much simpler anyway) --> Doesn't sweep box
+        /// I finally used http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D). Includes the cases of moving spheres and boxes. "
         /// ***********************************************************************
-        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref float Tcollision) // objA is a sphere, objB is an AABB
+        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point) // objA is a sphere, objB is an AABB
         {
+            BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
+            BoundingBox mBox = (BoundingBox)objB.boundingObj;
+
             // Bring the sphere into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
             objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
-            objACenter_t0 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t0);
-            objARadius_t0 = ((BoundingSphere)objA.boundingObj).Radius *                                                     // Origional radius
+            objACenter_t0 = Vector3.Transform(mSphere.Center, objAMat_t0);
+            objARadius_t0 = mSphere.Radius *                                                                                // Origional radius
                             Math.Max(Math.Max(objA.prevState.scale.X, objA.prevState.scale.Y), objA.prevState.scale.Z) *    // Scale factor
                             objA.modelScaleToNormalizeSize;                                                                 // Normalization factor
-            Vector3 objADisplacement = objA.state.pos - objA.prevState.pos;
+            
 
-            // OBB is defined in object coords --> Bring into world coords by wrapping another AABB around the rotated box
+            // Bring BoundingSphere into box coordinate system --> Means we don't need to recalculate AABB dimensions in world 
             objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
-            UpdateBoundingBox((BoundingBox)objB.boundingObj, objBMat_t0, ref objBMin_t0, ref objBMax_t0);
-            Vector3 objBDisplacement = objB.state.pos - objB.prevState.pos;
+            objBMatInt_t0 = Matrix.Invert(objBMat_t0);
+            objACenter_t0 = Vector3.Transform(objACenter_t0, objBMatInt_t0); // bring objA starting center into B's fram
+            objARadius_t0 = objARadius_t0 * 
+                            (1.0f / Math.Max(Math.Max(objB.prevState.scale.X, objB.prevState.scale.Y), objB.prevState.scale.Z)) *
+                            (1.0f / objB.modelScaleToNormalizeSize); // bring objA radius in B's frame
+            
+            // Find the velocities and then the relative velocity
+            Vector3 va = objA.state.pos - objA.prevState.pos; 
+            Vector3 vb = objB.state.pos - objB.prevState.pos; 
+            Vector3 vab = vb - va; // Relative velocity (in normalized time)
+            vab = Vector3.Transform(vab, objBMatInt_t0); // bring relative velocity into A's frame
+            float vx = vab.X; float vy = vab.Y; float vz = vab.Z; 
 
-            // B may be moving, subtract dx_B from dx_A and perform algorithm w.r.t B.
-            Vector3 displacement = objADisplacement - objBDisplacement;
+            // Find the Box Center and then the relative starting position in B's frame
+            Vector3 boxCenter = (mBox.Min + mBox.Max) * 0.5f;  // Just average of the two positions
+            Vector3 cdiff = objACenter_t0 - boxCenter;
+            cdiff = Vector3.Transform(cdiff, objBMatInt_t0);
+            float ax = cdiff.X; float ay = cdiff.Y; float az = cdiff.Z;
 
-            // Now perform the algorithm described on pages 228-229 (compare ray against minkowski sum of sphere + AABB)
-            // Computer the AABB resulting from expanding AABB by sphere radius r
-            minkowskiAABB.Min.X = objBMin_t0.X - objARadius_t0;
-            minkowskiAABB.Min.Y = objBMin_t0.Y - objARadius_t0;
-            minkowskiAABB.Min.Z = objBMin_t0.Z - objARadius_t0;
-            minkowskiAABB.Max.X = objBMax_t0.X + objARadius_t0;
-            minkowskiAABB.Max.Y = objBMax_t0.Y + objARadius_t0;
-            minkowskiAABB.Max.Z = objBMax_t0.Z + objARadius_t0;
+            // Also need the box's half-lengths --> David Eberly defines a box as a center, some basis vectors and extents
+            float [] Extent = new float[3];
+            Extent[0] = (mBox.Max.X - mBox.Min.X) * 0.5f;
+            Extent[1] = (mBox.Max.Y - mBox.Min.Y) * 0.5f;
+            Extent[2] = (mBox.Max.Z - mBox.Min.Z) * 0.5f;
 
-            // Intersect ray against expanded minkowskiAABB. Exit with no intersection if ray misses minkowskiAABB.
-            // Otherwise get intersection point p and time t as result
-            Vector3 point;
-            if (!testCollisionRayAABB(objACenter_t0, displacement, minkowskiAABB, ref Tcollision, ref point))
+            // Now perform the routine in :
+            // http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D)" --> Find (...)
+
+            // Flip coordinate frame into the first octant.
+            int signX = 1;
+            if (ax < 0.0f)
+            {
+                ax = -ax;
+                vx = -vx;
+                signX = -1;
+            }
+
+            int signY = 1;
+            if (ay < 0.0f)
+            {
+                ay = -ay;
+                vy = -vy;
+                signY = -1;
+            }
+
+            int signZ = 1;
+            if (az < 0.0f)
+            {
+                az = -az;
+                vz = -vz;
+                signZ = -1;
+            }
+
+            // Intersection coordinates.
+            float ix = 0.0f, iy = 0.0f, iz = 0.0f;
+            int retVal;
+
+            if (ax <= Extent[0])
+            {
+                if (ay <= Extent[1])
+                {
+                    if (az <= Extent[2])
+                    {
+                        // The sphere center is inside box.  Return it as the contact
+                        // point, but report an "other" intersection type.
+                        Tcollision = 0.0f;
+                        point = Vector3.Transform(mSphere.Center, objAMat_t0); // Collision point is the sphere's center in world coordinates
+                        throw new Exception("collisionUtils::testCollisionSphereAABB() - Sphere started sweep inside AABB. Check starting conditions");
+                    }
+                    else
+                    {
+                        // Sphere above face on axis Z.
+                        retVal = FindFaceRegionIntersection(Extent[0],
+                            Extent[1], Extent[2], ax, ay, az, vx, vy,
+                            vz, ref ix, ref iy, ref iz, true, objARadius_t0, ref Tcollision);
+                    }
+                }
+                else
+                {
+                    if (az <= Extent[2])
+                    {
+                        // Sphere above face on axis Y.
+                        retVal = FindFaceRegionIntersection(Extent[0],
+                            Extent[2], Extent[1], ax, az, ay, vx, vz,
+                            vy, ref ix, ref iz, ref iy, true, objARadius_t0, ref Tcollision);
+                    }
+                    else
+                    {
+                        // Sphere is above the edge formed by faces y and z.
+                        retVal = FindEdgeRegionIntersection(Extent[1],
+                            Extent[0], Extent[2], ay, ax, az, vy, vx,
+                            vz, ref iy, ref ix, ref iz, true, objARadius_t0, ref Tcollision);
+                    }
+                }
+            }
+            else
+            {
+                if (ay <= Extent[1])
+                {
+                    if (az <= Extent[2])
+                    {
+                        // Sphere above face on axis X.
+                        retVal = FindFaceRegionIntersection(Extent[1],
+                            Extent[2], Extent[0], ay, az, ax, vy, vz,
+                            vx, ref iy, ref iz, ref ix, true, objARadius_t0, ref Tcollision);
+                    }
+                    else
+                    {
+                        // Sphere is above the edge formed by faces x and z.
+                        retVal = FindEdgeRegionIntersection(Extent[0],
+                            Extent[1], Extent[2], ax, ay, az, vx, vy,
+                            vz, ref ix, ref iy, ref iz, true, objARadius_t0, ref Tcollision);
+                    }
+                }
+                else
+                {
+                    if (az <= Extent[2])
+                    {
+                        // Sphere is above the edge formed by faces x and y.
+                        retVal = FindEdgeRegionIntersection(Extent[0],
+                            Extent[2], Extent[1], ax, az, ay, vx, vz,
+                            vy, ref ix, ref iz, ref iy, true, objARadius_t0, ref Tcollision);
+                    }
+                    else
+                    {
+                        // sphere is above the corner formed by faces x,y,z
+                        retVal = FindVertexRegionIntersection(Extent[0],
+                            Extent[1], Extent[2], ax, ay, az, vx, vy,
+                            vz, ref ix, ref iy, ref iz, objARadius_t0, ref Tcollision);
+                    }
+                }
+            }
+
+            if (retVal == 0 || Tcollision > 1.0f)
+            {
                 return false;
+            }
 
-            // TO DO *********************** (!q#$%@#%^!#$^@$%^!#$%^!#^ ADD THE REST
-
-            return false;
+            // Calculate actual intersection (move point back into world coordinates).
+            Vector3 i = new Vector3(signX * ix, signY * iy, signZ * iz);
+            point = boxCenter + i;
+            point = Vector3.Transform(point, objBMat_t0);
+            return true;
+            
         }
         #endregion
 
-        #region UpdateBoundingBox()
-        /// UpdateBoundingBox() - Rotate the bounding box and fix the AABB coordinates
-        /// --> Simply wrap the AABB in another AABB --> Least space efficient by fastest.
+        #region FindFaceRegionIntersection()
+        /// FindFaceRegionIntersection() - Direct port of David Eberly's function
         /// ***********************************************************************
-        public static void UpdateBoundingBox(BoundingBox origBox,  Matrix mat, ref Vector3 newMin, ref Vector3 newMax)
+        protected static int FindFaceRegionIntersection(float ex, float ey, float ez,
+                                                        float cx, float cy, float cz,
+                                                        float vx, float vy, float vz,
+                                                        ref float ix, ref float iy, ref float iz,
+                                                        bool aboveFace,
+                                                        float sphereRadius,
+                                                        ref float Tcollision)
         {
-            // transform all 8 points and find min and max extents
-            // This is the dumbest method but it works
-            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Max.Y; aabbverticies[0].Z = origBox.Max.Z;  // left top back      - + +
-            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Max.Y; aabbverticies[1].Z = origBox.Max.Z;  // right top back     + + +
-            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // left top front     - + -
-            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // right top front    + + -
+            // Returns when and whether a sphere in the region above face +Z
+            // intersects face +Z or any of its vertices or edges.  The input
+            // aboveFace is true when the x and y coordinates are within the x and y
+            // extents.  The function will still work if they are not, but it needs
+            // to be false then, to avoid some checks that assume that x and y are
+            // within the extents.  This function checks face z, and the vertex and
+            // two edges that the velocity is headed towards on the face.
 
-            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Min.Y; aabbverticies[0].Z = origBox.Max.Z;  // left bottom back   - - +
-            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Min.Y; aabbverticies[1].Z = origBox.Max.Z;  // right bottom back  + - +
-            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // left bottom front  - - -
-            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // right bottom front + - -
-
-            newMin = newMax = aabbverticies[0];
-
-            for (int i = 0; i < 8; i++)
+            // Check for already intersecting if above face.
+            if (cz <= ez + sphereRadius && aboveFace)
             {
-                aabbverticies[i] = Vector3.Transform(aabbverticies[i], mat);
-                if (aabbverticies[i].X < newMin.X)
-                    newMin.X = aabbverticies[i].X;
-                if (aabbverticies[i].Y < newMin.Y)
-                    newMin.Y = aabbverticies[i].Y;
-                if (aabbverticies[i].Z < newMin.Z)
-                    newMin.Z = aabbverticies[i].Z;
+                Tcollision = 0.0f;
+                return -1;
+            }
 
-                if (aabbverticies[i].X > newMax.X)
-                    newMax.X = aabbverticies[i].X;
-                if (aabbverticies[i].Y > newMax.Y)
-                    newMax.Y = aabbverticies[i].Y;
-                if (aabbverticies[i].Z > newMax.Z)
-                    newMax.Z = aabbverticies[i].Z;
+            // Check for easy out (moving away on Z axis).
+            if (vz >= 0.0f)
+            {
+                return 0;
+            }
+
+            float rsqr = sphereRadius*sphereRadius;
+
+            float vsqrX = vz * vz + vx * vx;
+            float vsqrY = vz * vz + vy * vy;
+            float dx, dy, dz = cz - ez;
+            float crossX, crossY;
+            int signX, signY;
+
+            // This determines which way the box is heading and finds the values of
+            // CrossX and CrossY which are positive if the sphere center will not
+            // pass through the box.  Then it is only necessary to check two edges,
+            // the face and the vertex for intersection.
+
+            if (vx >= 0.0f)
+            {
+                signX = 1;
+                dx = cx - ex;
+                crossX = vx*dz - vz*dx;
+            }
+            else
+            {
+                signX = -1;
+                dx = cx + ex;
+                crossX = vz*dx - vx*dz;
+            }
+
+            if (vy >= 0.0f)
+            {
+                signY = 1;
+                dy = cy - ey;
+                crossY = vy*dz - vz*dy;
+            }
+            else
+            {
+                signY = -1;
+                dy = cy + ey;
+                crossY = vz*dy - vy*dz;
+            }
+
+            // Does the circle intersect along the x edge?
+            if (crossX > sphereRadius*vx*signX)
+            {
+                if (crossX*crossX > rsqr*vsqrX)
+                {
+                    // Sphere overshoots box on the x-axis (either side).
+                    return 0;
+                }
+
+                // Does the circle hit the y edge?
+                if (crossY > sphereRadius*vy*signY)
+                {
+                    // Potential vertex intersection.
+                    if (crossY*crossY > rsqr*vsqrY)
+                    {
+                        // Sphere overshoots box on the y-axis (either side).
+                        return 0;
+                    }
+
+                    Vector3 relVelocity = new Vector3(vx,vy,vz);
+                    Vector3 D = new Vector3(dx,dy,dz);
+                    Vector3 cross = Vector3.Cross(D, relVelocity);
+                    if (cross.SquaredLength() > rsqr*relVelocity.SquaredLength())
+                    {
+                        // Sphere overshoots the box on the corner.
+                        return 0;
+                    }
+
+                    Tcollision = GetVertexIntersection(dx, dy, dz, vx, vy, vz,
+                        rsqr);
+                    ix = ex*signX;
+                    iy = ey*signY;
+                }
+                else
+                {
+                    // x-edge intersection
+                    Tcollision = GetEdgeIntersection(dx, dz, vx, vz, vsqrX, rsqr);
+                    ix = ex*signX;
+                    iy = cy + vy*Tcollision;
+                }
+            }
+            else
+            {
+                // Does the circle hit the y edge?
+                if (crossY > sphereRadius*vy*signY)
+                {
+                    // Potential y-edge intersection.
+                    if (crossY*crossY > rsqr*vsqrY)
+                    {
+                        // Sphere overshoots box on the y-axis (either side).
+                        return 0;
+                    }
+
+                    Tcollision = GetEdgeIntersection(dy, dz, vy, vz, vsqrY, rsqr);
+                    ix = cx + vx*Tcollision;
+                    iy = ey*signY;
+                }
+                else
+                {
+                    // Face intersection (easy).
+                    Tcollision = (-dz + sphereRadius)/vz;
+                    ix = Tcollision*vx + cx;
+                    iy = Tcollision*vy + cy;
+                }
+            }
+
+            // z coordinate of any intersection must be the face of z.
+            iz = ez;
+            return 1;
+
+        }
+        #endregion
+
+        #region GetVertexIntersection()
+        /// GetVertexIntersection() - Direct port of David Eberly's function
+        /// ***********************************************************************
+        protected static float GetVertexIntersection(float dx, float dy, float dz,
+                                                     float vx, float vy, float vz, 
+                                                     float rsqr)
+        {
+            // Finds the time of a 3D line-sphere intersection between a line
+            // P = Dt, where P = (dx, dy, dz) and D = (vx, vy, vz) and
+            // a sphere of radius^2 rsqr.  Note: only valid if there is, in fact,
+            // an intersection.
+
+            float vsqr = vx*vx + vy*vy + vz*vz;
+            float dot = dx*vx + dy*vy + dz*vz;
+            float diff = dx*dx + dy*dy + dz*dz - rsqr;
+            //float inv = Math<Real>::InvSqrt(Math<Real>::FAbs(dot*dot - vsqr*diff));
+            float inv = 1.0f / (float)Math.Sqrt(Math.Abs(dot * dot - vsqr * diff));  // Don't worry about optimization
+            return diff*inv/(1.0f - dot*inv);
+        }
+        #endregion
+
+        #region GetEdgeIntersection()
+        /// GetEdgeIntersection() - Direct port of David Eberly's function
+        /// ***********************************************************************
+        protected static float GetEdgeIntersection(float dx, float dz,
+                                                   float vx, float vz,
+                                                   float vsqr,
+                                                   float rsqr)
+        {
+            float dot = vx*dx + vz*dz;
+            float diff = dx*dx + dz*dz - rsqr;
+            // float inv = Math<Real>::InvSqrt(Math<Real>::FAbs(dot*dot - vsqr*diff));
+            float inv = 1.0f / (float)Math.Sqrt(Math.Abs(dot * dot - vsqr * diff)); // Don't worry about optimization
+            return diff*inv/(1.0f - dot*inv);
+        }
+        #endregion
+
+        #region FindEdgeRegionIntersection()
+        /// FindEdgeRegionIntersection() - Direct port of David Eberly's function
+        /// ***********************************************************************
+        protected static int FindEdgeRegionIntersection(float ex, float ey, float ez, 
+                                                        float cx, float cy, float cz, 
+                                                        float vx, float vy, float vz,
+                                                        ref float ix, ref float iy, ref float iz,
+                                                        bool aboveEdge,
+                                                        float sphereRadius,
+                                                        ref float Tcollision )
+        {
+            // Assumes the sphere center is in the region above the x and z planes.
+            // The input aboveEdge is true when the y coordinate is within the y
+            // extents.  The function will still work if it is not, but it needs to be
+            // false then, to avoid some checks that assume that y is within the
+            // extent.  This function checks the edge that the region is above, as
+            // well as does a "face region" check on the face it is heading towards.
+
+            float dx = cx - ex;
+            float dz = cz - ez;
+            float rsqr = sphereRadius * sphereRadius;
+
+            if (aboveEdge)
+            {
+                float diff = dx * dx + dz * dz - rsqr;
+                if (diff <= 0.0f)
+                {
+                    // Circle is already intersecting the box.
+                    Tcollision = 0.0f;
+                    return -1;
+                }
+            }
+
+            float dot = vx * dx + vz * dz;
+            if (dot >= 0.0f)
+            {
+                // Circle not moving towards box.
+                return 0;
+            }
+
+            // The value dotPerp splits the region of interest along the edge in the
+            // middle of that region.
+            float dotPerp = vz * dx - vx * dz;
+            if (dotPerp >= 0.0f)
+            {
+                // Sphere moving towards +z face.
+                if (vx >= 0.0f)
+                {
+                    // Passed corner, moving away from box.
+                    return 0;
+                }
+
+                // Intersection with x-z edge.  If there is trouble with objects that
+                // "scrape" the surface (velocity perpendicular to face normal, and
+                // point of contact with a radius direction parallel to the face
+                // normal), this check may need to be a little more inclusive (small
+                // tolerance due to floating point errors) as the edge check needs
+                // to get "scraping" objects (as they hit the edge with the point)
+                // and the face region check will not catch it because the object is
+                // not moving towards the face.
+                if (dotPerp <= -sphereRadius * vx)
+                {
+                    return FindJustEdgeIntersection(cy, ez, ey, ex, dz, dx, vz, vy,
+                        vx, ref iz, ref iy, ref ix, sphereRadius, ref Tcollision);
+                }
+
+                // Now, check the face of z for intersections.
+                return FindFaceRegionIntersection(ex, ey, ez, cx, cy, cz, vx, vy,
+                    vz, ref ix, ref iy, ref iz, false, sphereRadius, ref Tcollision);
+            }
+            else
+            {
+                // Sphere moving towards +x face.
+                if (vz >= 0.0f)
+                {
+                    // Passed corner, moving away from box.
+                    return 0;
+                }
+
+                // Check intersection with x-z edge.  See the note above about
+                // "scraping" objects.
+                if (dotPerp >= sphereRadius * vz)
+                {
+                    // Possible edge/vertex intersection.
+                    return FindJustEdgeIntersection(cy, ex, ey, ez, dx, dz, vx, vy,
+                        vz, ref ix, ref iy, ref iz, sphereRadius, ref Tcollision);
+                }
+
+                // Now, check the face of x for intersections.
+                return FindFaceRegionIntersection(ez, ey, ex, cz, cy, cx, vz, vy,
+                    vx, ref iz, ref iy, ref ix, false, sphereRadius, ref Tcollision);
             }
         }
         #endregion
 
-        #region testCollisionRayAABB()
-        /// testCollisionRayAABB() - Test whether a ray intersects an AABB
-        /// Code derived from: Pages 179-181 Real Time Collision Detection, Christer Ericson
+        #region FindJustEdgeIntersection()
+        /// FindJustEdgeIntersection() - Direct port of David Eberly's function
         /// ***********************************************************************
-        protected static bool testCollisionRayAABB(Vector3 p, Vector3 d, BoundingBox AABB, ref float Tcollision, ref Vector3 q)
+        protected static int FindJustEdgeIntersection (float cy, 
+                                                       float ex, float ey, float ez, 
+                                                       float dx, float dz, 
+                                                       float vx, float vy, float vz,
+                                                       ref float ix, ref float iy, ref float iz,
+                                                       float sphereRadius,
+                                                       ref float Tcollision)
         {
-            // TO DO *********************** (!q#$%@#%^!#$^@$%^!#$%^!#^ ADD THE REST
+            // Finds the intersection of a point dx and dz away from an edge with
+            // direction y.  The sphere is at a point cy, and the edge is at the
+            // point ex.  Checks the edge and the vertex the velocity is heading
+            // towards.
+
+            float rsqr = sphereRadius*sphereRadius;
+            float dy, crossZ, crossX;  // possible edge/vertex intersection
+            int signY;
+
+            // Depending on the sign of Vy, pick the vertex that the velocity is
+            // heading towards on the edge, as well as creating crossX and crossZ
+            // such that their sign will always be positive if the sphere center goes
+            // over that edge.
+
+            if (vy >= 0.0f)
+            {
+                signY = 1;
+                dy = cy - ey;
+                crossZ = dx*vy - dy*vx;
+                crossX = dz*vy - dy*vz;
+            }
+            else
+            {
+                signY = -1;
+                dy = cy + ey;
+                crossZ = dy*vx - dx*vy;
+                crossX = dy*vz - dz*vy;
+            }
+
+            // Check where on edge this intersection will occur.
+            if (crossZ >= 0.0f && crossX >= 0.0f
+            &&  crossX*crossX + crossZ*crossZ >
+                vy*vy*sphereRadius*sphereRadius)
+            {
+                // Sphere potentially intersects with vertex.
+                Vector3 relVelocity = new Vector3(vx, vy, vz);
+                Vector3 D = new Vector3(dx, dy, dz);
+                Vector3 cross = Vector3.Cross(D,relVelocity);
+                if (cross.SquaredLength() > rsqr*relVelocity.SquaredLength())
+                {
+                    // Sphere overshoots the box on the vertex.
+                    return 0;
+                }
+
+                // Sphere actually does intersect the vertex.
+                Tcollision = GetVertexIntersection(dx, dy, dz, vx, vy, vz, rsqr);
+                ix = ex;
+                iy = signY*ey;
+                iz = ez;
+            }
+            else
+            {
+                // Sphere intersects with edge.
+                float vsqrX = vz*vz + vx*vx;
+                Tcollision = GetEdgeIntersection(dx, dz, vx, vz, vsqrX, rsqr);
+                ix = ex;
+                iy = cy + Tcollision * vy;
+                iz = ez;
+            }
+            return 1;
         }
         #endregion
 
+        #region FindVertexRegionIntersection()
+        /// FindVertexRegionIntersection() - Direct port of David Eberly's function
+        /// ***********************************************************************
+        protected static int FindVertexRegionIntersection(float ex, float ey, float ez, 
+                                                          float cx, float cy, float cz, 
+                                                          float vx, float vy, float vz,
+                                                          ref float ix, ref float iy, ref float iz,
+                                                          float sphereRadius,
+                                                          ref float Tcollision)
+        {
+            // Assumes the sphere is above the vertex +ex, +ey, +ez.
+
+            float dx = cx - ex;
+            float dy = cy - ey;
+            float dz = cz - ez;
+            float rsqr = sphereRadius * sphereRadius;
+            float diff = dx * dx + dy * dy + dz * dz - rsqr;
+            if (diff <= 0.0f)
+            {
+                // Sphere is already intersecting the box.
+                Tcollision = 0.0f;
+                return -1;
+            }
+
+            if (vx * dx + vy * dy + vz * dz >= 0.0f)
+            {
+                // Sphere not moving towards box.
+                return 0;
+            }
+
+            // The box can be divided up into 3 regions, which simplifies checking to
+            // see what the sphere hits.  The regions are divided by which edge
+            // (formed by the vertex and some axis) is closest to the velocity
+            // vector.
+            //
+            // To check if it hits the vertex, look at the edge (E) it is going
+            // towards.  Create a plane formed by the other two edges (with E as the
+            // plane normal) with the vertex at the origin.  The intercept along an
+            // axis, in that plane, of the line formed by the sphere center and the
+            // velocity as its direction, will be fCrossAxis/fVEdge.  Thus, the
+            // distance from the origin to the point in the plane that that line from
+            // the sphere in the velocity direction crosses will be the squared sum
+            // of those two intercepts.  If that sum is less than the radius squared,
+            // then the sphere will hit the vertex otherwise, it will continue on
+            // past the vertex.  If it misses, since it is known which edge the box
+            // is near, the find edge region test can be used.
+            //
+            // Also, due to the constrained conditions, only those six cases (two for
+            // each region, since fCrossEdge can be + or -) of signs of fCross values
+            // can occur.
+            //
+            // The 3rd case will also pick up cases where D = V, causing a ZERO cross.
+
+            float crossX = vy * dz - vz * dy;
+            float crossY = vx * dz - vz * dx;
+            float crossZ = vy * dx - vx * dy;
+            float crX2 = crossX * crossX;
+            float crY2 = crossY * crossY;
+            float crZ2 = crossZ * crossZ;
+            float vx2 = vx * vx;
+            float vy2 = vy * vy;
+            float vz2 = vz * vz;
+
+            // Intersection with the vertex?
+            if (crossY < 0.0f
+            && crossZ >= 0.0f
+            && crY2 + crZ2 <= rsqr * vx2
+
+            || crossZ < 0.0f
+            && crossX < 0.0f
+            && crX2 + crZ2 <= rsqr * vy2
+
+            || crossY >= 0.0f
+            && crossX >= 0.0f
+            && crX2 + crY2 <= rsqr * vz2)
+            {
+                // Standard line-sphere intersection.
+                Tcollision = GetVertexIntersection(dx, dy, dz, vx, vy, vz,
+                    sphereRadius * sphereRadius);
+                ix = Tcollision * vx + cx;
+                iy = Tcollision * vy + cy;
+                iz = Tcollision * vz + cz;
+                return 1;
+            }
+            else if (crossY < 0.0f && crossZ >= 0.0f)
+            {
+                // x edge region, check y,z planes.
+                return FindEdgeRegionIntersection(ey, ex, ez, cy, cx, cz, vy, vx,
+                    vz, ref iy, ref ix, ref iz, false, sphereRadius, ref Tcollision);
+            }
+            else if (crossZ < 0.0f && crossX < 0.0f)
+            {
+                // y edge region, check x,z planes.
+                return FindEdgeRegionIntersection(ex, ey, ez, cx, cy, cz, vx, vy,
+                    vz, ref ix, ref iy, ref iz, false, sphereRadius, ref Tcollision);
+            }
+            else // crossY >= 0 && crossX >= 0
+            {
+                // z edge region, check x,y planes.
+                return FindEdgeRegionIntersection(ex, ez, ey, cx, cz, cy, vx, vz,
+                    vy, ref ix, ref iz, ref iy, false, sphereRadius, ref Tcollision);
+            }
+        }
+        #endregion
+
+        #region ClosestPointOnAABB(Vector3 point, BoundingBox xBox) - NOT TESTED
+        protected static Vector3 ClosestPointOnAABB(Vector3 Point, BoundingBox xBox)
+        {
+            Vector3 xClosestPoint;
+            xClosestPoint.X = (Point.X < xBox.Min.X) ? xBox.Min.X : (Point.X > xBox.Max.X) ? xBox.Max.X : Point.X;
+            xClosestPoint.Y = (Point.Y < xBox.Min.Y) ? xBox.Min.Y : (Point.Y > xBox.Max.Y) ? xBox.Max.Y : Point.Y;
+            xClosestPoint.Z = (Point.Z < xBox.Min.Z) ? xBox.Min.Z : (Point.Z > xBox.Max.Z) ? xBox.Max.Z : Point.Z;
+
+            return xClosestPoint;
+        }
+        #endregion
+
+        #region testCollisionPointAABB(Vector3 point, BoundingBox xBox) - NOT TESTED
+        protected static bool testCollisionPointAABB(Vector3 point, BoundingBox xBox)
+        {
+            // For the point to be in the bounding box, it must be in all the ranges
+            if (point.X < xBox.Min.X || point.X > xBox.Max.X)
+                return false;
+            else if (point.Y < xBox.Min.Y || point.Y > xBox.Max.Y)
+                return false;
+            else if (point.Z < xBox.Min.Z || point.Z > xBox.Max.Z)
+                return false;
+            else
+                return true;
+        }
+        #endregion
+
+        #region testCollisionRayAABB() - NOT TESTED
+        /// testCollisionRayAABB() - Test whether a ray intersects an AABB
+        /// Code derived from: Pages 179-181 Real Time Collision Detection, Christer Ericson
+        /// Intersect ray R(t) = p + t*d against AABB
+        /// ***********************************************************************
+        protected static bool testCollisionRayAABB(Vector3 p, Vector3 d, BoundingBox AABB, ref float Tcollision, ref Vector3 q)
+        {
+            Tcollision = 0.0f;
+            float tmax = float.MaxValue;
+
+            // for all three slabs
+            for (int i = 0; i < 3; i++)
+            {
+                if (Math.Abs(d.GetAt(i)) < EPSILON)
+                {
+                    // Ray is parallel to the slab --> No hit if origin not within slab
+                    if (p.GetAt(i) < AABB.Min.GetAt(i) || p.GetAt(i) > AABB.Max.GetAt(i))
+                        return false;
+                }
+                else
+                {
+                    // Compute intersection t value of ray with near and far plane of slab
+                    float ood = 1.0f / d.GetAt(i);
+                    float t1 = (AABB.Min.GetAt(i) - p.GetAt(i)) * ood;
+                    float t2 = (AABB.Max.GetAt(i) - p.GetAt(i)) * ood;
+                    // Make t1 be intersection with near plane, t2 with far plane
+                    if (t1 > t2)
+                        Swap(t1, t2);
+                    // Compute the intersection of slab intersection intervals
+                    Tcollision = Max(Tcollision, t1);
+                    tmax = Min(tmax, t2);
+                    // Exit with no collision as soon as slab intersection becomes empty
+                    if (Tcollision > tmax)
+                        return false;
+                }
+            }
+
+            // Ray intersections all 3 slabs. Return point q and intersection time
+            q = p + d * Tcollision;
+            return true;
+        }
+        #endregion
+
+        #region Swap(float x, float y) - NOT TESTED
+        /// Just swap the two variables
+        /// ***********************************************************************
+        protected static void Swap(float x, float y)
+        {
+            float temp = y;
+            y = x;
+            x = temp;
+        }
+        #endregion
+
+        #region Corner(BoundingBox b, int n) - NOT TESTED
+        /// Support function that returns the AABB vertex with index n
+        /// ***********************************************************************
+        protected static Vector3 Corner(BoundingBox b, int n)
+        {
+            Vector3 p = new Vector3();
+            p.X = (((n & 1)!=0) ? b.Max.X : b.Min.X);
+            p.Y = (((n & 2)!=0) ? b.Max.Y : b.Min.Y);
+            p.Z = (((n & 4)!=0) ? b.Max.Z : b.Min.Z);
+            return p;
+        }
+        #endregion
     }
+
 }

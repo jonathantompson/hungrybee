@@ -46,7 +46,7 @@ namespace hungrybee
 
         #region Constructor - gameObjectHeightMap(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
         public gameObjectHeightMap(game game, bool fromFile, string file, string textureFile, Vector3 min, Vector3 max)
-            : base(game, null)
+            : base(game, null, boundingObjType.AABB)
         {
             heightMapFromFile = fromFile;
             heightMapFile = file;
@@ -91,7 +91,7 @@ namespace hungrybee
 
             // Create the AABB and mark object as using AABB for collision detection
             base.boundingObjType = boundingObjType.AABB;
-            BoundingBox bBox = XNAUtils.CreateBoxFromVerticies(terrainVertices);
+            BoundingBox bBox = XNAUtils.CreateAABBFromVerticies(terrainVertices);
             base.boundingObj = (Object)bBox;
 
             // Calculate the Itensor --> Not really required since floor doesn't move, but anyway
@@ -108,6 +108,8 @@ namespace hungrybee
         /// ***********************************************************************
         public override void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {
+            // THE HEIGHT MAP DOESN'T MOVE --> SO DON'T BOTHER INTERPOLATING BETWEEN FRAMES
+
             //draw terrain
             int width = heightMapData.GetLength(0);
             int height = heightMapData.GetLength(1);

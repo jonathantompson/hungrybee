@@ -1,5 +1,8 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
-2. Implement collision routine: bounding spheres are easiest and quickest (collision with heightmap shouldn't be too stressful
+2. Implement collision routine: 
+  a) Finish lower level routines (need to debug AABB Vs. AABB)
+  b) Put together coarse collision routine
+  c) When coarse is triggered, run lower-level and restart using impulse based method
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
 5. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities

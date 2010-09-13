@@ -84,7 +84,7 @@ namespace hungrybee
                 {
                     ListEnum.Current.ChangeEffectUsedByModel(replacementEffect);
                 }
-                catch(Exception ex_in)
+                catch
                 {
                     // I expect to catch an exception here if we're tyring to change the model effects twice
                     // This happens when two game objects share the same model content
@@ -122,14 +122,15 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 6 )
+                        if (numPlayers == 0 && curToken.Count == 7 )
                         {
                             curObject = new gameObjectPlayer(h_game, 
                                                              curToken[1],
-                                                             float.Parse(curToken[2]),
+                                                             GetBoundingObjTypeFromString(curToken[2]),
                                                              float.Parse(curToken[3]),
                                                              float.Parse(curToken[4]),
-                                                             float.Parse(curToken[5]));
+                                                             float.Parse(curToken[5]),
+                                                             float.Parse(curToken[6]));
                             numPlayers += 1;
                         }
                         else
@@ -151,13 +152,14 @@ namespace hungrybee
                             throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}",levelNumber) + ".csv");
                         break;
                     case "enemy":
-                        if (curToken.Count == 7)
+                        if (curToken.Count == 8)
                         {
                             curObject = new gameObjectEnemy(h_game,
                                                             curToken[1],
-                                                            float.Parse(curToken[2]),
+                                                            GetBoundingObjTypeFromString(curToken[2]),
                                                             float.Parse(curToken[3]),
-                                                            new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])));
+                                                            float.Parse(curToken[4]),
+                                                            new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7])));
                             numEnemys += 1;
                         }
                         else
@@ -252,5 +254,20 @@ namespace hungrybee
         }
         #endregion
 
+        #region GetBoundingObjTypeFromString()
+        protected static boundingObjType GetBoundingObjTypeFromString(string token)
+        {
+            boundingObjType objType = boundingObjType.UNDEFINED;
+            if (token == "AUTO")
+                objType = boundingObjType.UNDEFINED;
+            else if (token == "SPHERE")
+                objType = boundingObjType.SPHERE;
+            else if (token == "AABB")
+                objType = boundingObjType.AABB;
+            else
+                throw new Exception("gameObjectManager::GetBoundingObjTypeFromString() - Unrecognized obj type " + token);
+            return objType;
+        }
+        #endregion
     }
 }
