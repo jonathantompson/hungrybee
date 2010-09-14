@@ -103,6 +103,9 @@ namespace hungrybee
             
             // Load in the object descriptions from the csv file for the first level
             LoadLevel(1);
+
+            // Now initialize the physics manager content
+            h_game.GetPhysicsManager().LoadContent();
         }
         #endregion
 
@@ -267,6 +270,32 @@ namespace hungrybee
             else
                 throw new Exception("gameObjectManager::GetBoundingObjTypeFromString() - Unrecognized obj type " + token);
             return objType;
+        }
+        #endregion
+
+        #region SetDirtyBoundingBoxes()
+        /// SetDirtyBoundingBoxes - Set all the AABB boxes to be marked as dirty and need of updating
+        /// ***********************************************************************
+        public void SetDirtyBoundingBoxes()
+        {
+            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                ListEnum.Current.SetDirtyAABB();
+            }
+        }
+        #endregion
+
+        #region UpdateBoundingBoxes()
+        /// UpdateBoundingBoxes - Update all the bounding boxes if they are dirty
+        /// ***********************************************************************
+        public void UpdateBoundingBoxes()
+        {
+            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                 ListEnum.Current.UpdateBoundingBox();
+            }
         }
         #endregion
     }

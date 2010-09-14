@@ -47,7 +47,7 @@ namespace ExtensionMethods
         }
 
         // Add a modifier so we can use index referencing to Vector3
-        public static void SetAt(this Vector3 vec, int index, float val)
+        public static void Vector3SetAt(ref Vector3 vec, int index, float val)
         {
             switch (index)
             {

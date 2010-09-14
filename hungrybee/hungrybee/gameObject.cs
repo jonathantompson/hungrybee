@@ -35,6 +35,10 @@ namespace hungrybee
         public boundingObjType boundingObjType;
         public Object boundingObj;
 
+        public BoundingBox sweepAndPruneAABB;
+        public Vector3 AABB_min, AABB_max;
+        public bool dirtyAABB; // Flag for collision detection to avoid computing translated aabb twice
+
         public rboState state;
         public rboState prevState;
         public rboState drawState;
@@ -60,6 +64,7 @@ namespace hungrybee
             modelScaleToNormalizeSize = 1.0f;
             forceList = new List<force>(game.GetGameSettings().forceListCapacity);
             boundingObjType = objType;
+            dirtyAABB = true;
         }
         #endregion
 
@@ -89,6 +94,7 @@ namespace hungrybee
 
             // Create a Bounding Box
             BoundingBox bBox = XNAUtils.CreateAABBFromModel(model);
+            sweepAndPruneAABB = bBox;
 
             // Choose the bounding volume that has the smallest volume...
             if( boundingObjType == boundingObjType.UNDEFINED )
@@ -314,6 +320,45 @@ namespace hungrybee
         public static Vector3 Interp(Vector3 start, Vector3 end, float percentInterp)
         {
             return (end - start) * percentInterp + start;
+        }
+        #endregion
+
+        #region UpdateBoundingBox()
+        /// UpdateBoundingBox() - Update the bounding box used in Collision detection
+        /// Box is formed by the origional static box swept through the vector (state.pos - prevState.pos)
+        /// For fast moving objects this will be a very large Bounding box
+        /// ASSUMES ROTATION AND SCALE ARE CONSTANT BETWEEN FRAMES
+        /// ***********************************************************************
+        public void UpdateBoundingBox()
+        {
+            if (dirtyAABB)
+            {
+                Matrix mat = CreateScale(prevState.scale) * Matrix.CreateFromQuaternion(prevState.orient) * Matrix.CreateTranslation(prevState.pos);
+                collisionUtils.UpdateBoundingBox(sweepAndPruneAABB, mat, ref AABB_min, ref AABB_max);
+                Vector3 displacement = state.pos - prevState.pos;
+                AABB_min = Vector3.Transform(sweepAndPruneAABB.Min, mat);
+                AABB_max = Vector3.Transform(sweepAndPruneAABB.Max, mat);
+
+                // Find smallest vector by sweeping sphere along the displacement between the two states
+                AABB_min.X = collisionUtils.Min(AABB_min.X, AABB_min.X + displacement.X);
+                AABB_min.Y = collisionUtils.Min(AABB_min.Y, AABB_min.Y + displacement.Y);
+                AABB_min.Z = collisionUtils.Min(AABB_min.Z, AABB_min.Z + displacement.Z);
+
+                // Find largest vector by sweeping sphere along the displacement between the two states
+                AABB_max.X = collisionUtils.Max(AABB_max.X, AABB_max.X + displacement.X);
+                AABB_max.Y = collisionUtils.Max(AABB_max.Y, AABB_max.Y + displacement.Y);
+                AABB_max.Z = collisionUtils.Max(AABB_max.Z, AABB_max.Z + displacement.Z);
+                dirtyAABB = false;
+            }
+        }
+        #endregion
+
+        #region SetDirtyAABB()
+        /// SetDirtyAABB()
+        /// ***********************************************************************
+        public void SetDirtyAABB()
+        {
+            dirtyAABB = true;
         }
         #endregion
     }

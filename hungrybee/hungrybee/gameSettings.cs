@@ -42,6 +42,7 @@ namespace hungrybee
         public float    EPSILON;
         public int      forceListCapacity;
         public float    physicsMinVel;
+        public int      physicsObjectsStartingCapacity;
         public float    gravity;
 
         // VARIABLES NOT SAVED TO DISK
@@ -80,6 +81,7 @@ namespace hungrybee
             EPSILON = 0.00000001f;
             forceListCapacity = 4;
             physicsMinVel = 0.0001f;
+            physicsObjectsStartingCapacity = 128;
             gravity = 0.981f;
 
             //// ************************************
@@ -190,6 +192,9 @@ namespace hungrybee
                         case "gravity":
                             this.gravity = float.Parse(curToken[1]);
                             break;
+                        case "physicsObjectsStartingCapacity":
+                            this.physicsObjectsStartingCapacity = Convert.ToInt32(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -233,6 +238,7 @@ namespace hungrybee
             writer.WriteNextToken("EPSILON", this.EPSILON);
             writer.WriteNextToken("forceListCapacity", this.forceListCapacity);
             writer.WriteNextToken("physicsMinVel", this.physicsMinVel);
+            writer.WriteNextToken("physicsObjectsStartingCapacity", this.physicsObjectsStartingCapacity);
             writer.WriteNextToken("gravity", this.gravity);
 
             //// ************************************

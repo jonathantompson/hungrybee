@@ -1,7 +1,7 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
 2. Implement collision routine: 
-  a) Finish lower level routines (need to debug AABB Vs. AABB)
-  b) Put together coarse collision routine
+  a) Finish lower level routines (need to provide collision point and normal for each routine)
+  b) Put together coarse collision routine --> DONE, NEED TO DEBUG
   c) When coarse is triggered, run lower-level and restart using impulse based method
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty

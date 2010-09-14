@@ -24,7 +24,7 @@ namespace hungrybee
     /// ** Static library of collision detection routines.  A LOT of code here isn't    ** 
     /// ** mine.  Particularly the lower-level bounding volume intersection tests. The  **
     /// ** sources that were used are:                                                  **
-    /// ** David Eberly's Geometric Tools (Sphere Vs. Box)                              **
+    /// ** 1. David Eberly's Geometric Tools (Sphere Vs. Box and Box Vs. Box)           **
     /// ** Gamasutra article: Simple Intersection Tests For Games (Sphere Vs. Sphere)   **
     /// ** ALL TESTS ARE SWEPT VOLUME TESTS.  There should be NO tunnelling between     **
     /// ** frames & for each collision a point and a normalized time [0,1] is returned. **
@@ -58,8 +58,14 @@ namespace hungrybee
         #region testCollision()
         /// testCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
-        public static bool testCollision(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point )
+        public static bool testCollision(gameObject objA, gameObject objB, ref collision _col ) // normal defined for objA --> objB is just negative
         {
+            bool retVal;
+            Vector3 point = Vector3.Zero;
+            Vector3 normal = Vector3.Zero;
+            float Tcollision = 0.0f;
+
+
             // Big dumb if else chain
             // --> Probably data directed programming would be better here, but not too many types
             if (objA.boundingObjType == boundingObjType.UNDEFINED || objB.boundingObjType == boundingObjType.UNDEFINED)
@@ -67,20 +73,38 @@ namespace hungrybee
 
             // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.testCollisionSphereSphere(objA, objB, ref Tcollision, ref point);
+            {
+                retVal = collisionUtils.testCollisionSphereSphere(objA, objB, ref Tcollision, ref point, ref normal);
+                if (retVal)
+                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
+            }
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.testCollisionSphereAABB(objA, objB, ref Tcollision, ref point);
+            {
+                retVal = collisionUtils.testCollisionSphereAABB(objA, objB, ref Tcollision, ref point, ref normal);
+                if (retVal)
+                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
+            }
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.testCollisionSphereAABB(objB, objA, ref Tcollision, ref point);
+            {
+                retVal = collisionUtils.testCollisionSphereAABB(objB, objA, ref Tcollision, ref point, ref normal);
+                if (retVal)
+                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
+            }
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.testCollisionAABBAABB(objA, objB, ref Tcollision, ref point);
-
+            {
+                retVal = collisionUtils.testCollisionAABBAABB(objA, objB, ref Tcollision, ref point, ref normal);
+                if (retVal)
+                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
+            }
             else
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on unrecognized object types");
+
+            return retVal;
+
         }
         #endregion
 
@@ -90,7 +114,7 @@ namespace hungrybee
         ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
         /// ***********************************************************************
-        protected static bool testCollisionAABBAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point) // objA is a sphere, objB is an AABB
+        protected static bool testCollisionAABBAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point, ref Vector3 normal) // objA is a sphere, objB is an AABB
         {
             BoundingBox mBox1 = (BoundingBox)objA.boundingObj;
             BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
@@ -116,8 +140,6 @@ namespace hungrybee
 
             // Continue with the algorithm in: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
             Vector3 v = velB - velA; // Revative velocity in normalized time
-            Vector3 u_0 = new Vector3(0.0f, 0.0f, 0.0f); // first times of overlap along each axis
-            Vector3 u_1 = new Vector3(1.0f, 1.0f, 1.0f); // last times of overlap along each axis
 
             //check if they were overlapping on the previous frame
             if (testCollisionAABBAABBStatic(objACenter_t0, objBCenter_t0, Ea, Eb))
@@ -127,59 +149,44 @@ namespace hungrybee
                 throw new Exception("CollisionUtils::testCollisionAABBAABB() - AABBs were overlapping at the start! Check starting conditions");
             }
 
-            if (v.Mag() < EPSILON) // If the velocity is zero we've done enough
+            if (v.Mag() == 0.0f ) // If the velocity is zero we've done enough
                 return false;
 
-            //find the possible first and last times of overlap along each axis
+            float tfirst = 0.0f;
+            float tlast = 1.0f;
+
             for (int i = 0; i < 3; i++)
             {
-                if (objAMax_t0.GetAt(i) < objBMin_t0.GetAt(i) && v.GetAt(i) < 0)
+                if (v.GetAt(i) < 0.0f)
                 {
-                    u_0.SetAt(i,(objAMax_t0.GetAt(i) - objBMin_t0.GetAt(i)) / v.GetAt(i));
+                    if (objBMax_t0.GetAt(i) < objAMin_t0.GetAt(i))
+                        return false;
+                    if (objAMax_t0.GetAt(i) < objBMin_t0.GetAt(i))
+                        tfirst = Max((objAMax_t0.GetAt(i) - objBMin_t0.GetAt(i)) / v.GetAt(i), tfirst);
+                    if (objBMax_t0.GetAt(i) > objAMin_t0.GetAt(i))
+                        tlast = Min((objAMin_t0.GetAt(i) - objBMax_t0.GetAt(i)) / v.GetAt(i), tlast);
                 }
-
-                else if (objBMax_t0.GetAt(i) < objAMin_t0.GetAt(i) && v.GetAt(i) > 0)
+                if (v.GetAt(i) > 0.0f)
                 {
-                    u_0.SetAt(i,(objAMin_t0.GetAt(i) - objBMax_t0.GetAt(i)) / v.GetAt(i));
+                    if (objBMin_t0.GetAt(i) > objAMax_t0.GetAt(i))
+                        return false;
+                    if (objBMax_t0.GetAt(i) < objAMin_t0.GetAt(i))
+                        tfirst = Max((objAMin_t0.GetAt(i) - objBMax_t0.GetAt(i)) / v.GetAt(i), tfirst);
+                    if (objAMax_t0.GetAt(i) > objBMin_t0.GetAt(i))
+                        tlast = Min((objAMax_t0.GetAt(i) - objBMin_t0.GetAt(i)) / v.GetAt(i), tlast);
                 }
-
-                if (objBMax_t0.GetAt(i) > objAMin_t0.GetAt(i) && v.GetAt(i) < 0)
-                {
-                    u_1.SetAt(i,(objAMin_t0.GetAt(i) - objBMax_t0.GetAt(i)) / v.GetAt(i));
-                }
-
-                else if (objAMax_t0.GetAt(i) > objBMin_t0.GetAt(i) && v.GetAt(i) > 0)
-                {
-                    u_1.SetAt(i,(objAMax_t0.GetAt(i) - objBMin_t0.GetAt(i)) / v.GetAt(i));
-                }
-
+                // No overlap possible if time of first contact occurs after time of last contact
+                if (tfirst > tlast)
+                    return false;
             }
 
-
-            float u0 = Max(u_0.X, Max(u_0.Y, u_0.Z)); //possible first time of overlap
-            float u1 = Min(u_1.X, Min(u_1.Y, u_1.Z)); //possible last time of overlap
-
-            //they could have only collided if the first time of overlap occurred before the last time of overlap
-            if (u0 <= u1)
-            {
-                Tcollision = u0;
-                //*********************************
-                //*********** TEMP CODE ***********
-                //*********************************
-                throw new Exception("TO DO: FIND OUT HOW TO GET THE POINT OF COLLISION");
-                //*********************************
-                //*********** TEMP CODE ***********
-                //*********************************
-                return true;
-            }
-            else
-                return false;
-
+            Tcollision = tfirst;
+            return true;
         }
         #endregion
 
         #region testCollisionAABBAABBStatic()
-        protected static bool testCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float [] Ea, float [] Eb)
+        protected static bool testCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float[] Ea, float[] Eb)
         {
             Vector3 T = Pb - Pa;
             return ((float)Math.Abs(T.X)) <= (Ea[0] + Eb[0]) &&
@@ -191,7 +198,7 @@ namespace hungrybee
         #region Max(float x, float y)
         /// Just return the largest - throw an exception if both are the same value
         /// ***********************************************************************
-        protected static float Max(float x, float y)
+        public static float Max(float x, float y)
         {
             if (x >= y)
                 return x;
@@ -203,7 +210,7 @@ namespace hungrybee
         #region Min(float x, float y)
         /// Just return the largest - throw an exception if both are the same value
         /// ***********************************************************************
-        protected static float Min(float x, float y)
+        public static float Min(float x, float y)
         {
             if (x < y)
                 return x;
@@ -216,21 +223,22 @@ namespace hungrybee
         /// UpdateBoundingBox() - Rotate the bounding box and fix the AABB coordinates
         /// --> Simply wrap the AABB in another AABB --> Least space efficient by fastest.
         /// ***********************************************************************
-        protected static void UpdateBoundingBox(BoundingBox origBox, Matrix mat, ref Vector3 newMin, ref Vector3 newMax)
+        public static void UpdateBoundingBox(BoundingBox origBox, Matrix mat, ref Vector3 newMin, ref Vector3 newMax)
         {
             // transform all 8 points and find min and max extents
             // This is the dumbest method but it works
             aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Max.Y; aabbverticies[0].Z = origBox.Max.Z;  // left top back      - + +
             aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Max.Y; aabbverticies[1].Z = origBox.Max.Z;  // right top back     + + +
             aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // left top front     - + -
-            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Max.Y; aabbverticies[2].Z = origBox.Min.Z;  // right top front    + + -
+            aabbverticies[3].X = origBox.Max.X; aabbverticies[3].Y = origBox.Max.Y; aabbverticies[3].Z = origBox.Min.Z;  // right top front    + + -
 
-            aabbverticies[0].X = origBox.Min.X; aabbverticies[0].Y = origBox.Min.Y; aabbverticies[0].Z = origBox.Max.Z;  // left bottom back   - - +
-            aabbverticies[1].X = origBox.Max.X; aabbverticies[1].Y = origBox.Min.Y; aabbverticies[1].Z = origBox.Max.Z;  // right bottom back  + - +
-            aabbverticies[2].X = origBox.Min.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // left bottom front  - - -
-            aabbverticies[2].X = origBox.Max.X; aabbverticies[2].Y = origBox.Min.Y; aabbverticies[2].Z = origBox.Min.Z;  // right bottom front + - -
+            aabbverticies[4].X = origBox.Min.X; aabbverticies[4].Y = origBox.Min.Y; aabbverticies[4].Z = origBox.Max.Z;  // left bottom back   - - +
+            aabbverticies[5].X = origBox.Max.X; aabbverticies[5].Y = origBox.Min.Y; aabbverticies[5].Z = origBox.Max.Z;  // right bottom back  + - +
+            aabbverticies[6].X = origBox.Min.X; aabbverticies[6].Y = origBox.Min.Y; aabbverticies[6].Z = origBox.Min.Z;  // left bottom front  - - -
+            aabbverticies[7].X = origBox.Max.X; aabbverticies[7].Y = origBox.Min.Y; aabbverticies[7].Z = origBox.Min.Z;  // right bottom front + - -
 
-            newMin = newMax = Vector3.Transform(aabbverticies[0], mat);
+            aabbverticies[0] = Vector3.Transform(aabbverticies[0], mat);
+            newMin = newMax = aabbverticies[0];
 
             for (int i = 1; i < 8; i++)
             {
@@ -259,7 +267,7 @@ namespace hungrybee
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page2
         /// NOTE: There are faster methods to perform this test --> to avoid sqrt calls AND to avoid floating point accuracy issues for large velocities
         /// ***********************************************************************
-        protected static bool testCollisionSphereSphere(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point)
+        protected static bool testCollisionSphereSphere(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point, ref Vector3 normal)
         {
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
@@ -367,7 +375,7 @@ namespace hungrybee
         /// I also tried http://www.gamedev.net/community/forums/topic.asp?topic_id=335465 (much simpler anyway) --> Doesn't sweep box
         /// I finally used http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D). Includes the cases of moving spheres and boxes. "
         /// ***********************************************************************
-        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point) // objA is a sphere, objB is an AABB
+        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point, ref Vector3 normal) // objA is a sphere, objB is an AABB
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;

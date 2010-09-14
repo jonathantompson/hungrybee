@@ -33,8 +33,19 @@ namespace hungrybee
 
         // Local variables
         private game h_game;
+        private int numObjects; // Not known until gameObjectManager.LoadLevel() is complete
         rboDerivative D1, D2, D3, D4;
         private static bool pauseGame = false;
+
+        // Coarse collision detection
+        private List<AABBOverlap> AABBOverlapStatus;
+        private LinkedList<int> AABBActiveList; // Linked list of active values
+        private List<int> AABBXaxis;   // Sorted indices of gameObjects --> xaxis values
+        private List<int> AABBYaxis;
+        private List<int> AABBZaxis;
+
+        // Fine collision detection
+        private List<collision> collisions;
 
         #endregion
 
@@ -62,42 +73,41 @@ namespace hungrybee
         }
         #endregion
 
+        #region LoadContent()
+        /// LoadContent() -  Just initilaize physics structures that require knowledge of how many game elements exist.
+        /// ***********************************************************************
+        public void LoadContent()
+        {
+            numObjects = h_game.GetGameObjectManager().h_GameObjects.Count;
+            initCoarseCollisionDetection();
+            initFineCollisionDetection();
+        }
+        #endregion
+
         #region Update()
         /// Update()
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
             // Take RK4 Step for each object in h_game.gameObjectManager
-            if (!pauseGame) 
+            if (!pauseGame)
+            {
                 TakeRK4Step(gameTime, h_game.GetGameObjectManager().h_GameObjects);
+                h_game.GetGameObjectManager().SetDirtyBoundingBoxes();
+            }
 
             // Coarse Collision detection
+            CoarseCollisionDetection();
 
             // Fine Collision detection
-            // This might be useful: http://nehe.gamedev.net/data/lessons/lesson.asp?lesson=30
-            // Also useful: http://www.realtimerendering.com/intersections.html
+            FineCollisionDetection();
 
-            // *******************************
-            // ********** TEST CODE **********
-            // *******************************
-            float Tcollision = 0.0f;
-            Vector3 point = Vector3.Zero;
-            bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[0], 
-                                                       h_game.GetGameObjectManager().h_GameObjects[1],
-                                                       ref Tcollision,
-                                                       ref point);
-            if (!pauseGame && retVal) // if we haven't yet paused and there is a collision
+            // Resolve Collisions
+            if (GetFirstCollision() != null && pauseGame == false)
             {
                 pauseGame = true;
                 h_game.GetGameObjectManager().SpawnCollidables();
             }
-
-            // *******************************
-            // ******** END TEST CODE ********
-            // *******************************
-
-
-            // Resolve Collisions
 
             base.Update(gameTime);
         }
@@ -154,7 +164,6 @@ namespace hungrybee
         }
         #endregion
 
-
         #region ClipVelocity()
         /// ClipVelocity() - Clip the velocity to 0 or maxVel
         /// ***********************************************************************
@@ -167,6 +176,287 @@ namespace hungrybee
             else if (magVel < minVel)
                 velocity = Vector3.Zero;
             // else velocity is ok, so do nothing
+        }
+        #endregion
+
+        #region initCoarseCollisionDetection()
+        /// initCoarseCollisionDetection() --> Performs first insertion sort of AABB arrays. O(n^2).
+        /// ***********************************************************************
+        public void initCoarseCollisionDetection()
+        {
+            int STARTING_VECTOR_SIZE = h_game.GetGameSettings().physicsObjectsStartingCapacity;
+
+            // Reset all object overlap statuses.  This array wastes space --> 2x larger than necessary.  But faster indexing this way.
+            AABBOverlapStatus = new List<AABBOverlap>(STARTING_VECTOR_SIZE);
+            for (int i = 0; i < numObjects * numObjects; i++) // Add as many elements as there are objects
+                AABBOverlapStatus.Add(new AABBOverlap(false, false, false));
+
+            // Initialize axis lists as just the RBOBJECTS (arbitrary order)
+            AABBXaxis = new List<int>(STARTING_VECTOR_SIZE);
+            AABBYaxis = new List<int>(STARTING_VECTOR_SIZE);
+            AABBZaxis = new List<int>(STARTING_VECTOR_SIZE);
+            for (int i = 0; i < numObjects; i++)
+            {
+                AABBXaxis.Add(i); AABBYaxis.Add(i); AABBZaxis.Add(i);
+            }
+
+            AABBActiveList = new LinkedList<int>();
+
+            // Perform a first time sort and sweep --> Expected slow due to insertion sort on unsorted list.
+            CoarseCollisionDetection();
+        }
+        #endregion
+
+        #region CoarseCollisionDetection()
+        /// CoarseCollisionDetection()				
+        /// Use Axis aligned bounding boxes to find all sets of potential collisions. Expected O(n+k+c)
+        /// ***********************************************************************
+        public void CoarseCollisionDetection()
+        {
+	        // Update Bounding boxes
+            h_game.GetGameObjectManager().UpdateBoundingBoxes();
+
+            // Do an insertion sort on each axis list to order objects, by minimum BB vertex
+            // Insertion sort is O(n) when almost sorted, therefore best for slowly moving objects
+            InsertionSortAABBs(ref AABBXaxis, 
+                               ref h_game.GetGameObjectManager().h_GameObjects, 
+                               numObjects, 
+                               new FUNC_AXISSELECT(xAxisMinSel));
+            InsertionSortAABBs(ref AABBYaxis, 
+                               ref h_game.GetGameObjectManager().h_GameObjects, 
+                               numObjects, 
+                               new FUNC_AXISSELECT(yAxisMinSel));
+            InsertionSortAABBs(ref AABBZaxis, 
+                               ref h_game.GetGameObjectManager().h_GameObjects, 
+                               numObjects, 
+                               new FUNC_AXISSELECT(zAxisMinSel));
+
+            // Now Find all overlaps by doing sweep of each axis lists.
+            SweepAxisList(ref AABBXaxis, 
+                          ref h_game.GetGameObjectManager().h_GameObjects, 
+                          numObjects, 
+                          new FUNC_AXISSELECT(xAxisMinSel),
+                          new FUNC_AXISSELECT(xAxisMaxSel),
+                          new FUNC_STATUSSELECT(SetOverlapStatusXaxis));
+            SweepAxisList(ref AABBYaxis,
+                          ref h_game.GetGameObjectManager().h_GameObjects,
+                          numObjects,
+                          new FUNC_AXISSELECT(yAxisMinSel),
+                          new FUNC_AXISSELECT(yAxisMaxSel),
+                          new FUNC_STATUSSELECT(SetOverlapStatusYaxis));
+            SweepAxisList(ref AABBZaxis,
+                          ref h_game.GetGameObjectManager().h_GameObjects,
+                          numObjects,
+                          new FUNC_AXISSELECT(zAxisMinSel),
+                          new FUNC_AXISSELECT(zAxisMaxSel),
+                          new FUNC_STATUSSELECT(SetOverlapStatusZaxis));
+        }
+        #endregion
+
+        #region InsertionSortAABBs()
+        /// InsertionSortAABBs()				
+        /// Takes a list of rbobjects indices, and sorts them using the value derived from the selection function.
+        /// ***********************************************************************
+        protected static void InsertionSortAABBs(ref List<int> pArray, ref List<gameObject> gameObjects, int arraySize, FUNC_AXISSELECT FUNC)
+        {
+        	if(arraySize<1)
+	        throw new Exception("physicsManager::InsertionSortAABBs: Array is empty, nothing to sort!");
+
+            int rbobjectToSortIndex; float curVal = 0.0f, valueToSort = 0.0f;
+	        for(int i=1; i<arraySize;i++) {  // Place the next value
+		        rbobjectToSortIndex = pArray[i];
+                valueToSort = FUNC(gameObjects[rbobjectToSortIndex]);
+		        for(int j=0; j<=i;j++) {
+			        curVal = FUNC(gameObjects[pArray[j]]);
+			        if(curVal > valueToSort) {
+				        // push the other value forward to insert
+				        for(int m = i; m>j; m--) {
+					        pArray[m] = pArray[m-1];
+				        }
+                        pArray[j] = rbobjectToSortIndex;
+				        break;
+			        }
+		        }
+	        }
+        }
+        #endregion
+
+        #region SweepAxisList()
+        /// SweepAxisList()				
+        /// Takes a list of rbobjects, performs a sweep determining all overlaps, and sets the 
+        /// appropriate values in the overlap list (using a set_func). pArray must already be
+        /// ordered by minimum AABB verticies.
+        /// ***********************************************************************
+        protected void SweepAxisList(ref List<int> pArray, ref List<gameObject> gameObjects, int arraySize, FUNC_AXISSELECT MinSel, FUNC_AXISSELECT MaxSel, FUNC_STATUSSELECT Set)
+        {
+            int curArrayIndex = 0; LinkedListNode<int> curNode; LinkedListNode<int> tempNode;
+	        AABBActiveList.Clear();
+	        while(curArrayIndex < arraySize)
+	        {
+		        // Check the current object against objects on the active list
+                curNode = AABBActiveList.First;
+                while (curNode != null) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+		        {
+                    // If the new object start is after the active list end, then: REMOVE INDEX FROM ACTIVE LIST
+                    if (MinSel(gameObjects[pArray[curNode.Value]]) < MinSel(gameObjects[pArray[curArrayIndex]]))
+			        {
+                        Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], false);
+                        tempNode = curNode.Next;
+                        AABBActiveList.Remove(curNode);
+                        curNode = tempNode;
+			        }
+			        else // OTHERWISE THERE IS OVERLAP BETWEEN THESE OBJECTS, so set overlap status
+			        {
+                        Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], true);
+                        curNode = curNode.Next;
+			        }
+		        }
+
+		        // Put the current rbobject index on the active list
+		        AABBActiveList.AddLast(new LinkedListNode<int>(pArray[curArrayIndex]));
+        		
+		        curArrayIndex ++;
+	        }
+        }
+        #endregion
+
+        #region Delegates (FUNCTION POINTERS) for variable selection in sweep and prune
+        /// A bunch of delegate functions so that sort and sweep functions are written once, but can be sorted on numerous targest
+        /// ***********************************************************************
+        public delegate float FUNC_AXISSELECT(gameObject x);
+        public float xAxisMinSel(gameObject _obj)
+        {
+            return _obj.AABB_min.X;
+        }
+        public static float yAxisMinSel(gameObject _obj)
+        {
+            return _obj.AABB_min.Y;
+        }
+        public static float zAxisMinSel(gameObject _obj)
+        {
+            return _obj.AABB_min.Z;
+        }
+        public static float xAxisMaxSel(gameObject _obj)
+        {
+            return _obj.AABB_max.X;
+        }
+        public static float yAxisMaxSel(gameObject _obj)
+        {
+            return _obj.AABB_max.Y;
+        }
+        public static float zAxisMaxSel(gameObject _obj)
+        {
+            return _obj.AABB_max.Z;
+        }
+
+        public delegate void FUNC_STATUSSELECT(ref List<AABBOverlap> AABBOverlapStatus, int arraySize, int index1, int index2, bool setval);
+        void SetOverlapStatusXaxis(ref List<AABBOverlap> AABBOverlapStatus, int arraySize, int index1, int index2, bool setval)
+        {
+            if (index1 < index2)
+            {
+                AABBOverlapStatus[index1 * arraySize + index2].xAxisOverlap = setval;
+            }
+	        else
+            {
+                AABBOverlapStatus[index2 * arraySize + index1].xAxisOverlap = setval;
+            }
+        }
+        void SetOverlapStatusYaxis(ref List<AABBOverlap> AABBOverlapStatus, int arraySize, int index1, int index2, bool setval)
+        {
+            if (index1 < index2)
+            {
+                AABBOverlapStatus[index1 * arraySize + index2].yAxisOverlap = setval;
+            }
+            else
+            {
+                AABBOverlapStatus[index2 * arraySize + index1].yAxisOverlap = setval;
+            }
+        }
+        void SetOverlapStatusZaxis(ref List<AABBOverlap> AABBOverlapStatus, int arraySize, int index1, int index2, bool setval)
+        {
+            if (index1 < index2)
+            {
+                AABBOverlapStatus[index1 * arraySize + index2].zAxisOverlap = setval;
+            }
+            else
+            {
+                AABBOverlapStatus[index2 * arraySize + index1].zAxisOverlap = setval;
+            }
+        }
+
+        #endregion
+
+        #region initFineCollisionDetection()
+        /// initFineCollisionDetection() --> Just initialize data structures (ie 
+        /// ***********************************************************************
+        public void initFineCollisionDetection()
+        {
+            collisions = new List<collision>(numObjects * numObjects); // Worst case number of collsions O(n^2) from n choose 2
+        }
+        #endregion
+
+        #region FineCollisionDetection()
+        /// FineCollisionDetection() --> Go through the coarse collision routine results and get run fine collision detection
+        /// I thought O(n^2) through array was dumb, but Christer Ericson does the same thing (Real Time Collision Detection, page 329-338)
+        /// We're going to all the trouble to get O(n) in sweap and prune, then we just do an O(n^2) loop
+        /// ***********************************************************************
+        protected void FineCollisionDetection()
+        {
+            // Temp variables
+            collision curCollision = null;
+
+            // Loop through object pairs and check if they potentially overlap from the sweep and prune test
+            for(int i = 0; i < (numObjects-1); i ++)
+			{
+				for(int j = i+1; j < (numObjects); j ++)
+				{
+					AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
+					if(curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
+					{
+						// Objects potentially overlap --> Check the low level collision routines
+                        bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[i], 
+                                                                   h_game.GetGameObjectManager().h_GameObjects[j],
+                                                                   ref curCollision);
+                        if (retVal) AddNewCollision(ref curCollision);
+					}
+				}
+			}
+        }
+        #endregion
+
+        #region AddNewCollision()
+        /// AddNewCollision() --> Add a new collision to the collision list
+        /// ***********************************************************************
+        protected void AddNewCollision(ref collision _collision )
+        {
+            collisions.Add(_collision);
+        }
+        #endregion
+
+        #region GetFirstCollision()
+        /// GetFirstCollision() --> Return the collison that happens first
+        /// ***********************************************************************
+        protected collision GetFirstCollision()
+        {
+            if( collisions.Count < 1)
+                return null; // No collisions detected, return null
+
+            // Otherwise, linear search to find the first collison
+            collision firstCol = collisions[0];
+            for (int i = 1; i < collisions.Count; i++)
+                if (collisions[i].colTime < firstCol.colTime)
+                    firstCol = collisions[i];
+
+            return firstCol;
+        }
+        #endregion
+
+        #region ClearCollisions()
+        /// ClearCollisions() --> Clear the collisions list
+        /// ***********************************************************************
+        protected void ClearCollisions()
+        {
+            collisions.Clear();
         }
         #endregion
     }

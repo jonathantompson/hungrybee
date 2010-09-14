@@ -93,6 +93,8 @@ namespace hungrybee
             base.boundingObjType = boundingObjType.AABB;
             BoundingBox bBox = XNAUtils.CreateAABBFromVerticies(terrainVertices);
             base.boundingObj = (Object)bBox;
+            base.sweepAndPruneAABB = bBox;
+            base.dirtyAABB = true;
 
             // Calculate the Itensor --> Not really required since floor doesn't move, but anyway
             base.state.Itensor = XNAUtils.CalculateItensorFromBoundingBox(bBox, base.state.mass);
