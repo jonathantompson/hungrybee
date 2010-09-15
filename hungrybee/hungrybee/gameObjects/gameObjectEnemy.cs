@@ -18,9 +18,11 @@ namespace hungrybee
 {
     /// <summary>
     /// ***********************************************************************
-    /// **                             player                                **
+    /// **                         gameObjectEnemy                           **
     /// ** This is a class to store the data for each player game object     **
     /// ** ie, the bee to be controlled by the human                         **
+    /// ** COLLIDABLE = TRUE                                                 **
+    /// ** MOVABLE = TRUE                                                    **
     /// ***********************************************************************
     /// </summary>
     class gameObjectEnemy : gameObject
@@ -43,6 +45,7 @@ namespace hungrybee
             state.pos = startingPos;
             enemyHealth = 100.0f;
             base.movable = true;
+            base.collidable = true;
             base.maxVel = _maxVel;
 
             // Setup the force structures to describe movement

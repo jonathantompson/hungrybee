@@ -86,32 +86,31 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AABBOverlap.cs" />
-    <Compile Include="collision.cs" />
-    <Compile Include="collisionUtils.cs" />
-    <Compile Include="coordCross.cs" />
-    <Compile Include="camera.cs" />
-    <Compile Include="cameraInterface.cs" />
-    <Compile Include="csvHandle.cs" />
-    <Compile Include="force.cs" />
-    <Compile Include="gameObject.cs" />
-    <Compile Include="gameObjectManager.cs" />
-    <Compile Include="gameObjectEnemy.cs" />
-    <Compile Include="gameObjectPhysicsDebug.cs" />
-    <Compile Include="gameSettings.cs" />
-    <Compile Include="gameObjectPlayer.cs" />
-    <Compile Include="gameObjectHeightMap.cs" />
-    <Compile Include="physicsManager.cs" />
+    <Compile Include="physics\AABBOverlap.cs" />
+    <Compile Include="physics\collision.cs" />
+    <Compile Include="physics\collisionUtils.cs" />
+    <Compile Include="camera\camera.cs" />
+    <Compile Include="camera\cameraInterface.cs" />
+    <Compile Include="fileIo\csvHandle.cs" />
+    <Compile Include="physics\force.cs" />
+    <Compile Include="gameObjects\gameObject.cs" />
+    <Compile Include="gameObjects\gameObjectManager.cs" />
+    <Compile Include="gameObjects\gameObjectEnemy.cs" />
+    <Compile Include="gameObjects\gameObjectPhysicsDebug.cs" />
+    <Compile Include="gameSettings\gameSettings.cs" />
+    <Compile Include="gameObjects\gameObjectPlayer.cs" />
+    <Compile Include="gameObjects\gameObjectHeightMap.cs" />
+    <Compile Include="physics\physicsManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="program.cs" />
     <Compile Include="game.cs" />
-    <Compile Include="rboDerivative.cs" />
-    <Compile Include="rboState.cs" />
-    <Compile Include="renderManager.cs" />
-    <Compile Include="skyPlane.cs" />
-    <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="vertex.cs" />
-    <Compile Include="XNAUtils.cs" />
+    <Compile Include="physics\rboDerivative.cs" />
+    <Compile Include="physics\rboState.cs" />
+    <Compile Include="rendering\renderManager.cs" />
+    <Compile Include="rendering\skyPlane.cs" />
+    <Compile Include="misc\ExtensionMethods.cs" />
+    <Compile Include="rendering\vertex.cs" />
+    <Compile Include="misc\XNAUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="game.ico" />

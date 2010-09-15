@@ -20,7 +20,9 @@ namespace hungrybee
     /// ***********************************************************************
     /// **                    gameObjectPhysicsDebug                         **
     /// ** This is a class to store the data for the physics debug objects   **
-    /// ** and render them **
+    /// ** and render them.                                                  **
+    /// ** COLLIDABLE = FALSE                                                **
+    /// ** MOVABLE = FALSE                                                   **
     /// ***********************************************************************
     /// </summary>
     class gameObjectPhysicsDebug : gameObject
@@ -53,6 +55,8 @@ namespace hungrybee
             vertexDeclaration = null;
             numLines = 0;
             world = Matrix.Identity;
+            base.movable = false;
+            base.collidable = false;
         }
         #endregion
 

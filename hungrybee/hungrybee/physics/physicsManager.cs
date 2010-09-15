@@ -34,6 +34,7 @@ namespace hungrybee
         // Local variables
         private game h_game;
         private int numObjects; // Not known until gameObjectManager.LoadLevel() is complete
+        private int numCollidableObjects;
         rboDerivative D1, D2, D3, D4;
         private static bool pauseGame = false;
 
@@ -61,11 +62,13 @@ namespace hungrybee
             D2 = new rboDerivative();
             D3 = new rboDerivative();
             D4 = new rboDerivative();
+            numCollidableObjects = 0;
+            numObjects = 0;
         }
         #endregion
 
         #region Initialize()
-        /// Perform initialization - Nothing to initialize
+        /// Nothing to initialize - bulk of startup code is performed once gameObjects are loaded
         /// ***********************************************************************
         public override void Initialize()
         {
@@ -78,6 +81,7 @@ namespace hungrybee
         /// ***********************************************************************
         public void LoadContent()
         {
+            numCollidableObjects = h_game.GetGameObjectManager().GetNumberCollidableObjects();
             numObjects = h_game.GetGameObjectManager().h_GameObjects.Count;
             initCoarseCollisionDetection();
             initFineCollisionDetection();
@@ -93,8 +97,11 @@ namespace hungrybee
             if (!pauseGame)
             {
                 TakeRK4Step(gameTime, h_game.GetGameObjectManager().h_GameObjects);
-                h_game.GetGameObjectManager().SetDirtyBoundingBoxes();
+                
             }
+
+            // We've moved the objects, so the AABB data is no longer valid --> Flag it
+            h_game.GetGameObjectManager().SetDirtyBoundingBoxes(); 
 
             // Coarse Collision detection
             CoarseCollisionDetection();
@@ -106,7 +113,6 @@ namespace hungrybee
             if (GetFirstCollision() != null && pauseGame == false)
             {
                 pauseGame = true;
-                h_game.GetGameObjectManager().SpawnCollidables();
             }
 
             base.Update(gameTime);
@@ -186,18 +192,22 @@ namespace hungrybee
         {
             int STARTING_VECTOR_SIZE = h_game.GetGameSettings().physicsObjectsStartingCapacity;
 
-            // Reset all object overlap statuses.  This array wastes space --> 2x larger than necessary.  But faster indexing this way.
+            // Reset all object overlap statuses.
             AABBOverlapStatus = new List<AABBOverlap>(STARTING_VECTOR_SIZE);
-            for (int i = 0; i < numObjects * numObjects; i++) // Add as many elements as there are objects
+            // Add as many elements as there are objects --> I'm being wastefull and adding space for non-collidables, but indexing is faster and easier
+            for (int i = 0; i < numObjects * numObjects; i++) 
                 AABBOverlapStatus.Add(new AABBOverlap(false, false, false));
 
-            // Initialize axis lists as just the RBOBJECTS (arbitrary order)
+            // Initialize axis lists as just the RBOBJECTS that are collidable only! (they will be in topographically unsorted order to start)
             AABBXaxis = new List<int>(STARTING_VECTOR_SIZE);
             AABBYaxis = new List<int>(STARTING_VECTOR_SIZE);
             AABBZaxis = new List<int>(STARTING_VECTOR_SIZE);
             for (int i = 0; i < numObjects; i++)
             {
-                AABBXaxis.Add(i); AABBYaxis.Add(i); AABBZaxis.Add(i);
+                if (h_game.GetGameObjectManager().h_GameObjects[i].collidable)
+                {
+                    AABBXaxis.Add(i); AABBYaxis.Add(i); AABBZaxis.Add(i);
+                }
             }
 
             AABBActiveList = new LinkedList<int>();
@@ -220,33 +230,33 @@ namespace hungrybee
             // Insertion sort is O(n) when almost sorted, therefore best for slowly moving objects
             InsertionSortAABBs(ref AABBXaxis, 
                                ref h_game.GetGameObjectManager().h_GameObjects, 
-                               numObjects, 
+                               numCollidableObjects, 
                                new FUNC_AXISSELECT(xAxisMinSel));
             InsertionSortAABBs(ref AABBYaxis, 
-                               ref h_game.GetGameObjectManager().h_GameObjects, 
-                               numObjects, 
+                               ref h_game.GetGameObjectManager().h_GameObjects,
+                               numCollidableObjects, 
                                new FUNC_AXISSELECT(yAxisMinSel));
             InsertionSortAABBs(ref AABBZaxis, 
-                               ref h_game.GetGameObjectManager().h_GameObjects, 
-                               numObjects, 
+                               ref h_game.GetGameObjectManager().h_GameObjects,
+                               numCollidableObjects, 
                                new FUNC_AXISSELECT(zAxisMinSel));
 
             // Now Find all overlaps by doing sweep of each axis lists.
             SweepAxisList(ref AABBXaxis, 
-                          ref h_game.GetGameObjectManager().h_GameObjects, 
-                          numObjects, 
+                          ref h_game.GetGameObjectManager().h_GameObjects,
+                          numCollidableObjects, 
                           new FUNC_AXISSELECT(xAxisMinSel),
                           new FUNC_AXISSELECT(xAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusXaxis));
             SweepAxisList(ref AABBYaxis,
                           ref h_game.GetGameObjectManager().h_GameObjects,
-                          numObjects,
+                          numCollidableObjects,
                           new FUNC_AXISSELECT(yAxisMinSel),
                           new FUNC_AXISSELECT(yAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusYaxis));
             SweepAxisList(ref AABBZaxis,
                           ref h_game.GetGameObjectManager().h_GameObjects,
-                          numObjects,
+                          numCollidableObjects,
                           new FUNC_AXISSELECT(zAxisMinSel),
                           new FUNC_AXISSELECT(zAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusZaxis));
@@ -293,28 +303,32 @@ namespace hungrybee
 	        AABBActiveList.Clear();
 	        while(curArrayIndex < arraySize)
 	        {
-		        // Check the current object against objects on the active list
-                curNode = AABBActiveList.First;
-                while (curNode != null) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
-		        {
-                    // If the new object start is after the active list end, then: REMOVE INDEX FROM ACTIVE LIST
-                    if (MinSel(gameObjects[pArray[curNode.Value]]) < MinSel(gameObjects[pArray[curArrayIndex]]))
-			        {
-                        Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], false);
-                        tempNode = curNode.Next;
-                        AABBActiveList.Remove(curNode);
-                        curNode = tempNode;
-			        }
-			        else // OTHERWISE THERE IS OVERLAP BETWEEN THESE OBJECTS, so set overlap status
-			        {
-                        Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], true);
-                        curNode = curNode.Next;
-			        }
-		        }
+                if (gameObjects[pArray[curArrayIndex]].collidable)
+                {
+                    // Check the current object against objects on the active list
+                    curNode = AABBActiveList.First;
+                    while (curNode != null) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+                    {
+                        // If the new object start is after the active list end, then: REMOVE INDEX FROM ACTIVE LIST
+                        if (MinSel(gameObjects[pArray[curNode.Value]]) < MinSel(gameObjects[pArray[curArrayIndex]]))
+                        {
+                            Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], false);
+                            tempNode = curNode.Next;
+                            AABBActiveList.Remove(curNode);
+                            curNode = tempNode;
+                        }
+                        else // OTHERWISE THERE IS OVERLAP BETWEEN THESE OBJECTS, so set overlap status
+                        {
+                            Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], true);
+                            curNode = curNode.Next;
+                        }
+                    }
 
-		        // Put the current rbobject index on the active list
-		        AABBActiveList.AddLast(new LinkedListNode<int>(pArray[curArrayIndex]));
-        		
+                    // Put the current rbobject index on the active list
+                    AABBActiveList.AddLast(new LinkedListNode<int>(pArray[curArrayIndex]));
+                }
+
+                // Go to the next object
 		        curArrayIndex ++;
 	        }
         }
@@ -391,7 +405,7 @@ namespace hungrybee
         /// ***********************************************************************
         public void initFineCollisionDetection()
         {
-            collisions = new List<collision>(numObjects * numObjects); // Worst case number of collsions O(n^2) from n choose 2
+            collisions = new List<collision>(numCollidableObjects * numCollidableObjects); // Worst case number of collsions O(n^2) from n choose 2
         }
         #endregion
 
@@ -410,15 +424,18 @@ namespace hungrybee
 			{
 				for(int j = i+1; j < (numObjects); j ++)
 				{
-					AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
-					if(curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
-					{
-						// Objects potentially overlap --> Check the low level collision routines
-                        bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[i], 
-                                                                   h_game.GetGameObjectManager().h_GameObjects[j],
-                                                                   ref curCollision);
-                        if (retVal) AddNewCollision(ref curCollision);
-					}
+                    if (h_game.GetGameObjectManager().h_GameObjects[i].collidable && h_game.GetGameObjectManager().h_GameObjects[j].collidable)
+                    {
+                        AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
+                        if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
+                        {
+                            // Objects potentially overlap --> Check the low level collision routines
+                            bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[i],
+                                                                       h_game.GetGameObjectManager().h_GameObjects[j],
+                                                                       ref curCollision);
+                            if (retVal) AddNewCollision(ref curCollision);
+                        }
+                    }
 				}
 			}
         }

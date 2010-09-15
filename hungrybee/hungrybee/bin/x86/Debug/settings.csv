@@ -14,5 +14,6 @@ cameraRotationSpeed,0.002
 EPSILON,1E-08
 forceListCapacity,4
 physicsMinVel,0.0001
-physicsObjectsStartingCapacity,128
+physicsObjectsStartingCapacity,64
 gravity,0.981
+renderBoundingObjects,1

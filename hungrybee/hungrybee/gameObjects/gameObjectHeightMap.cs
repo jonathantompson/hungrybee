@@ -18,8 +18,10 @@ namespace hungrybee
 {
     /// <summary>
     /// ***********************************************************************
-    /// **                           heightMap                               **
+    /// **                      gameObjectHeightMap                          **
     /// ** This is a class to store the data for the heightmap and render it **
+    /// ** COLLIDABLE = TRUE                                                 **
+    /// ** MOVABLE = FALSE                                                   **
     /// ***********************************************************************
     /// </summary>
     class gameObjectHeightMap : gameObject
@@ -53,6 +55,8 @@ namespace hungrybee
             heightMapTextureFile = textureFile;
             minDim = min;
             maxDim = max;
+            base.movable = false;
+            base.collidable = true;
         }
         #endregion
 

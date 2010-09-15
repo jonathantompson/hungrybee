@@ -104,6 +104,9 @@ namespace hungrybee
             // Load in the object descriptions from the csv file for the first level
             LoadLevel(1);
 
+            if(h_game.GetGameSettings().renderBoundingObjects) // Add bounding objects to be rendered if we want
+                SpawnCollidables();
+
             // Now initialize the physics manager content
             h_game.GetPhysicsManager().LoadContent();
         }
@@ -287,15 +290,48 @@ namespace hungrybee
         #endregion
 
         #region UpdateBoundingBoxes()
-        /// UpdateBoundingBoxes - Update all the bounding boxes if they are dirty
+        /// UpdateBoundingBoxes - Update all the bounding boxes if they are dirty ONLY FOR COLLIDABLE OBJECTS
         /// ***********************************************************************
         public void UpdateBoundingBoxes()
         {
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
             {
-                 ListEnum.Current.UpdateBoundingBox();
+                if(ListEnum.Current.collidable)
+                    ListEnum.Current.UpdateBoundingBox();
             }
+        }
+        #endregion
+
+        #region GetNumberCollidableObjects()
+        /// GetNumberCollidableObjects - Linearly search through array and find out how many objects are collidable
+        /// ***********************************************************************
+        public int GetNumberCollidableObjects()
+        {
+            int retVal = 0;
+            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                if (ListEnum.Current.collidable)
+                    retVal += 1;
+            }
+            return retVal;
+        }
+        #endregion
+
+        #region GetNumberMovableObjects()
+        /// GetNumberMovableObjects - Linearly search through array and find out how many objects are collidable
+        /// ***********************************************************************
+        public int GetNumberMovableObjects()
+        {
+            int retVal = 0;
+            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                if (ListEnum.Current.movable)
+                    retVal += 1;
+            }
+            return retVal;
         }
         #endregion
     }

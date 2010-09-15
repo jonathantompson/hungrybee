@@ -44,6 +44,7 @@ namespace hungrybee
         public float    physicsMinVel;
         public int      physicsObjectsStartingCapacity;
         public float    gravity;
+        public bool     renderBoundingObjects;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -81,8 +82,9 @@ namespace hungrybee
             EPSILON = 0.00000001f;
             forceListCapacity = 4;
             physicsMinVel = 0.0001f;
-            physicsObjectsStartingCapacity = 128;
+            physicsObjectsStartingCapacity = 64;
             gravity = 0.981f;
+            renderBoundingObjects = true;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -195,6 +197,9 @@ namespace hungrybee
                         case "physicsObjectsStartingCapacity":
                             this.physicsObjectsStartingCapacity = Convert.ToInt32(curToken[1]);
                             break;
+                        case "renderBoundingObjects":
+                            this.renderBoundingObjects = Convert.ToInt32(curToken[1]) == 1;
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -240,6 +245,7 @@ namespace hungrybee
             writer.WriteNextToken("physicsMinVel", this.physicsMinVel);
             writer.WriteNextToken("physicsObjectsStartingCapacity", this.physicsObjectsStartingCapacity);
             writer.WriteNextToken("gravity", this.gravity);
+            writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0 );
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

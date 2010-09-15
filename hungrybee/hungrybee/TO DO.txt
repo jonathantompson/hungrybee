@@ -5,7 +5,11 @@
   c) When coarse is triggered, run lower-level and restart using impulse based method
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
-5. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
+5. Reduce redundant computations in collision detecdtion.
+  a) Only flag dirty AABB for objects that move.
+  b) Cache matricies and transformed bounding objects for fine collision detection (nothing saved at all!)
+6. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
+
 
 
 // Might help load the models: http://forums.xna.com/forums/p/37798/220378.aspx

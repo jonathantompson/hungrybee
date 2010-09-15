@@ -19,7 +19,9 @@ namespace hungrybee
     /// <summary>
     /// ***********************************************************************
     /// **                           gameObject                              **
-    /// ** Game object with a mesh instance to be drawn                      **
+    /// ** Game object with a mesh instance to be drawn.                     **
+    /// ** COLLIDABLE = FALSE (default)                                      **
+    /// ** MOVABLE = FALSE (default)                                         **
     /// ***********************************************************************
     /// </summary>
     public class gameObject
@@ -43,7 +45,8 @@ namespace hungrybee
         public rboState prevState;
         public rboState drawState;
         public float maxVel;
-        public bool movable; // Does the object react to RK4 integrator and collision response
+        public bool movable; // Does the object react to RK4 integrator or move after collisions
+        public bool collidable; // Does the object take part in collision detection
 
         public List<force> forceList;
 
@@ -59,6 +62,7 @@ namespace hungrybee
             drawState = new rboState();
             maxVel = float.PositiveInfinity;
             movable = false;
+            collidable = false;
             h_game = game;
             modelFile = modelfile;
             modelScaleToNormalizeSize = 1.0f;
