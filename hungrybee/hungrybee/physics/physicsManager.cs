@@ -93,12 +93,12 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
+            if (Keyboard.GetState().IsKeyDown(Keys.P))
+                pauseGame = true;
+
             // Take RK4 Step for each object in h_game.gameObjectManager
             if (!pauseGame)
-            {
                 TakeRK4Step(gameTime, h_game.GetGameObjectManager().h_GameObjects);
-                
-            }
 
             // We've moved the objects, so the AABB data is no longer valid --> Flag it
             h_game.GetGameObjectManager().SetDirtyBoundingBoxes(); 
@@ -119,7 +119,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region TakeStep()
+        #region TakeRK4Step()
         /// TakeStep() - Perform RK4 step on each gameObject
         /// ***********************************************************************
         public void TakeRK4Step(GameTime gameTime, List<gameObject> gameObjects)
@@ -244,19 +244,22 @@ namespace hungrybee
             // Now Find all overlaps by doing sweep of each axis lists.
             SweepAxisList(ref AABBXaxis, 
                           ref h_game.GetGameObjectManager().h_GameObjects,
-                          numCollidableObjects, 
+                          numCollidableObjects,
+                          numObjects,
                           new FUNC_AXISSELECT(xAxisMinSel),
                           new FUNC_AXISSELECT(xAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusXaxis));
             SweepAxisList(ref AABBYaxis,
                           ref h_game.GetGameObjectManager().h_GameObjects,
                           numCollidableObjects,
+                          numObjects,
                           new FUNC_AXISSELECT(yAxisMinSel),
                           new FUNC_AXISSELECT(yAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusYaxis));
             SweepAxisList(ref AABBZaxis,
                           ref h_game.GetGameObjectManager().h_GameObjects,
                           numCollidableObjects,
+                          numObjects,
                           new FUNC_AXISSELECT(zAxisMinSel),
                           new FUNC_AXISSELECT(zAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusZaxis));
@@ -297,11 +300,11 @@ namespace hungrybee
         /// appropriate values in the overlap list (using a set_func). pArray must already be
         /// ordered by minimum AABB verticies.
         /// ***********************************************************************
-        protected void SweepAxisList(ref List<int> pArray, ref List<gameObject> gameObjects, int arraySize, FUNC_AXISSELECT MinSel, FUNC_AXISSELECT MaxSel, FUNC_STATUSSELECT Set)
+        protected void SweepAxisList(ref List<int> pArray, ref List<gameObject> gameObjects, int pArraySize, int numObjects, FUNC_AXISSELECT MinSel, FUNC_AXISSELECT MaxSel, FUNC_STATUSSELECT Set)
         {
             int curArrayIndex = 0; LinkedListNode<int> curNode; LinkedListNode<int> tempNode;
 	        AABBActiveList.Clear();
-	        while(curArrayIndex < arraySize)
+            while (curArrayIndex < pArraySize)
 	        {
                 if (gameObjects[pArray[curArrayIndex]].collidable)
                 {
@@ -310,16 +313,16 @@ namespace hungrybee
                     while (curNode != null) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
                     {
                         // If the new object start is after the active list end, then: REMOVE INDEX FROM ACTIVE LIST
-                        if (MinSel(gameObjects[pArray[curNode.Value]]) < MinSel(gameObjects[pArray[curArrayIndex]]))
+                        if (MaxSel(gameObjects[curNode.Value]) < MinSel(gameObjects[pArray[curArrayIndex]]))
                         {
-                            Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], false);
+                            Set(ref AABBOverlapStatus, numObjects, curNode.Value, pArray[curArrayIndex], false);
                             tempNode = curNode.Next;
                             AABBActiveList.Remove(curNode);
                             curNode = tempNode;
                         }
                         else // OTHERWISE THERE IS OVERLAP BETWEEN THESE OBJECTS, so set overlap status
                         {
-                            Set(ref AABBOverlapStatus, arraySize, curNode.Value, pArray[curArrayIndex], true);
+                            Set(ref AABBOverlapStatus, numObjects, curNode.Value, pArray[curArrayIndex], true);
                             curNode = curNode.Next;
                         }
                     }
