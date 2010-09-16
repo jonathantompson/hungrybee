@@ -61,7 +61,23 @@ namespace ExtensionMethods
                     vec.Z = val;
                     break;
                 default:
-                    throw new Exception("Vector3.GetAt(): index out of bounds");
+                    throw new Exception("Vector3SetAt: index out of bounds");
+            }
+        }
+
+        // Add a modifier so we can use index referencing to Vector3
+        public static void Vector2SetAt(ref Vector2 vec, int index, float val)
+        {
+            switch (index)
+            {
+                case 0:
+                    vec.X = val;
+                    break;
+                case 1:
+                    vec.Y = val;
+                    break;
+                default:
+                    throw new Exception("Vector2SetAt: index out of bounds");
             }
         }
 

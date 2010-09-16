@@ -1,15 +1,17 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
 2. Implement collision routine: 
+  a) Fix I(t) --> Inertia tensor changes depending on scale and rotation!! UPDATE IT!
   a) Finish lower level routines (need to provide collision point and normal for each routine)
   c) When coarse is triggered, run lower-level and restart using impulse based method
   d) Implement collision Vs. screen bounds
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
-5. Reduce redundant computations in collision detecdtion.
+5. Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
+6. Reduce redundant computations in collision detecdtion.
   a) Only flag dirty AABB for objects that move.
   b) Cache matricies and transformed bounding objects for fine collision detection (nothing saved at all!)
-6. Coarse tune data structures are wasteful.  Some are O(n^2).  Reduce to only have (numCollidables choose 2).
-7. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
+7. Coarse tune data structures are wasteful.  Some are O(n^2).  Reduce to only have (numCollidables choose 2).
+8. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
 
 
 

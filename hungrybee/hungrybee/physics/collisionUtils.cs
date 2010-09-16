@@ -32,7 +32,7 @@ namespace hungrybee
     /// </summary>
     class collisionUtils
     {
-        // Temporary variables to avoid continuous allocation and deallocation on the stack
+        // Temporary variables to avoid continuous allocation and deallocation on the heap
         static Matrix objAMat_t0 = new Matrix();
         static Matrix objBMat_t0 = new Matrix();
         static Matrix objBMatInt_t0 = new Matrix();
@@ -53,58 +53,36 @@ namespace hungrybee
         static float objARadius_t0 = 0.0f;
         static float objBRadius_t0 = 0.0f;
 
-        static float EPSILON = 0.00000000000001f;
+        static float EPSILON = 0.000000000001f;
+        static float coeffRestitution = 0.5f;
 
         #region testCollision()
         /// testCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
-        public static bool testCollision(gameObject objA, gameObject objB, ref collision _col ) // normal defined for objA --> objB is just negative
+        public static bool testCollision(gameObject objA, gameObject objB, ref List<collision> _cols ) // normal defined for objA --> objB is just negative
         {
-            bool retVal;
-            Vector3 point = Vector3.Zero;
-            Vector3 normal = Vector3.Zero;
-            float Tcollision = 0.0f;
-
-
-            // Big dumb if else chain
+            // Big dumb if else chain --> But easiest way to quickly parse through input types
             // --> Probably data directed programming would be better here, but not too many types
             if (objA.boundingObjType == boundingObjType.UNDEFINED || objB.boundingObjType == boundingObjType.UNDEFINED)
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on UNDEFINED object types (maybe forgot to initialize objects?)");
 
             // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-            {
-                retVal = collisionUtils.testCollisionSphereSphere(objA, objB, ref Tcollision, ref point, ref normal);
-                if (retVal)
-                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
-            }
+                return collisionUtils.testCollisionSphereSphere(objA, objB, ref _cols);
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-            {
-                retVal = collisionUtils.testCollisionSphereAABB(objA, objB, ref Tcollision, ref point, ref normal);
-                if (retVal)
-                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
-            }
+                return collisionUtils.testCollisionSphereAABB(objA, objB, ref _cols);
+
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-            {
-                retVal = collisionUtils.testCollisionSphereAABB(objB, objA, ref Tcollision, ref point, ref normal);
-                if (retVal)
-                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
-            }
+                return collisionUtils.testCollisionSphereAABB(objB, objA, ref _cols);
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
-            {
-                retVal = collisionUtils.testCollisionAABBAABB(objA, objB, ref Tcollision, ref point, ref normal);
-                if (retVal)
-                    _col = new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal);
-            }
+                return collisionUtils.testCollisionAABBAABB(objA, objB, ref _cols);
+
             else
                 throw new Exception("collisionUtils::testCollision(): Trying to test collision on unrecognized object types");
-
-            return retVal;
-
         }
         #endregion
 
@@ -114,7 +92,7 @@ namespace hungrybee
         ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
         /// ***********************************************************************
-        protected static bool testCollisionAABBAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point, ref Vector3 normal) // objA is a sphere, objB is an AABB
+        protected static bool testCollisionAABBAABB(gameObject objA, gameObject objB, ref List<collision> _cols ) // objA is a sphere, objB is an AABB
         {
             BoundingBox mBox1 = (BoundingBox)objA.boundingObj;
             BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
@@ -143,11 +121,7 @@ namespace hungrybee
 
             //check if they were overlapping on the previous frame
             if (testCollisionAABBAABBStatic(objACenter_t0, objBCenter_t0, Ea, Eb))
-            {
-                point = Vector3.Zero;
-                Tcollision = 0.0f;
                 throw new Exception("CollisionUtils::testCollisionAABBAABB() - AABBs were overlapping at the start! Check starting conditions");
-            }
 
             if (v.Mag() == 0.0f ) // If the velocity is zero we've done enough
                 return false;
@@ -179,9 +153,226 @@ namespace hungrybee
                 if (tfirst > tlast)
                     return false;
             }
+            
+            float Tcollision = tfirst;
 
-            Tcollision = tfirst;
+            // Find new min and max for each AABB at the time of the collision
+            objAMin_t0 = objAMin_t0 + velA * Tcollision;
+            objAMax_t0 = objAMax_t0 + velA * Tcollision;
+
+            objBMin_t0 = objBMin_t0 + velB * Tcollision;
+            objBMax_t0 = objBMax_t0 + velB * Tcollision;
+
+            FindAABBColPoints(Tcollision, ref objA, ref objB,  ref objAMin_t0, ref objAMax_t0, ref objBMin_t0, ref objBMax_t0, ref _cols);
+
             return true;
+        }
+        #endregion
+
+        #region FindAABBColPoints()
+        /// Given the Min and Max extents for the two AABBs AT the time of the collision -> find the points and add them to the list of collisions
+        /// ***********************************************************************
+        public static void FindAABBColPoints(float Tcollision, 
+                                             ref gameObject A, ref gameObject B, 
+                                             ref Vector3 minA, ref Vector3 maxA, 
+                                             ref Vector3 minB, ref Vector3 maxB, 
+                                             ref List<collision> _cols )
+        {
+            // 1. FIRST FIGURE OUT WHICH AXES THE CONTACT HAS OCCURED --> 6 POSSIBILITIES
+            int[] commonCollisionCoord = new int[3];
+            commonCollisionCoord[0] = 0; commonCollisionCoord[1] = 0; commonCollisionCoord[2] = 0; 
+            // AND BUILD A NEW VECTOR2 MIN / MAX WITH THE COMMON COORDINATE REMOVED
+            Vector2 minA_flat = Vector2.Zero;
+            Vector2 maxA_flat = Vector2.Zero;
+            Vector2 minB_flat = Vector2.Zero;
+            Vector2 maxB_flat = Vector2.Zero;
+
+            ReduceDownTo2DPoint(ref minA, ref maxA,
+                                ref minB, ref maxB,
+                                ref commonCollisionCoord,
+                                ref minA_flat, ref maxA_flat,
+                                ref minB_flat, ref maxB_flat);
+            
+
+            // 2. THEN FIGURE OUT WHAT THE 4 POINTS ARE --> 4 POSSIBILITIES
+            //   A)      +------+         2 vertex/face, 2 edge/edge
+            //           |      |
+            //           | +----+-+
+            //           | |    | | 
+            //           +-+----+ |
+            //             |      |
+            //             +------+
+            //   B)      +-------+        2 vertex/face, 2 edge/edge
+            //           |       |
+            //           | +---+ |
+            //           | |   | | 
+            //           +-+---+-+
+            //             |   |
+            //             +---+
+            //   C)      +-------+        4 vertex/face
+            //           | +---+ |
+            //           | |   | |
+            //           | +---+ | 
+            //           +-+---+-+
+            //   C)        +---+          4 edge/edge
+            //             |   |
+            //           +-+   +-+
+            //           | |   | |
+            //           | |   | |
+            //           | |   | | 
+            //           +-+---+-+
+            //             |   |
+            //             +---+
+
+            // Find the two internal points along the X direction
+            float[] contactPoints_Xaxis = new float[2];
+            int[] contactObj_Xaxis = new int[2];        // 0 --> It was an object A point, 1 --> It was an object B point
+            float[] contactPoints_Yaxis = new float[2];
+            int[] contactObj_Yaxis = new int[2];        // 0 --> It was an object A point, 1 --> It was an object B point
+            GetInternalPoints(ref minA_flat, ref maxA_flat,
+                              ref minB_flat, ref maxB_flat,
+                              ref contactPoints_Xaxis, ref contactPoints_Yaxis,
+                              ref contactObj_Xaxis, ref contactObj_Yaxis);
+
+            // Now we have 2 coords on each axis --> Build the 4 contact points from these
+            Vector3 point = new Vector3();
+            Vector3 normal = new Vector3();
+            Vector3 e1 = new Vector3();
+            Vector3 e2 = new Vector3();
+            collisionType curCollisionType = collisionType.COL_UNDEFINED;
+
+            if(contactObj_Xaxis[0] == contactObj_Yaxis[0])
+                curCollisionType = collisionType.VERTEX_FACE; // The collision point is INSIDE one of the boxes
+            else
+                curCollisionType = collisionType.EDGE_EDGE; // The collision point is an edge / edge
+            point = BuildUpTo3DPoint(contactPoints_Xaxis[0], contactPoints_Yaxis[0], ref minA, ref maxA, ref commonCollisionCoord);
+            
+
+            throw new Exception("Figure out how to get normal from the collision");
+
+            /*
+            // AABB collisions ALWAYS result in 4 collisions --> Add them to the collision array
+            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
+            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
+            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
+            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
+             */
+            
+        }
+        #endregion
+
+        #region BuildUpTo3DPoint
+        protected static Vector3 BuildUpTo3DPoint(float p0, float p1, 
+                                                  ref Vector3 minA, ref Vector3 maxA, 
+                                                  ref int[] commonCollisionCoord )
+        {
+           // Six possibilities like with ReduceDownTo2DPoint
+            if (commonCollisionCoord[0] == -1)      // CASE 1: minA = maxB ON X AXIS
+                return new Vector3(minA.X, p0, p1);
+            else if (commonCollisionCoord[0] == +1) // CASE 2: maxA = minB ON X AXIS
+                return new Vector3(maxA.X, p0, p1);
+            else if (commonCollisionCoord[1] == -1) // CASE 3: maxA = minB ON Y AXIS
+                return new Vector3(p0, minA.Y, p1);
+            else if (commonCollisionCoord[1] == +1) // CASE 4: maxA = minB ON Y AXIS
+                return new Vector3(p0, maxA.Y, p1);
+            else if (commonCollisionCoord[2] == -1) // CASE 5: maxA = minB ON Z AXIS
+                return new Vector3(p0, p1, minA.Z);
+            else if (commonCollisionCoord[2] == +1) // CASE 6: maxA = minB ON Z AXIS
+                return new Vector3(p0, p1, maxA.Z);
+            else
+                throw new Exception("collisionUtils::BuildUpTo3DPoint() - Couldn't rebuild 3D point");
+        }
+        #endregion
+
+        #region GetInternalPoints
+        protected static void GetInternalPoints(ref Vector2 minA_flat, ref Vector2 maxA_flat,
+                                                ref Vector2 minB_flat, ref Vector2 maxB_flat,
+                                                ref float[] contactPoints_Xaxis, ref float[] contactPoints_Yaxis,
+                                                ref int[] contactObj_Xaxis, ref int[] contactObj_Yaxis)
+        {
+            if (minA_flat.X < minB_flat.X)
+            {
+                contactPoints_Xaxis[0] = minB_flat.X; contactObj_Xaxis[0] = 1; // B corner on inside
+            }
+            else
+            {
+                contactPoints_Xaxis[0] = minA_flat.X; contactObj_Xaxis[0] = 0; // A corner on inside
+            }
+            if (maxA_flat.X > maxB_flat.X)
+            {
+                contactPoints_Xaxis[1] = maxB_flat.X; contactObj_Xaxis[1] = 1; // B corner on inside
+            }
+            else
+            {
+                contactPoints_Xaxis[1] = maxA_flat.X; contactObj_Xaxis[1] = 0; // A corner on inside
+            }
+            // Find the two internal points along the Y direction
+
+            if (minA_flat.Y < minB_flat.Y)
+            {
+                contactPoints_Yaxis[0] = minB_flat.Y; contactObj_Yaxis[0] = 1; // B corner on inside
+            }
+            else
+            {
+                contactPoints_Yaxis[0] = minA_flat.Y; contactObj_Yaxis[0] = 0; // A corner on inside
+            }
+            if (maxA_flat.Y > maxB_flat.Y)
+            {
+                contactPoints_Yaxis[1] = maxB_flat.Y; contactObj_Yaxis[1] = 1; // B corner on inside
+            }
+            else
+            {
+                contactPoints_Yaxis[1] = maxA_flat.Y; contactObj_Yaxis[1] = 0; // A corner on inside
+            }
+        }
+        #endregion
+
+        #region ReduceDownTo2DPoint
+        protected static void ReduceDownTo2DPoint(ref Vector3 minA, ref Vector3 maxA, 
+                                                  ref Vector3 minB, ref Vector3 maxB,
+                                                  ref int[] commonCollisionCoord,
+                                                  ref Vector2 minA_flat, ref Vector2 maxA_flat,
+                                                  ref Vector2 minB_flat, ref Vector2 maxB_flat )
+        {
+            // Six possibilities 
+            if ((minA.X - maxB.X) < EPSILON)      // CASE 1: minA = maxB ON X AXIS
+            {
+                commonCollisionCoord[0] = -1;
+                minA_flat.X = minA.Y; minA_flat.Y = minA.Z; maxA_flat.X = maxA.Y; maxA_flat.Y = maxA.Z;
+                minB_flat.X = minB.Y; minB_flat.Y = minB.Z; maxB_flat.X = maxB.Y; maxB_flat.Y = maxB.Z;
+            }
+            else if ((maxA.X - minB.X) < EPSILON) // CASE 2: maxA = minB ON X AXIS
+            {
+                commonCollisionCoord[0] = +1;
+                minA_flat.X = minA.Y; minA_flat.Y = minA.Z; maxA_flat.X = maxA.Y; maxA_flat.Y = maxA.Z;
+                minB_flat.X = minB.Y; minB_flat.Y = minB.Z; maxB_flat.X = maxB.Y; maxB_flat.Y = maxB.Z;
+            }
+            else if ((minA.Y - maxB.Y) < EPSILON) // CASE 3: maxA = minB ON Y AXIS
+            {
+                commonCollisionCoord[1] = -1;
+                minA_flat.X = minA.X; minA_flat.Y = minA.Z; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Z;
+                minB_flat.X = minB.X; minB_flat.Y = minB.Z; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Z;
+            }
+            else if ((maxA.Y - minB.Y) < EPSILON) // CASE 4: maxA = minB ON Y AXIS
+            {
+                commonCollisionCoord[1] = +1;
+                minA_flat.X = minA.X; minA_flat.Y = minA.Z; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Z;
+                minB_flat.X = minB.X; minB_flat.Y = minB.Z; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Z;
+            }
+            else if ((minA.Z - maxB.Z) < EPSILON) // CASE 5: maxA = minB ON Z AXIS
+            {
+                commonCollisionCoord[2] = -1;
+                minA_flat.X = minA.X; minA_flat.Y = minA.Y; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Y;
+                minB_flat.X = minB.X; minB_flat.Y = minB.Y; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Y;
+            }
+            else if ((maxA.Z - minB.Z) < EPSILON) // CASE 6: maxA = minB ON Z AXIS
+            {
+                commonCollisionCoord[2] = +1;
+                minA_flat.X = minA.X; minA_flat.Y = minA.Y; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Y;
+                minB_flat.X = minB.X; minB_flat.Y = minB.Y; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Y;
+            }
+            else
+                throw new Exception("collisionUtils::FindAABBColPoints() - Couldn't find contact axis");
         }
         #endregion
 
@@ -267,8 +458,14 @@ namespace hungrybee
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page2
         /// NOTE: There are faster methods to perform this test --> to avoid sqrt calls AND to avoid floating point accuracy issues for large velocities
         /// ***********************************************************************
-        protected static bool testCollisionSphereSphere(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point, ref Vector3 normal)
+        protected static bool testCollisionSphereSphere(gameObject objA, gameObject objB, ref List<collision> _cols )
         {
+            float Tcollision = 0.0f;
+            Vector3 point = Vector3.Zero;
+            Vector3 normal = Vector3.Zero;
+            Vector3 e1 = Vector3.Zero;
+            Vector3 e2 = Vector3.Zero;
+
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
             objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
@@ -303,8 +500,6 @@ namespace hungrybee
             // Check if they're currently overlapping --> We actually don't want this.  It means that there are two points of collision
             if ( Vector3.Dot(AB,AB) <= rab * rab )
             {
-                // Tcollision = 0.0f;
-                // return true;
                 throw new Exception("collisionUtils::testCollisionSphereSphere() Spheres are already overlapping at t=0.0f, check start vals");
             }
 
@@ -337,8 +532,11 @@ namespace hungrybee
                 objACenter_t1 = objACenter_t0 + va * Tcollision;  // Reuse t1 variables to save stack (or heap) space
                 objBCenter_t1 = objBCenter_t0 + va * Tcollision;
                 AB = objBCenter_t1 - objACenter_t1; // Vector from the center of A to the center of B at the time of collision
-                Vector3.Normalize(AB);
-                point = objACenter_t1 + AB * objARadius_t0; // Center is along the vector between the two centers, at a distance of the radius
+                normal = Vector3.Normalize(AB);
+                point = objACenter_t1 + normal * objARadius_t0; // Center is along the vector between the two centers, at a distance of the radius
+
+                // sphere collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
+                _cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, Vector3.Negate(normal), e1, e2, coeffRestitution)); // Normal points out of face of B
                 return true;
             }
             else
@@ -375,10 +573,16 @@ namespace hungrybee
         /// I also tried http://www.gamedev.net/community/forums/topic.asp?topic_id=335465 (much simpler anyway) --> Doesn't sweep box
         /// I finally used http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D). Includes the cases of moving spheres and boxes. "
         /// ***********************************************************************
-        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref float Tcollision, ref Vector3 point, ref Vector3 normal) // objA is a sphere, objB is an AABB
+        protected static bool testCollisionSphereAABB(gameObject objA, gameObject objB, ref List<collision> _cols ) // objA is a sphere, objB is an AABB
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;
+
+            float Tcollision = 0.0f; 
+            Vector3 point = Vector3.Zero;
+            Vector3 normal = Vector3.Zero;
+            Vector3 e1 = Vector3.Zero;
+            Vector3 e2 = Vector3.Zero;
 
             // Bring the sphere into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
@@ -456,8 +660,6 @@ namespace hungrybee
                     {
                         // The sphere center is inside box.  Return it as the contact
                         // point, but report an "other" intersection type.
-                        Tcollision = 0.0f;
-                        point = Vector3.Transform(mSphere.Center, objAMat_t0); // Collision point is the sphere's center in world coordinates
                         throw new Exception("collisionUtils::testCollisionSphereAABB() - Sphere started sweep inside AABB. Check starting conditions");
                     }
                     else
@@ -533,7 +735,12 @@ namespace hungrybee
             Vector3 i = new Vector3(signX * ix, signY * iy, signZ * iz);
             point = boxCenter + i;
             point = Vector3.Transform(point, objBMat_t0);
-            return true;
+
+            // sphere AABB collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
+            throw new Exception("Figure out how to get normal from the collision");
+
+            //_cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution)); // Normal points out of face of B
+            //return true;
             
         }
         #endregion

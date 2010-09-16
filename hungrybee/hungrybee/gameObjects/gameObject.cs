@@ -36,6 +36,7 @@ namespace hungrybee
 
         public boundingObjType boundingObjType;
         public Object boundingObj;
+        public Vector3 boundingObjCenter;
 
         public BoundingBox sweepAndPruneAABB;
         public Vector3 AABB_min, AABB_max;
@@ -111,12 +112,14 @@ namespace hungrybee
             {
                 case (boundingObjType.SPHERE):
                     boundingObj = (Object)bSphere;
+                    boundingObjCenter = bSphere.Center;
                     // Calculate moment of Inertia from bounding sphere:
                     state.Itensor = XNAUtils.CalculateItensorFromBoundingSphere(bSphere, state.mass);
                     state.InvItensor = Matrix.Invert(state.Itensor);
                     break;
                 case (boundingObjType.AABB):
                     boundingObj = (Object)bBox;
+                    boundingObjCenter = (bBox.Max + bBox.Min) / 2.0f;
                     // Calculate moment of Inertia from bounding box:
                     state.Itensor = XNAUtils.CalculateItensorFromBoundingBox(bBox, state.mass);
                     state.InvItensor = Matrix.Invert(state.Itensor);
@@ -145,8 +148,12 @@ namespace hungrybee
             // Calculate the object's transform from state variables --> Need to do lerp and slerp between states
             float deltaT = state.time - prevState.time;
             float percentInterp = 0.0f;
-            if (deltaT > 0.0f)
-                percentInterp = gameTime.ElapsedGameTime.Seconds / deltaT;
+
+            // DOESN'T WORK!!! --> NEED TO DEBUG HOW XNA IS UPDATING DRAW DELTAT (FIX FOR GAMEOBJECT AND GAMEOBJECTPHYSICSDEBUG)
+            //if (deltaT > 0.0f)
+            //    percentInterp = gameTime.ElapsedGameTime.Seconds / deltaT;
+            percentInterp = 1.0f;
+
             drawState.scale = Interp(prevState.scale, state.scale, percentInterp);
             drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
             drawState.pos = Interp(prevState.pos, state.pos, percentInterp);

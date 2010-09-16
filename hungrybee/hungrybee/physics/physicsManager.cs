@@ -50,7 +50,6 @@ namespace hungrybee
 
         #endregion
 
-
         #region Constructor - renderManager(game game)
         /// Initializes to default values
         /// ***********************************************************************
@@ -96,23 +95,53 @@ namespace hungrybee
             if (Keyboard.GetState().IsKeyDown(Keys.P))
                 pauseGame = true;
 
-            // Take RK4 Step for each object in h_game.gameObjectManager
-            if (!pauseGame)
-                TakeRK4Step(gameTime, h_game.GetGameObjectManager().h_GameObjects);
 
-            // We've moved the objects, so the AABB data is no longer valid --> Flag it
-            h_game.GetGameObjectManager().SetDirtyBoundingBoxes(); 
+            float time = (float)gameTime.TotalGameTime.TotalSeconds;
+            float Tstep_remaining = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            // Coarse Collision detection
-            CoarseCollisionDetection();
+            collision firstCollision = null;
 
-            // Fine Collision detection
-            FineCollisionDetection();
+            if(!pauseGame)
+                CopyStateToPrevState(time, h_game.GetGameObjectManager().h_GameObjects); // Update the "old state" for this frame to the "new state" from last frame
 
-            // Resolve Collisions
-            if (GetFirstCollision() != null && pauseGame == false)
+            while (Tstep_remaining > 0.0f && !pauseGame) // While there is still time to process
             {
-                pauseGame = true;
+                // Try taking a RK4 Step for each object in h_game.gameObjectManager
+                TakeRK4Step(time, Tstep_remaining, h_game.GetGameObjectManager().h_GameObjects);
+
+                // We've moved the objects, so the AABB data is no longer valid --> Flag it
+                h_game.GetGameObjectManager().SetDirtyBoundingBoxes(); 
+
+                // Coarse Collision detection
+                CoarseCollisionDetection();
+
+                // Fine Collision detection
+                FineCollisionDetection();
+
+                firstCollision = GetFirstCollision();
+
+                // Resolve Collisions
+                if (firstCollision != null)
+                {
+                    // Roll back the start of the integrator
+                    RollBackRK4Step(h_game.GetGameObjectManager().h_GameObjects);
+
+                    // Take a step to just at the time of the first collision, NOTE: colTime is normalized 0->1
+                    float Tstep_to_colision = firstCollision.colTime * Tstep_remaining;
+                    TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
+
+                    // Resolve Collision
+                    ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
+
+                    // Remove the piecewise step from the time remaining
+                    Tstep_remaining -= Tstep_to_colision;
+
+                    pauseGame = true;
+                }
+                else
+                {
+                    Tstep_remaining -= Tstep_remaining;
+                }
             }
 
             base.Update(gameTime);
@@ -122,11 +151,9 @@ namespace hungrybee
         #region TakeRK4Step()
         /// TakeStep() - Perform RK4 step on each gameObject
         /// ***********************************************************************
-        public void TakeRK4Step(GameTime gameTime, List<gameObject> gameObjects)
+        public void TakeRK4Step(float time, float deltaTime, List<gameObject> gameObjects)
         {
             gameObject curObject = null;
-            float time = (float)gameTime.TotalGameTime.TotalSeconds;
-            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             // enumerate through each element in the list and update the quaternion values
             List<gameObject>.Enumerator ListEnum = gameObjects.GetEnumerator();
@@ -134,18 +161,14 @@ namespace hungrybee
             {
                 curObject = ListEnum.Current;
 
-                // Copy: prevState = state
-                rboState.CopyDynamicQuantitiesAtoB(ref curObject.state, ref curObject.prevState);
-                curObject.prevState.time = time;
-
                 if (curObject.movable)
                 {
                     // Calculate piecewise derivatives
                     float halfDeltaTime = 0.5f * deltaTime;
-                    D1.Evaluate(curObject.state, time, curObject);
-                    D2.Evaluate(curObject.state, curObject.prevState, time + halfDeltaTime, halfDeltaTime, D1, curObject);
-                    D3.Evaluate(curObject.state, curObject.prevState, time + halfDeltaTime, halfDeltaTime, D2, curObject);
-                    D4.Evaluate(curObject.state, curObject.prevState, time + deltaTime, deltaTime, D3, curObject);
+                    D1.Evaluate(ref curObject.prevState, time, curObject);
+                    D2.Evaluate(ref curObject.state, ref curObject.prevState, time + halfDeltaTime, halfDeltaTime, D1, curObject);
+                    D3.Evaluate(ref curObject.state, ref curObject.prevState, time + halfDeltaTime, halfDeltaTime, D2, curObject);
+                    D4.Evaluate(ref curObject.state, ref curObject.prevState, time + deltaTime, deltaTime, D3, curObject);
 
                     // Calculate rbo State quantities from forth order interpolation of piecewise derivatives
                     float sixthDeltaTime = deltaTime / 6.0f;
@@ -164,9 +187,49 @@ namespace hungrybee
                     // physicsManager.ClipVelocity(ref curObject.state.linearVel, h_game.GetGameSettings().physicsMinVel, curObject.maxVel);
                 }
             }
-            base.Update(gameTime);
+        }
+        #endregion
 
-            
+        #region RollBackRK4Step()
+        /// RollBackRK4Step() - Undo the step by setting state to previous state.
+        /// ***********************************************************************
+        public void RollBackRK4Step(List<gameObject> gameObjects)
+        {
+            // Nothing to do
+        }
+        #endregion
+
+        #region ResolveCollisions()
+        /// ResolveCollisions() - Add impulse for collision contacts, and add contact forces for contact collisions
+        /// ***********************************************************************
+        protected void ResolveCollisions(float time, float deltaTime, List<gameObject> gameObjects)
+        {
+            // Step through each collision and only resolve those collisions that happened from time to (time + deltaTime)
+            // All other contacts will be resolved on later iterations of the physics loop
+            // This ensures that if two objects collide at EXACTLY the same time they will both be resolved --> Rare!
+            for (int i = 0; i < collisions.Count; i++)
+                if (collisions[i].colTime <= deltaTime)
+                    collisions[i].ResolveCollision(time, deltaTime, gameObjects);
+        }
+        #endregion
+
+        #region CopyStateToPrevState()
+        /// CopyStateToPrevState() - Undo the step by setting state to previous state.
+        /// ***********************************************************************
+        public void CopyStateToPrevState(float time, List<gameObject> gameObjects)
+        {
+            gameObject curObject = null;
+
+            // enumerate through each element in the list and update the quaternion values
+            List<gameObject>.Enumerator ListEnum = gameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                curObject = ListEnum.Current;
+
+                // Copy: prevState = state
+                rboState.CopyDynamicQuantitiesAtoB(ref curObject.state, ref curObject.prevState);
+                curObject.prevState.time = time;
+            }
         }
         #endregion
 
@@ -419,8 +482,7 @@ namespace hungrybee
         /// ***********************************************************************
         protected void FineCollisionDetection()
         {
-            // Temp variables
-            collision curCollision = null;
+            collisions.Clear();
 
             // Loop through object pairs and check if they potentially overlap from the sweep and prune test
             for(int i = 0; i < (numObjects-1); i ++)
@@ -433,23 +495,13 @@ namespace hungrybee
                         if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
                         {
                             // Objects potentially overlap --> Check the low level collision routines
-                            bool retVal = collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[i],
-                                                                       h_game.GetGameObjectManager().h_GameObjects[j],
-                                                                       ref curCollision);
-                            if (retVal) AddNewCollision(ref curCollision);
+                            collisionUtils.testCollision(h_game.GetGameObjectManager().h_GameObjects[i],
+                                                         h_game.GetGameObjectManager().h_GameObjects[j],
+                                                         ref collisions);
                         }
                     }
 				}
 			}
-        }
-        #endregion
-
-        #region AddNewCollision()
-        /// AddNewCollision() --> Add a new collision to the collision list
-        /// ***********************************************************************
-        protected void AddNewCollision(ref collision _collision )
-        {
-            collisions.Add(_collision);
         }
         #endregion
 

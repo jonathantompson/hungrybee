@@ -48,7 +48,7 @@ namespace hungrybee
         #region Evaluate() - Evaluate Piecewise derivative
         /// Evaluate() - Evaluate derivative values (1 Euler step) at t+dt
         /// ***********************************************************************
-        public void Evaluate(rboState state, rboState initialState, float time, float deltaTime, rboDerivative derivative, gameObject rboObject)
+        public void Evaluate(ref rboState state, ref rboState initialState, float time, float deltaTime, rboDerivative derivative, gameObject rboObject)
         {
             state.pos           = initialState.pos          + derivative.linearVel * deltaTime;
             state.linearMom     = initialState.linearMom    + derivative.force * deltaTime;
@@ -69,14 +69,14 @@ namespace hungrybee
         #region Evaluate() - Evaluate single derivative
         /// Evaluate() - Evaluate derivative values (1 Euler step) at t+dt
         /// ***********************************************************************
-        public void Evaluate(rboState state, float time, gameObject rboObject)
+        public void Evaluate(ref rboState initialState, float time, gameObject rboObject)
         {
-            this.linearVel = state.linearVel;
+            this.linearVel = initialState.linearVel;
             //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.GetGameSettings().physicsMinVel, rboObject.maxVel);
 
-            this.spin = state.spin;
+            this.spin = initialState.spin;
             // Get force and torque from rboObject at time & deltaTime
-            rboObject.GetForceTorque(ref this.force, ref this.torque, ref state, time);
+            rboObject.GetForceTorque(ref this.force, ref this.torque, ref initialState, time);
         }
         #endregion
     }

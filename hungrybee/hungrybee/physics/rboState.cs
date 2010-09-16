@@ -44,12 +44,14 @@ namespace hungrybee
         public Vector3 linearVel;
         public Quaternion spin;
         public Vector3 angularVel;
+        public Matrix Iinv;             // Inverse RBO tensor after transform
+        public Matrix Rot;              // Rotational matrix
 
         // Constant RBO quantities --> A static quantity
         public float mass;
         public float inverseMass;
-        public Matrix Itensor;
-        public Matrix InvItensor;
+        public Matrix Itensor;          // Body tensor
+        public Matrix InvItensor;       // Inverse Body tensor
 
         #endregion
 
@@ -70,6 +72,8 @@ namespace hungrybee
             linearVel = Vector3.Zero;
             spin = new Quaternion(0.0f, 0.0f, 0.0f, 0.0f);
             angularVel = Vector3.Zero;
+            Iinv = Matrix.Identity;
+            Rot = Matrix.Identity;
 
             // Constant RBO quantities
             mass = 1.0f;
@@ -111,6 +115,14 @@ namespace hungrybee
             B.linearVel.X = A.linearVel.X; B.linearVel.Y = A.linearVel.Y; B.linearVel.Z = A.linearVel.Z;
             B.spin.X = A.spin.X; B.spin.Y = A.spin.Y; B.spin.Z = A.spin.Z; B.spin.W = A.spin.W;
             B.angularVel.X = A.angularVel.X; B.angularVel.Y = A.angularVel.Y; B.angularVel.Z = A.angularVel.Z;
+            B.Iinv.M11 = A.Iinv.M11; B.Iinv.M12 = A.Iinv.M12; B.Iinv.M13 = A.Iinv.M13; B.Iinv.M14 = A.Iinv.M14;
+            B.Iinv.M21 = A.Iinv.M21; B.Iinv.M22 = A.Iinv.M22; B.Iinv.M23 = A.Iinv.M23; B.Iinv.M24 = A.Iinv.M24;
+            B.Iinv.M31 = A.Iinv.M31; B.Iinv.M32 = A.Iinv.M32; B.Iinv.M33 = A.Iinv.M33; B.Iinv.M34 = A.Iinv.M34;
+            B.Iinv.M41 = A.Iinv.M41; B.Iinv.M42 = A.Iinv.M42; B.Iinv.M43 = A.Iinv.M43; B.Iinv.M44 = A.Iinv.M44;
+            B.Rot.M11 = A.Rot.M11; B.Rot.M12 = A.Rot.M12; B.Rot.M13 = A.Rot.M13; B.Rot.M14 = A.Rot.M14;
+            B.Rot.M21 = A.Rot.M21; B.Rot.M22 = A.Rot.M22; B.Rot.M23 = A.Rot.M23; B.Rot.M24 = A.Rot.M24;
+            B.Rot.M31 = A.Rot.M31; B.Rot.M32 = A.Rot.M32; B.Rot.M33 = A.Rot.M33; B.Rot.M34 = A.Rot.M34;
+            B.Rot.M41 = A.Rot.M41; B.Rot.M42 = A.Rot.M42; B.Rot.M43 = A.Rot.M43; B.Rot.M44 = A.Rot.M44;
         }
         #endregion
 
@@ -131,6 +143,10 @@ namespace hungrybee
             B.linearVel.X = A.linearVel.X; B.linearVel.Y = A.linearVel.Y; B.linearVel.Z = A.linearVel.Z;
             B.spin.X = A.spin.X; B.spin.Y = A.spin.Y; B.spin.Z = A.spin.Z; B.spin.W = A.spin.W;
             B.angularVel.X = A.angularVel.X; B.angularVel.Y = A.angularVel.Y; B.angularVel.Z = A.angularVel.Z;
+            B.Iinv.M11 = A.Iinv.M11; B.Iinv.M12 = A.Iinv.M12; B.Iinv.M13 = A.Iinv.M13; B.Iinv.M14 = A.Iinv.M14;
+            B.Iinv.M21 = A.Iinv.M21; B.Iinv.M22 = A.Iinv.M22; B.Iinv.M23 = A.Iinv.M23; B.Iinv.M24 = A.Iinv.M24;
+            B.Iinv.M31 = A.Iinv.M31; B.Iinv.M32 = A.Iinv.M32; B.Iinv.M33 = A.Iinv.M33; B.Iinv.M34 = A.Iinv.M34;
+            B.Iinv.M41 = A.Iinv.M41; B.Iinv.M42 = A.Iinv.M42; B.Iinv.M43 = A.Iinv.M43; B.Iinv.M44 = A.Iinv.M44;
 
             // Constant RBO quantities
             B.mass = A.mass;
@@ -146,15 +162,15 @@ namespace hungrybee
         }
         #endregion
 
-
-
         #region RecalculateDerivedQuantities()
         /// RecalculateDerivedQuantities()
         /// ***********************************************************************
         public void RecalculateDerivedQuantities()
         {
             linearVel = linearMom * inverseMass;
-            angularVel = Vector3.Transform(angularMom, InvItensor);
+            Rot = Matrix.CreateFromQuaternion(Quaternion.Normalize(orient));
+            Iinv = Rot * InvItensor * Matrix.Transpose(Rot);
+            angularVel = Vector3.Transform(angularMom, Iinv);
             orient.Normalize();
             spin.W = 0.0f; spin.X = angularVel.X; spin.Y = angularVel.Y; spin.Z = angularVel.Z;
             spin = Quaternion.Multiply(spin, 0.5f);

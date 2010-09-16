@@ -97,6 +97,7 @@ namespace hungrybee
             base.boundingObjType = boundingObjType.AABB;
             BoundingBox bBox = XNAUtils.CreateAABBFromVerticies(terrainVertices);
             base.boundingObj = (Object)bBox;
+            base.boundingObjCenter = (bBox.Max + bBox.Min) / 2.0f;
             base.sweepAndPruneAABB = bBox;
             base.dirtyAABB = true;
 
