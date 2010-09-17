@@ -21,7 +21,7 @@ namespace hungrybee
     /// <summary>
     /// **********************************************************************************
     /// **                          collisionUtils                                      **
-    /// ** Static library of collision detection routines.  A LOT of code here isn't    ** 
+    /// ** Static library of collision detection routines.  Some code here isn't        ** 
     /// ** mine.  Particularly the lower-level bounding volume intersection tests. The  **
     /// ** sources that were used are:                                                  **
     /// ** 1. David Eberly's Geometric Tools (Sphere Vs. Box and Box Vs. Box)           **
@@ -223,6 +223,7 @@ namespace hungrybee
             //           +-+---+-+
             //             |   |
             //             +---+
+            // A Vertex / face happens if the internal corner is derived from points from the same object.
 
             // Find the two internal points along the X direction
             float[] contactPoints_Xaxis = new float[2];
@@ -234,30 +235,69 @@ namespace hungrybee
                               ref contactPoints_Xaxis, ref contactPoints_Yaxis,
                               ref contactObj_Xaxis, ref contactObj_Yaxis);
 
-            // Now we have 2 coords on each axis --> Build the 4 contact points from these
-            Vector3 point = new Vector3();
-            Vector3 normal = new Vector3();
-            Vector3 e1 = new Vector3();
-            Vector3 e2 = new Vector3();
             collisionType curCollisionType = collisionType.COL_UNDEFINED;
+            gameObject curObjA = null;
+            gameObject curObjB = null;
+            Vector3 normal;
+            Vector3 point;
+            Vector3 e1 = Vector3.Zero;
+            Vector3 e2 = Vector3.Zero;
 
-            if(contactObj_Xaxis[0] == contactObj_Yaxis[0])
-                curCollisionType = collisionType.VERTEX_FACE; // The collision point is INSIDE one of the boxes
+            for (int j = 0; j < 2; j++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    if (contactObj_Xaxis[i] == contactObj_Yaxis[j])
+                    {
+                        curCollisionType = collisionType.VERTEX_FACE; // The collision point is INSIDE one of the boxes
+                        if (contactObj_Xaxis[i] == 0)
+                        { curObjA = A; curObjB = B; }   // INPUT OBJECT A IS THE VERTEX, INPUT OBJECT B IS THE FACE
+                        else
+                        { curObjA = B; curObjB = A; }   // INPUT OBJECT B IS THE VERTEX, INPUT OBJECT B IS THE FACE
+                        normal = -1.0f * new Vector3(commonCollisionCoord[0], commonCollisionCoord[1], commonCollisionCoord[2]); // Normal is defined positive out of obj 2
+                    }
+                    else
+                    {
+                        curCollisionType = collisionType.EDGE_EDGE; // The collision point is an edge / edge
+                        curObjA = A; curObjB = B; // Both are edges so order is not important
+                        BuildEdgeVectors(ref e1, ref e2, ref commonCollisionCoord, (contactObj_Xaxis[i] == 0));
+                        normal = Vector3.Cross(e1, e2);
+                    }
+                    point = BuildUpTo3DPoint(contactPoints_Xaxis[i], contactPoints_Yaxis[j], ref minA, ref maxA, ref commonCollisionCoord);
+                    // Add the point
+                    _cols.Add(new collision(curCollisionType, curObjA, curObjB, Tcollision, point, normal, e1, e2, coeffRestitution));
+                }
+            }
+            
+        }
+        #endregion
+
+        #region BuildEdgeVectors()
+        protected static void BuildEdgeVectors(ref Vector3 e1, ref Vector3 e2, ref int[] commonCollisionCoord, bool firstAxisDefinedByA )
+        {
+            if (commonCollisionCoord[0] != 0)
+            {
+                if (firstAxisDefinedByA)
+                { e1 = new Vector3(0, 1, 0); e2 = new Vector3(0, 0, 1); } // Yaxis is defined by A's edge, Zaxis is defined by B's edge
+                else
+                { e1 = new Vector3(0, 0, 1); e2 = new Vector3(0, 1, 0); } // Yaxis is defined by B's edge, Zaxis is defined by A's edge
+            }
+            else if (commonCollisionCoord[1] != 0)
+            {
+                if (firstAxisDefinedByA)
+                { e1 = new Vector3(1, 0, 0); e2 = new Vector3(0, 0, 1); } // Zaxis is defined by A's edge, Zaxis is defined by B's edge
+                else
+                { e1 = new Vector3(0, 0, 1); e2 = new Vector3(1, 0, 0); } // Zaxis is defined by B's edge, Zaxis is defined by A's edge
+            }
+            else if (commonCollisionCoord[2] != 0)
+            {
+                if (firstAxisDefinedByA)
+                { e1 = new Vector3(1, 0, 0); e2 = new Vector3(0, 1, 0); } // Xaxis is defined by A's edge, Yaxis is defined by B's edge
+                else
+                { e1 = new Vector3(0, 1, 0); e2 = new Vector3(1, 0, 0); } // Xaxis is defined by B's edge, Yaxis is defined by A's edge
+            }
             else
-                curCollisionType = collisionType.EDGE_EDGE; // The collision point is an edge / edge
-            point = BuildUpTo3DPoint(contactPoints_Xaxis[0], contactPoints_Yaxis[0], ref minA, ref maxA, ref commonCollisionCoord);
-            
-
-            throw new Exception("Figure out how to get normal from the collision");
-
-            /*
-            // AABB collisions ALWAYS result in 4 collisions --> Add them to the collision array
-            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
-            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
-            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
-            _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution));
-             */
-            
+                throw new Exception("BuildEdgeVectors() - Couldn't find a common collision coordinate!");
         }
         #endregion
 

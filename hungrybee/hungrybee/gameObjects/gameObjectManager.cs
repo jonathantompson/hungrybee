@@ -221,7 +221,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region SpanGameObjectPhysicsDebug()
+        #region SpanGameObjectPhysicsDebug(gameObject inputObject)
         /// SpanGameObjectPhysicsDebug - create and initialize a debug object
         /// ***********************************************************************
         public gameObject SpawnGameObjectPhysicsDebug(gameObject inputObject)
@@ -232,6 +232,29 @@ namespace hungrybee
                                                            inputObject);
             newObj.LoadContent();
             return newObj;
+        }
+        #endregion
+
+        #region SpanGameObjectPhysicsDebug(collision inputObject)
+        /// SpanGameObjectPhysicsDebug - create and initialize a debug object
+        /// ***********************************************************************
+        public gameObject SpawnGameObjectPhysicsDebug(collision inputObject)
+        {
+            // Just make a game object with position equal to the collision and a bounding Sphere with radius 0.1
+            gameObject gameObj = new gameObject(h_game);
+            gameObj.boundingObj = (Object)new BoundingSphere(Vector3.Zero, 0.1f);
+            gameObj.boundingObjType = boundingObjType.SPHERE;
+            gameObj.state.pos = inputObject.colPoint; // This is all we care about
+
+            // Make sure both starting states are equal
+            rboState.CopyAtoB(ref gameObj.state, ref gameObj.prevState); 
+
+            gameObject retObj = new gameObjectPhysicsDebug(h_game,
+                                                           gameObj.boundingObjType,
+                                                           gameObj.boundingObj,
+                                                           gameObj);
+            retObj.LoadContent();
+            return retObj;
         }
         #endregion
 
@@ -257,6 +280,16 @@ namespace hungrybee
             {
                 h_GameObjects.Add(ListEnum.Current);
             }
+        }
+        #endregion
+
+        #region SpawnCollisions()
+        /// SpawnCollisions - create and initialize a debug object for each collision
+        /// ***********************************************************************
+        public void SpawnCollisions(ref List<collision> collisions)
+        {
+            for (int i = 0; i < collisions.Count; i++)
+                h_GameObjects.Add(SpawnGameObjectPhysicsDebug(collisions[i]));
         }
         #endregion
 

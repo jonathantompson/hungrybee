@@ -53,8 +53,29 @@ namespace hungrybee
 
         #endregion
 
-        #region Constructor DrawableGameObject(game game, string ModelFile)
-        /// Constructor - World transform is identity by default
+        #region Constructor gameObject()
+        /// Constructor
+        /// ***********************************************************************
+        public gameObject( game game )
+            : base()
+        {
+            state = new rboState();
+            prevState = new rboState();
+            drawState = new rboState();
+            maxVel = float.PositiveInfinity;
+            movable = false;
+            collidable = false;
+            h_game = game;
+            modelFile = null;
+            modelScaleToNormalizeSize = 1.0f;
+            forceList = new List<force>(game.GetGameSettings().forceListCapacity);
+            boundingObjType = boundingObjType.UNDEFINED;
+            dirtyAABB = true;
+        }
+        #endregion
+
+        #region Constructor gameObject( game game, string modelfile, boundingObjType objType )
+        /// Constructor
         /// ***********************************************************************
         public gameObject(game game, string modelfile, boundingObjType objType ) : base()
         {

@@ -1,9 +1,8 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
 2. Implement collision routine: 
-  a) Fix I(t) --> Inertia tensor changes depending on scale and rotation!! UPDATE IT!
-  a) Finish lower level routines (need to provide collision point and normal for each routine)
-  c) When coarse is triggered, run lower-level and restart using impulse based method
-  d) Implement collision Vs. screen bounds
+  a) Debug AABB collision points
+  b) Implement resting forces
+  c) Implement collision Vs. screen bounds
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
 5. Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)

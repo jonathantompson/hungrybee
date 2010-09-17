@@ -45,6 +45,7 @@ namespace hungrybee
         public int      physicsObjectsStartingCapacity;
         public float    gravity;
         public bool     renderBoundingObjects;
+        public bool     pauseOnCollision;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -85,6 +86,7 @@ namespace hungrybee
             physicsObjectsStartingCapacity = 64;
             gravity = 0.981f;
             renderBoundingObjects = true;
+            pauseOnCollision = true;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -200,6 +202,9 @@ namespace hungrybee
                         case "renderBoundingObjects":
                             this.renderBoundingObjects = Convert.ToInt32(curToken[1]) == 1;
                             break;
+                        case "pauseOnCollision":
+                            this.pauseOnCollision = Convert.ToInt32(curToken[1]) == 1;
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -246,6 +251,7 @@ namespace hungrybee
             writer.WriteNextToken("physicsObjectsStartingCapacity", this.physicsObjectsStartingCapacity);
             writer.WriteNextToken("gravity", this.gravity);
             writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0 );
+            writer.WriteNextToken("pauseOnCollision", this.pauseOnCollision ? (int)1 : (int)0);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

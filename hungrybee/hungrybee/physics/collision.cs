@@ -22,6 +22,7 @@ namespace hungrybee
 
     public class collision
     {
+        #region local and static variables
         public collisionType colType;
         public Object obj1;       // Body containing vertex
         public Object obj2;       // Body containing face
@@ -48,7 +49,9 @@ namespace hungrybee
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f);
+        #endregion
 
+        #region Constructor - collision(...)
         public collision(collisionType _colType, gameObject _obj1, gameObject _obj2, float _Tcollision, 
                          Vector3 _colPoint, Vector3 _colNorm, Vector3 _e1, Vector3 _e2, float _coeffRestitution)
         {
@@ -62,16 +65,18 @@ namespace hungrybee
             e2 = _e2;
             coeffRestitution = _coeffRestitution;
         }
+        #endregion
 
         #region ResolveCollision()
         /// ResolveCollision() - Add impulse for collision contacts, and add contact forces for contact collisions
         /// ***********************************************************************
         public void ResolveCollision(float time, float deltaTime, List<gameObject> gameObjects)
         {
+
             if (CheckCollidingContact())
                 ResolveCollidingCollision();
             else
-                time = 0; // do something
+                throw new Exception("Resting contacts not yet implemented");
         }
         #endregion
 

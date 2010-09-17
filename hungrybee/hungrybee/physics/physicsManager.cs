@@ -87,7 +87,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region Update()
+        #region Update() --> THIS IS WHERE MAIN PHYSICS STEP IS TAKEN
         /// Update()
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
@@ -123,20 +123,28 @@ namespace hungrybee
                 // Resolve Collisions
                 if (firstCollision != null)
                 {
-                    // Roll back the start of the integrator
-                    RollBackRK4Step(h_game.GetGameObjectManager().h_GameObjects);
+                    if (h_game.GetGameSettings().pauseOnCollision && (pauseGame == false))
+                    {
+                        // Pause the game and render the collision points
+                        pauseGame = true;
+                        h_game.GetGameObjectManager().SpawnCollisions(ref collisions);
+                        break;
+                    }
+                    else
+                    {
+                        // Roll back the start of the integrator
+                        RollBackRK4Step(h_game.GetGameObjectManager().h_GameObjects);
 
-                    // Take a step to just at the time of the first collision, NOTE: colTime is normalized 0->1
-                    float Tstep_to_colision = firstCollision.colTime * Tstep_remaining;
-                    TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
+                        // Take a step to just at the time of the first collision, NOTE: colTime is normalized 0->1
+                        float Tstep_to_colision = firstCollision.colTime * Tstep_remaining;
+                        TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
 
-                    // Resolve Collision
-                    ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
+                        // Resolve Collision
+                        ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
 
-                    // Remove the piecewise step from the time remaining
-                    Tstep_remaining -= Tstep_to_colision;
-
-                    pauseGame = true;
+                        // Remove the piecewise step from the time remaining
+                        Tstep_remaining -= Tstep_to_colision;
+                    }
                 }
                 else
                 {
@@ -400,7 +408,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region Delegates (FUNCTION POINTERS) for variable selection in sweep and prune
+        #region Delegates (FUNCTION POINTERS) for variable selection in coarse collision's sweep and prune
         /// A bunch of delegate functions so that sort and sweep functions are written once, but can be sorted on numerous targest
         /// ***********************************************************************
         public delegate float FUNC_AXISSELECT(gameObject x);
@@ -482,7 +490,7 @@ namespace hungrybee
         /// ***********************************************************************
         protected void FineCollisionDetection()
         {
-            collisions.Clear();
+            ClearCollisions();
 
             // Loop through object pairs and check if they potentially overlap from the sweep and prune test
             for(int i = 0; i < (numObjects-1); i ++)
