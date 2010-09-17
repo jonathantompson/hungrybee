@@ -117,7 +117,7 @@ namespace hungrybee
         /// ***********************************************************************
         void LoadLevel(int levelNumber)
         {
-            csvHandleRead reader = new csvHandleRead(".\\Level_" + String.Format("{0}", levelNumber) + ".csv");
+            csvHandleRead reader = new csvHandleRead(".\\gameSettings\\Level_" + String.Format("{0}", levelNumber) + ".csv");
             if (!reader.IsOpen())
                 throw new Exception("gameObjectManager::LoadContent(): Cannot find file Level_" + String.Format("{0}", levelNumber) + ".csv");
 
@@ -322,16 +322,16 @@ namespace hungrybee
         }
         #endregion
 
-        #region UpdateBoundingBoxes()
-        /// UpdateBoundingBoxes - Update all the bounding boxes if they are dirty ONLY FOR COLLIDABLE OBJECTS
+        #region UpdateCoarseBoundingBoxes()
+        /// UpdateCoarseBoundingBoxes - Update all the bounding boxes if they are dirty ONLY FOR COLLIDABLE OBJECTS
         /// ***********************************************************************
-        public void UpdateBoundingBoxes()
+        public void UpdateCoarseBoundingBoxes()
         {
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
             {
                 if(ListEnum.Current.collidable)
-                    ListEnum.Current.UpdateBoundingBox();
+                    ListEnum.Current.UpdateCoarseBoundingBox();
             }
         }
         #endregion

@@ -52,9 +52,11 @@ namespace hungrybee
 
         static float objARadius_t0 = 0.0f;
         static float objBRadius_t0 = 0.0f;
+        static float objARadius_t1 = 0.0f;
+        static float objBRadius_t1 = 0.0f;
 
         static float EPSILON = 0.000000000001f;
-        static float coeffRestitution = 0.5f;
+        static float coeffRestitution = 0.8f;
 
         #region testCollision()
         /// testCollision() - Just grab input objects and send them to their proper functions
@@ -121,7 +123,9 @@ namespace hungrybee
 
             //check if they were overlapping on the previous frame
             if (testCollisionAABBAABBStatic(objACenter_t0, objBCenter_t0, Ea, Eb))
+            {
                 throw new Exception("CollisionUtils::testCollisionAABBAABB() - AABBs were overlapping at the start! Check starting conditions");
+            }
 
             if (v.Mag() == 0.0f ) // If the velocity is zero we've done enough
                 return false;
@@ -179,8 +183,7 @@ namespace hungrybee
                                              ref List<collision> _cols )
         {
             // 1. FIRST FIGURE OUT WHICH AXES THE CONTACT HAS OCCURED --> 6 POSSIBILITIES
-            int[] commonCollisionCoord = new int[3];
-            commonCollisionCoord[0] = 0; commonCollisionCoord[1] = 0; commonCollisionCoord[2] = 0; 
+            int[] commonCollisionCoord = new int[3]; // Automatically starts at (0,0,0) in C#
             // AND BUILD A NEW VECTOR2 MIN / MAX WITH THE COMMON COORDINATE REMOVED
             Vector2 minA_flat = Vector2.Zero;
             Vector2 maxA_flat = Vector2.Zero;
@@ -251,21 +254,33 @@ namespace hungrybee
                     {
                         curCollisionType = collisionType.VERTEX_FACE; // The collision point is INSIDE one of the boxes
                         if (contactObj_Xaxis[i] == 0)
-                        { curObjA = A; curObjB = B; }   // INPUT OBJECT A IS THE VERTEX, INPUT OBJECT B IS THE FACE
+                        {
+                            curObjA = A;
+                            curObjB = B;
+                            // Normal is defined positive out of obj 2
+                            // INPUT OBJECT A IS THE VERTEX, INPUT OBJECT B IS THE FACE
+                            normal = -1.0f * new Vector3(commonCollisionCoord[0], commonCollisionCoord[1], commonCollisionCoord[2]); 
+                        }
                         else
-                        { curObjA = B; curObjB = A; }   // INPUT OBJECT B IS THE VERTEX, INPUT OBJECT B IS THE FACE
-                        normal = -1.0f * new Vector3(commonCollisionCoord[0], commonCollisionCoord[1], commonCollisionCoord[2]); // Normal is defined positive out of obj 2
+                        {
+                            curObjA = B;
+                            curObjB = A;
+                            // Normal is defined positive out of obj 2
+                            // INPUT OBJECT B IS THE VERTEX, INPUT OBJECT A IS THE FACE
+                            normal = +1.0f * new Vector3(commonCollisionCoord[0], commonCollisionCoord[1], commonCollisionCoord[2]);
+                        }
                     }
                     else
                     {
                         curCollisionType = collisionType.EDGE_EDGE; // The collision point is an edge / edge
                         curObjA = A; curObjB = B; // Both are edges so order is not important
                         BuildEdgeVectors(ref e1, ref e2, ref commonCollisionCoord, (contactObj_Xaxis[i] == 0));
-                        normal = Vector3.Cross(e1, e2);
+                        normal = -1.0f * new Vector3(commonCollisionCoord[0], commonCollisionCoord[1], commonCollisionCoord[2]); // If positive minA is touching maxB, if negative maxA is touching maxB
+                        e2 = Vector3.Cross(normal, e1); // Quick hack to fix the edge vectors
                     }
                     point = BuildUpTo3DPoint(contactPoints_Xaxis[i], contactPoints_Yaxis[j], ref minA, ref maxA, ref commonCollisionCoord);
                     // Add the point
-                    _cols.Add(new collision(curCollisionType, curObjA, curObjB, Tcollision, point, normal, e1, e2, coeffRestitution));
+                    _cols.Add(new collision(curCollisionType, curObjA, curObjB, Tcollision, point, Vector3.Normalize(normal), e1, e2, coeffRestitution, 0.25f)); // Vector3 should be normal
                 }
             }
             
@@ -278,16 +293,16 @@ namespace hungrybee
             if (commonCollisionCoord[0] != 0)
             {
                 if (firstAxisDefinedByA)
-                { e1 = new Vector3(0, 1, 0); e2 = new Vector3(0, 0, 1); } // Yaxis is defined by A's edge, Zaxis is defined by B's edge
+                { e1 = new Vector3(0, 0, 1); e2 = new Vector3(0, 1, 0); } // Yaxis is defined by A's edge, Zaxis is defined by B's edge
                 else
-                { e1 = new Vector3(0, 0, 1); e2 = new Vector3(0, 1, 0); } // Yaxis is defined by B's edge, Zaxis is defined by A's edge
-            }
+                { e1 = new Vector3(0, 1, 0); e2 = new Vector3(0, 0, 1); } // Yaxis is defined by B's edge, Zaxis is defined by A's edge
+            } // tested
             else if (commonCollisionCoord[1] != 0)
             {
                 if (firstAxisDefinedByA)
-                { e1 = new Vector3(1, 0, 0); e2 = new Vector3(0, 0, 1); } // Zaxis is defined by A's edge, Zaxis is defined by B's edge
+                { e1 = new Vector3(0, 0, 1); e2 = new Vector3(1, 0, 0); } // Zaxis is defined by A's edge, Zaxis is defined by B's edge
                 else
-                { e1 = new Vector3(0, 0, 1); e2 = new Vector3(1, 0, 0); } // Zaxis is defined by B's edge, Zaxis is defined by A's edge
+                { e1 = new Vector3(1, 0, 0); e2 = new Vector3(0, 0, 1); } // Zaxis is defined by B's edge, Zaxis is defined by A's edge
             }
             else if (commonCollisionCoord[2] != 0)
             {
@@ -375,37 +390,37 @@ namespace hungrybee
                                                   ref Vector2 minB_flat, ref Vector2 maxB_flat )
         {
             // Six possibilities 
-            if ((minA.X - maxB.X) < EPSILON)      // CASE 1: minA = maxB ON X AXIS
+            if (MyExtensions.testFloatEquality(minA.X, maxB.X))      // CASE 1: minA = maxB ON X AXIS
             {
                 commonCollisionCoord[0] = -1;
                 minA_flat.X = minA.Y; minA_flat.Y = minA.Z; maxA_flat.X = maxA.Y; maxA_flat.Y = maxA.Z;
                 minB_flat.X = minB.Y; minB_flat.Y = minB.Z; maxB_flat.X = maxB.Y; maxB_flat.Y = maxB.Z;
             }
-            else if ((maxA.X - minB.X) < EPSILON) // CASE 2: maxA = minB ON X AXIS
+            else if (MyExtensions.testFloatEquality(maxA.X, minB.X)) // CASE 2: maxA = minB ON X AXIS
             {
                 commonCollisionCoord[0] = +1;
                 minA_flat.X = minA.Y; minA_flat.Y = minA.Z; maxA_flat.X = maxA.Y; maxA_flat.Y = maxA.Z;
                 minB_flat.X = minB.Y; minB_flat.Y = minB.Z; maxB_flat.X = maxB.Y; maxB_flat.Y = maxB.Z;
             }
-            else if ((minA.Y - maxB.Y) < EPSILON) // CASE 3: maxA = minB ON Y AXIS
+            else if (MyExtensions.testFloatEquality(minA.Y, maxB.Y)) // CASE 3: maxA = minB ON Y AXIS
             {
                 commonCollisionCoord[1] = -1;
                 minA_flat.X = minA.X; minA_flat.Y = minA.Z; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Z;
                 minB_flat.X = minB.X; minB_flat.Y = minB.Z; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Z;
             }
-            else if ((maxA.Y - minB.Y) < EPSILON) // CASE 4: maxA = minB ON Y AXIS
+            else if (MyExtensions.testFloatEquality(maxA.Y, minB.Y)) // CASE 4: maxA = minB ON Y AXIS
             {
                 commonCollisionCoord[1] = +1;
                 minA_flat.X = minA.X; minA_flat.Y = minA.Z; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Z;
                 minB_flat.X = minB.X; minB_flat.Y = minB.Z; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Z;
             }
-            else if ((minA.Z - maxB.Z) < EPSILON) // CASE 5: maxA = minB ON Z AXIS
+            else if (MyExtensions.testFloatEquality(minA.Z, maxB.Z)) // CASE 5: maxA = minB ON Z AXIS
             {
                 commonCollisionCoord[2] = -1;
                 minA_flat.X = minA.X; minA_flat.Y = minA.Y; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Y;
                 minB_flat.X = minB.X; minB_flat.Y = minB.Y; maxB_flat.X = maxB.X; maxB_flat.Y = maxB.Y;
             }
-            else if ((maxA.Z - minB.Z) < EPSILON) // CASE 6: maxA = minB ON Z AXIS
+            else if (MyExtensions.testFloatEquality(maxA.Z, minB.Z)) // CASE 6: maxA = minB ON Z AXIS
             {
                 commonCollisionCoord[2] = +1;
                 minA_flat.X = minA.X; minA_flat.Y = minA.Y; maxA_flat.X = maxA.X; maxA_flat.Y = maxA.Y;
@@ -510,22 +525,13 @@ namespace hungrybee
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
             objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
             objAMat_t1 = objA.CreateScale(objA.state.scale) * Matrix.CreateFromQuaternion(objA.state.orient) * Matrix.CreateTranslation(objA.state.pos);
-            objACenter_t0 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t0);
-            objACenter_t1 = Vector3.Transform(((BoundingSphere)objA.boundingObj).Center, objAMat_t1);
-            
+            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t0, objA, ref objACenter_t0, ref objARadius_t0);
+            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t1, objA, ref objACenter_t1, ref objARadius_t1);
+
             objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
             objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
-            objBCenter_t0 = Vector3.Transform(((BoundingSphere)objB.boundingObj).Center, objBMat_t0);
-            objBCenter_t1 = Vector3.Transform(((BoundingSphere)objB.boundingObj).Center, objBMat_t1);
-
-            // Scale radius by the largest scale factor (may be non-uniform), then by gameObject normalization factor
-            // Actually radius * modelScaleToNormalizeSize = 1 ALWAYS...  But do it anyway for completeness
-            objARadius_t0 = ((BoundingSphere)objA.boundingObj).Radius *                                                     // Origional radius
-                            Math.Max(Math.Max(objA.prevState.scale.X, objA.prevState.scale.Y), objA.prevState.scale.Z) *    // Scale factor
-                            objA.modelScaleToNormalizeSize;                                                                 // Normalization factor
-            objBRadius_t0 = ((BoundingSphere)objB.boundingObj).Radius *                                                     // Origional radius
-                            Math.Max(Math.Max(objB.prevState.scale.X, objB.prevState.scale.Y), objB.prevState.scale.Z) *    // Scale factor
-                            objB.modelScaleToNormalizeSize;                                                                 // Normalization factor
+            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t0, objB, ref objBCenter_t0, ref objBRadius_t0);
+            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t1, objB, ref objBCenter_t1, ref objBRadius_t1);
 
             // Find the velocities
             Vector3 va = objACenter_t1 - objACenter_t0; // Vector from A0 to A1
@@ -551,7 +557,7 @@ namespace hungrybee
                 {
                     if( t0 >= 0.0f && t0 <= 1.0f) // t0 is within 0-->1
                     {
-                    Tcollision = t0 * ( objA.state.time - objA.prevState.time) + objA.prevState.time;
+                    Tcollision = t0;
                     retVal = true;
                     }
                 }
@@ -559,7 +565,7 @@ namespace hungrybee
                 {
                     if (t1 >= 0.0f && t1 <= 1.0f)  // t1 occured first and is within 0-->1
                     {
-                    Tcollision = t1 * ( objA.state.time - objA.prevState.time) + objA.prevState.time;
+                    Tcollision = t1;
                     retVal = true;
                     }
                 }
@@ -570,17 +576,30 @@ namespace hungrybee
             {
                 // Get the two centers at collision time
                 objACenter_t1 = objACenter_t0 + va * Tcollision;  // Reuse t1 variables to save stack (or heap) space
-                objBCenter_t1 = objBCenter_t0 + va * Tcollision;
+                objBCenter_t1 = objBCenter_t0 + vb * Tcollision;
                 AB = objBCenter_t1 - objACenter_t1; // Vector from the center of A to the center of B at the time of collision
                 normal = Vector3.Normalize(AB);
                 point = objACenter_t1 + normal * objARadius_t0; // Center is along the vector between the two centers, at a distance of the radius
 
                 // sphere collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
-                _cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, Vector3.Negate(normal), e1, e2, coeffRestitution)); // Normal points out of face of B
+                _cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, Vector3.Negate(normal), e1, e2, coeffRestitution, 1.0f)); // Normal points out of face of B
                 return true;
             }
             else
                 return false;
+        }
+        #endregion
+
+        #region UpdateBoundingSphere
+        public static void UpdateBoundingSphere(BoundingSphere bSphere, Matrix world, gameObject obj, ref Vector3 newCenter, ref float newRadius)
+        {
+            newCenter = Vector3.Transform(bSphere.Center, world);
+
+            // Scale radius by the largest scale factor (may be non-uniform), then by gameObject normalization factor
+            // Actually radius * modelScaleToNormalizeSize = 1 ALWAYS...  But do it anyway for completeness
+            newRadius = bSphere.Radius *                                                                                // Origional radius
+                        Math.Max(Math.Max(obj.prevState.scale.X, obj.prevState.scale.Y), obj.prevState.scale.Z) *       // Scale factor
+                        obj.modelScaleToNormalizeSize;                                                                  // Normalization factor
         }
         #endregion
 
@@ -627,10 +646,7 @@ namespace hungrybee
             // Bring the sphere into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
             objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
-            objACenter_t0 = Vector3.Transform(mSphere.Center, objAMat_t0);
-            objARadius_t0 = mSphere.Radius *                                                                                // Origional radius
-                            Math.Max(Math.Max(objA.prevState.scale.X, objA.prevState.scale.Y), objA.prevState.scale.Z) *    // Scale factor
-                            objA.modelScaleToNormalizeSize;                                                                 // Normalization factor
+            UpdateBoundingSphere(mSphere, objAMat_t0, objA, ref objACenter_t0, ref objARadius_t0);
             
 
             // Bring BoundingSphere into box coordinate system --> Means we don't need to recalculate AABB dimensions in world 
@@ -643,8 +659,9 @@ namespace hungrybee
             
             // Find the velocities and then the relative velocity
             Vector3 va = objA.state.pos - objA.prevState.pos; 
-            Vector3 vb = objB.state.pos - objB.prevState.pos; 
-            Vector3 vab = vb - va; // Relative velocity (in normalized time)
+            Vector3 vb = objB.state.pos - objB.prevState.pos;
+            //Vector3 vab = vb - va; // Relative velocity (in normalized time)
+            Vector3 vab = va - vb; // Relative velocity (in normalized time)
             vab = Vector3.Transform(vab, objBMatInt_t0); // bring relative velocity into A's frame
             float vx = vab.X; float vy = vab.Y; float vz = vab.Z; 
 
@@ -771,17 +788,40 @@ namespace hungrybee
                 return false;
             }
 
+            if(retVal == -1 || Tcollision == 0.0f)
+                throw new Exception("collisionUtils::testCollisionSphereAABB() - Sphere started sweep inside AABB. Check starting conditions");
+
             // Calculate actual intersection (move point back into world coordinates).
             Vector3 i = new Vector3(signX * ix, signY * iy, signZ * iz);
             point = boxCenter + i;
+            normal = GetAABBNormalFromPointOnAABB(point, mBox.Min, mBox.Max);
             point = Vector3.Transform(point, objBMat_t0);
+            normal = Vector3.Transform(normal, objBMat_t0);
 
-            // sphere AABB collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
-            throw new Exception("Figure out how to get normal from the collision");
+            _cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution, 1.0f)); // Normal points out of face of B
 
-            //_cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution)); // Normal points out of face of B
-            //return true;
+            return true;
             
+        }
+        #endregion
+
+        #region GetAABBNormalFromPointOnAABB()
+        protected static Vector3 GetAABBNormalFromPointOnAABB(Vector3 point, Vector3 min, Vector3 max)
+        {
+            if (MyExtensions.testFloatEquality(point.X, min.X))
+                return new Vector3(-1.0f, 0.0f, 0.0f);
+            else if (MyExtensions.testFloatEquality(point.X, max.X))
+                return new Vector3(+1.0f, 0.0f, 0.0f);
+            else if (MyExtensions.testFloatEquality(point.Y, min.Y))
+                return new Vector3(0.0f, -1.0f, 0.0f);
+            else if (MyExtensions.testFloatEquality(point.Y, max.Y))
+                return new Vector3(0.0f, +1.0f, 0.0f);
+            else if (MyExtensions.testFloatEquality(point.Z, min.Z))
+                return new Vector3(0.0f, 0.0f, -1.0f);
+            else if (MyExtensions.testFloatEquality(point.Z, max.Z))
+                return new Vector3(0.0f, 0.0f, +1.0f);
+            else
+                throw new Exception("GetAABBNormalFromPointOnAABB() - Input point is not on the bounds of the AABB -> Cannot get normal");
         }
         #endregion
 

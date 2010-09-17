@@ -32,6 +32,7 @@ namespace hungrybee
         public Vector3 e2;        // Edge direction for obj2
         public float coeffRestitution;
         public float colTime;
+        public float collisionScale; // If AABB Vs. AABB intersect, then momentum will be distributed accross 4 points
 
         // Some static variables to prevent constant allocation on the heap --> Using David Barraf's RBO introduction code
         protected static Vector3 padot = new Vector3();
@@ -44,7 +45,7 @@ namespace hungrybee
         protected static float numerator = 0.0f;
         protected static float term1 = 1.0f, term2 = 1.0f, term3 = 1.0f, term4 = 1.0f;
         protected static float j;
-        protected static float V_COLLIDING_THRESHOLD = 0.000001f;
+        protected static float V_COLLIDING_THRESHOLD = 0.00000000001f;
         protected static Matrix zeroMat = new Matrix(0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
@@ -53,7 +54,7 @@ namespace hungrybee
 
         #region Constructor - collision(...)
         public collision(collisionType _colType, gameObject _obj1, gameObject _obj2, float _Tcollision, 
-                         Vector3 _colPoint, Vector3 _colNorm, Vector3 _e1, Vector3 _e2, float _coeffRestitution)
+                         Vector3 _colPoint, Vector3 _colNorm, Vector3 _e1, Vector3 _e2, float _coeffRestitution, float _collisionScale)
         {
             colType = _colType;
             obj1 = _obj1;
@@ -64,6 +65,7 @@ namespace hungrybee
             e1 = _e1;
             e2 = _e2;
             coeffRestitution = _coeffRestitution;
+            collisionScale = _collisionScale;
         }
         #endregion
 
@@ -96,8 +98,8 @@ namespace hungrybee
             // Calculate the denominator in four parts
             if (((gameObject)obj1).movable)
             {
-                term1 = 1.0f / ((gameObject)obj1).state.mass;
-                term3 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(ra, n), ((gameObject)obj1).state.Iinv), ra));
+                term1 = 1.0f / ((gameObject)obj1).prevState.mass;
+                term3 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(ra, n), ((gameObject)obj1).prevState.Iinv), ra));
             }
             else
             {
@@ -106,8 +108,8 @@ namespace hungrybee
             }
             if (((gameObject)obj2).movable)
             {
-                term2 = 1.0f / ((gameObject)obj2).state.mass;
-                term4 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(rb, n), ((gameObject)obj2).state.Iinv), rb));
+                term2 = 1.0f / ((gameObject)obj2).prevState.mass;
+                term4 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(rb, n), ((gameObject)obj2).prevState.Iinv), rb));
             }
             else
             {
@@ -122,14 +124,14 @@ namespace hungrybee
             // Apply impulse to the two bodies
             if (((gameObject)obj1).movable)
             {
-                ((gameObject)obj1).state.linearMom += force;
-                ((gameObject)obj1).state.angularMom += Vector3.Cross(ra, force);
+                ((gameObject)obj1).state.linearMom += collisionScale * force;
+                ((gameObject)obj1).state.angularMom += collisionScale * Vector3.Cross(ra, force);
                 ((gameObject)obj1).state.RecalculateDerivedQuantities();
             }
-            if (((gameObject)obj1).movable)
+            if (((gameObject)obj2).movable)
             {
-                ((gameObject)obj2).state.linearMom -= force;
-                ((gameObject)obj2).state.angularMom -= Vector3.Cross(rb, force);
+                ((gameObject)obj2).state.linearMom -= collisionScale * force;
+                ((gameObject)obj2).state.angularMom -= collisionScale * Vector3.Cross(rb, force);
                 ((gameObject)obj2).state.RecalculateDerivedQuantities();
             }
         }
@@ -141,7 +143,7 @@ namespace hungrybee
         protected static Vector3 GetPointVelocity(gameObject obj, Vector3 point)
         {
 
-            return obj.state.linearVel + Vector3.Cross(obj.state.angularVel, (point - obj.state.pos));
+            return obj.prevState.linearVel + Vector3.Cross(obj.prevState.angularVel, (point - obj.prevState.pos));
         }
         #endregion
 
@@ -156,8 +158,8 @@ namespace hungrybee
 
             if (vrel > V_COLLIDING_THRESHOLD)
                 return false;
-            else if (vrel < -V_COLLIDING_THRESHOLD)
-                return true;
+            if (vrel > -V_COLLIDING_THRESHOLD)
+                return false;
             else
                 return true;
         }

@@ -355,21 +355,31 @@ namespace hungrybee
         }
         #endregion
 
-        #region UpdateBoundingBox()
-        /// UpdateBoundingBox() - Update the bounding box used in Collision detection
+        #region UpdateCoarseBoundingBox()
+        /// UpdateCoarseBoundingBox() - Update the bounding box used in Collision detection
         /// Box is formed by the origional static box swept through the vector (state.pos - prevState.pos)
         /// For fast moving objects this will be a very large Bounding box
         /// ASSUMES ROTATION AND SCALE ARE CONSTANT BETWEEN FRAMES
         /// ***********************************************************************
-        public void UpdateBoundingBox()
+        public void UpdateCoarseBoundingBox()
         {
             if (dirtyAABB)
             {
-                Matrix mat = CreateScale(prevState.scale) * Matrix.CreateFromQuaternion(prevState.orient) * Matrix.CreateTranslation(prevState.pos);
-                collisionUtils.UpdateBoundingBox(sweepAndPruneAABB, mat, ref AABB_min, ref AABB_max);
+                Matrix mat = CreateScale(state.scale) * Matrix.CreateFromQuaternion(state.orient) * Matrix.CreateTranslation(state.pos);
+                if (boundingObjType == boundingObjType.AABB)
+                    collisionUtils.UpdateBoundingBox(sweepAndPruneAABB, mat, ref AABB_min, ref AABB_max);
+                else if (boundingObjType == boundingObjType.SPHERE)
+                {
+                    Vector3 center = Vector3.Zero;
+                    float radius = 0.0f;
+                    collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat, this, ref center, ref radius);
+                    AABB_min = center - new Vector3(radius, radius, radius);
+                    AABB_max = center + new Vector3(radius, radius, radius);
+                }
+                else
+                    throw new Exception("UpdateCoarseBoundingBox() - Bounding object type not supported");
+
                 Vector3 displacement = state.pos - prevState.pos;
-                AABB_min = Vector3.Transform(sweepAndPruneAABB.Min, mat);
-                AABB_max = Vector3.Transform(sweepAndPruneAABB.Max, mat);
 
                 // Find smallest vector by sweeping sphere along the displacement between the two states
                 AABB_min.X = collisionUtils.Min(AABB_min.X, AABB_min.X + displacement.X);

@@ -1,6 +1,6 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
 2. Implement collision routine: 
-  a) Debug AABB collision points
+  a) Debug collisions --> Two issues. 1. AABB-AABB Collisions while rotating doesn't work. 2. sphere-sphere don't work. 3. Lots of overlapping objects
   b) Implement resting forces
   c) Implement collision Vs. screen bounds
 3. Implement player controls: using quaternions to give half distances and RK4 integrator

@@ -16,5 +16,6 @@ forceListCapacity,4
 physicsMinVel,0.0001
 physicsObjectsStartingCapacity,64
 gravity,0.981
-renderBoundingObjects,1
-pauseOnCollision,1
+renderBoundingObjects,0
+pauseOnCollision,0
+renderCollisions,1

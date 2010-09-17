@@ -57,6 +57,7 @@ namespace hungrybee
             world = Matrix.Identity;
             base.movable = false;
             base.collidable = false;
+            effect = null;
         }
         #endregion
 
@@ -65,22 +66,37 @@ namespace hungrybee
         /// ***********************************************************************
         public override void LoadContent()
         {
-            // Create a basic effect and vertexDeclaration
-            effect = new BasicEffect(base.h_game.GetGraphicsDevice(), null);
-            vertexDeclaration =  new VertexDeclaration(base.h_game.GetGraphicsDevice(), VertexPositionColor.VertexElements);
+            if( effect == null)
+                effect = new BasicEffect(base.h_game.GetGraphicsDevice(), null); // Create a basic effect if we haven't already
+            
+            if(vertexDeclaration == null)
+                vertexDeclaration = new VertexDeclaration(base.h_game.GetGraphicsDevice(), VertexPositionColor.VertexElements); // Create the vertexDeclaration if we haven't already
 
+            UpdateContent();
+        }
+        #endregion
+
+        #region UpdateContent()
+        protected void UpdateContent()
+        {
             // Create the vertex buffer depending on what the object type is
             if (objType == boundingObjType.SPHERE)
             {
-                Vector3 up = ((BoundingSphere)obj).Center + ((BoundingSphere)obj).Radius * Vector3.Up;
-                Vector3 down = ((BoundingSphere)obj).Center + ((BoundingSphere)obj).Radius * Vector3.Down;
-                Vector3 right = ((BoundingSphere)obj).Center + ((BoundingSphere)obj).Radius * Vector3.Right;
-                Vector3 left = ((BoundingSphere)obj).Center + ((BoundingSphere)obj).Radius * Vector3.Left;
-                Vector3 forward = ((BoundingSphere)obj).Center + ((BoundingSphere)obj).Radius * Vector3.Forward;
-                Vector3 back = ((BoundingSphere)obj).Center + ((BoundingSphere)obj).Radius * Vector3.Backward;
+                Vector3 Center = Vector3.Zero;
+                float Radius = 0.0f;
+                collisionUtils.UpdateBoundingSphere((BoundingSphere)obj, world, attachedGameObject, ref Center, ref Radius);
+
+                Vector3 up =        Center + Radius * Vector3.Up;
+                Vector3 down =      Center + Radius * Vector3.Down;
+                Vector3 right =     Center + Radius * Vector3.Right;
+                Vector3 left =      Center + Radius * Vector3.Left;
+                Vector3 forward =   Center + Radius * Vector3.Forward;
+                Vector3 back =      Center + Radius * Vector3.Backward;
 
                 numLines = 3;
-                lineVertices = new VertexPositionColor[numLines * 2];
+                if (lineVertices == null)
+                    lineVertices = new VertexPositionColor[numLines * 2];
+
                 lineVertices[0] = new VertexPositionColor(up, Color.White);
                 lineVertices[1] = new VertexPositionColor(down, Color.White);
                 lineVertices[2] = new VertexPositionColor(left, Color.White);
@@ -90,11 +106,15 @@ namespace hungrybee
             }
             else if (objType == boundingObjType.AABB)
             {
-                Vector3 min = ((BoundingBox)obj).Min;
-                Vector3 max = ((BoundingBox)obj).Max;
+                Vector3 min = new Vector3();
+                Vector3 max = new Vector3();
+
+                collisionUtils.UpdateBoundingBox((BoundingBox)obj, world, ref min, ref max);
 
                 numLines = 12;
-                lineVertices = new VertexPositionColor[numLines * 2];
+                if (lineVertices == null)
+                    lineVertices = new VertexPositionColor[numLines * 2];
+
                 // top back
                 lineVertices[0] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), Color.White);
                 lineVertices[1] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), Color.White);
@@ -155,7 +175,6 @@ namespace hungrybee
             //    percentInterp = gameTime.ElapsedGameTime.Seconds / deltaT;
             percentInterp = 1.0f;
 
-
             drawState.scale = Interp(attachedGameObject.prevState.scale, attachedGameObject.state.scale, percentInterp);
             drawState.orient = Quaternion.Slerp(attachedGameObject.prevState.orient, attachedGameObject.state.orient, percentInterp);
             drawState.pos = Interp(attachedGameObject.prevState.pos, attachedGameObject.state.pos, percentInterp);
@@ -163,7 +182,9 @@ namespace hungrybee
                     Matrix.CreateFromQuaternion(drawState.orient) *
                     Matrix.CreateTranslation(drawState.pos);
 
-            effect.World = world;
+            UpdateContent();
+
+            effect.World = Matrix.Identity;
             effect.View = view;
             effect.Projection = projection;
             effect.VertexColorEnabled = true;

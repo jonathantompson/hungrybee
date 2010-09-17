@@ -36,7 +36,6 @@ namespace hungrybee
         private int numObjects; // Not known until gameObjectManager.LoadLevel() is complete
         private int numCollidableObjects;
         rboDerivative D1, D2, D3, D4;
-        private static bool pauseGame = false;
 
         // Coarse collision detection
         private List<AABBOverlap> AABBOverlapStatus;
@@ -47,6 +46,10 @@ namespace hungrybee
 
         // Fine collision detection
         private List<collision> collisions;
+
+        protected static float EPSILON = 0.00000001f;
+        protected static bool pauseGame = false;
+        protected static bool pauseGameDebounce = false;
 
         #endregion
 
@@ -92,8 +95,10 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
-            if (Keyboard.GetState().IsKeyDown(Keys.P))
-                pauseGame = true;
+            if (Keyboard.GetState().IsKeyDown(Keys.P) && pauseGameDebounce == false)
+            { pauseGame = !pauseGame; pauseGameDebounce = true; }
+            if (Keyboard.GetState().IsKeyUp(Keys.P))
+            { pauseGameDebounce = false; }
 
 
             float time = (float)gameTime.TotalGameTime.TotalSeconds;
@@ -123,22 +128,20 @@ namespace hungrybee
                 // Resolve Collisions
                 if (firstCollision != null)
                 {
+                    // Take a step to just before the time of the first collision, NOTE: colTime is normalized 0->1
+                    float Tstep_to_colision = firstCollision.colTime * Tstep_remaining - EPSILON;
+                    TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
+
+                    if(h_game.GetGameSettings().renderCollisions)
+                        h_game.GetGameObjectManager().SpawnCollisions(ref collisions);
+
                     if (h_game.GetGameSettings().pauseOnCollision && (pauseGame == false))
                     {
-                        // Pause the game and render the collision points
+                        // Pause the game
                         pauseGame = true;
-                        h_game.GetGameObjectManager().SpawnCollisions(ref collisions);
-                        break;
                     }
                     else
                     {
-                        // Roll back the start of the integrator
-                        RollBackRK4Step(h_game.GetGameObjectManager().h_GameObjects);
-
-                        // Take a step to just at the time of the first collision, NOTE: colTime is normalized 0->1
-                        float Tstep_to_colision = firstCollision.colTime * Tstep_remaining;
-                        TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
-
                         // Resolve Collision
                         ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
 
@@ -198,31 +201,29 @@ namespace hungrybee
         }
         #endregion
 
-        #region RollBackRK4Step()
-        /// RollBackRK4Step() - Undo the step by setting state to previous state.
-        /// ***********************************************************************
-        public void RollBackRK4Step(List<gameObject> gameObjects)
-        {
-            // Nothing to do
-        }
-        #endregion
 
         #region ResolveCollisions()
         /// ResolveCollisions() - Add impulse for collision contacts, and add contact forces for contact collisions
         /// ***********************************************************************
         protected void ResolveCollisions(float time, float deltaTime, List<gameObject> gameObjects)
         {
+            // Make the previous state equal to the time of collision
+            CopyStateToPrevState(time, gameObjects); // Collision point velocities will be derived from "prevState" and added to "state"
+
             // Step through each collision and only resolve those collisions that happened from time to (time + deltaTime)
             // All other contacts will be resolved on later iterations of the physics loop
             // This ensures that if two objects collide at EXACTLY the same time they will both be resolved --> Rare!
             for (int i = 0; i < collisions.Count; i++)
                 if (collisions[i].colTime <= deltaTime)
                     collisions[i].ResolveCollision(time, deltaTime, gameObjects);
+
+            // Make the previous state equal to the time of collision again to copy over the impulse's added by the collisions
+            CopyStateToPrevState(time, gameObjects); // Collision point velocities will be derived from "prevState" and added to "state"
         }
         #endregion
 
         #region CopyStateToPrevState()
-        /// CopyStateToPrevState() - Undo the step by setting state to previous state.
+        /// CopyStateToPrevState() - Get ready for next physics step by making the previous frame's "new state", the current frame's "old state"
         /// ***********************************************************************
         public void CopyStateToPrevState(float time, List<gameObject> gameObjects)
         {
@@ -237,6 +238,25 @@ namespace hungrybee
                 // Copy: prevState = state
                 rboState.CopyDynamicQuantitiesAtoB(ref curObject.state, ref curObject.prevState);
                 curObject.prevState.time = time;
+            }
+        }
+        #endregion
+
+        #region CopyPrevStateToState()
+        /// CopyPrevStateToState() - Undo the step by setting state to previous state.
+        /// ***********************************************************************
+        public void CopyPrevStateToState(List<gameObject> gameObjects)
+        {
+            gameObject curObject = null;
+
+            // enumerate through each element in the list and update the quaternion values
+            List<gameObject>.Enumerator ListEnum = gameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                curObject = ListEnum.Current;
+
+                // Copy: prevState = state
+                rboState.CopyDynamicQuantitiesAtoB(ref curObject.prevState, ref curObject.state);
             }
         }
         #endregion
@@ -295,7 +315,7 @@ namespace hungrybee
         public void CoarseCollisionDetection()
         {
 	        // Update Bounding boxes
-            h_game.GetGameObjectManager().UpdateBoundingBoxes();
+            h_game.GetGameObjectManager().UpdateCoarseBoundingBoxes();
 
             // Do an insertion sort on each axis list to order objects, by minimum BB vertex
             // Insertion sort is O(n) when almost sorted, therefore best for slowly moving objects

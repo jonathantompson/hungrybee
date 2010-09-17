@@ -94,21 +94,30 @@ namespace hungrybee
     /// </summary>
     public class forcePlayerInput : force
     {
-        public Vector3 acceleration;
+        public Vector3 desiredVelocity;
+        public float timeToReachVelocity;
+        public float maxAcceleration;
+        public float maxAcceleration_squared;
 
-        public forcePlayerInput(Vector3 _acceleration)
+        public forcePlayerInput(Vector3 _desiredVelocity, float _timeToReachVelocity, float _maxAcceleration)
         {
-            acceleration = _acceleration;
+            desiredVelocity = _desiredVelocity;
+            timeToReachVelocity = _timeToReachVelocity;
+            maxAcceleration_squared = _maxAcceleration * _maxAcceleration;
+            maxAcceleration = _maxAcceleration;
         }
 
-        public void SetAcceleration(Vector3 _acceleration)
+        public void SetVelocity(Vector3 _desiredVelocity)
         {
-            acceleration = _acceleration;
+            desiredVelocity = _desiredVelocity;
         }
 
         public override Vector3 GetForce(ref rboState state, float time)
         {
-            return acceleration * state.mass;
+            Vector3 a = (desiredVelocity - state.linearVel) / timeToReachVelocity;
+            if( (a.X * a.X + a.Y * a.Y + a.Z * a.Z) > maxAcceleration_squared)
+                a = Vector3.Normalize(a) * maxAcceleration;
+            return a * state.mass;
         }
     }
 }

@@ -24,6 +24,17 @@ namespace ExtensionMethods
     /// </summary>
     public static class MyExtensions
     {
+        static float PRECISION = 0.0000001f;
+
+        public static bool testFloatEquality(float f1, float f2)
+        {
+            // Note: if f1 = a and f2 = -a --> (f1 - f2) = (a - (-a)) = 0 --> So need to check both cases
+            if ((float)Math.Abs(f1 - f2) < PRECISION && (float)Math.Abs(f2 - f1) < PRECISION)
+                return true;
+            else
+                return false;
+        }
+
         // Add a selector so we can use index referencing to Vector3
         public static float Mag(this Vector3 vec)
         {

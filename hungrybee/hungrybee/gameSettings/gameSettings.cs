@@ -46,6 +46,7 @@ namespace hungrybee
         public float    gravity;
         public bool     renderBoundingObjects;
         public bool     pauseOnCollision;
+        public bool     renderCollisions;
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -84,9 +85,10 @@ namespace hungrybee
             forceListCapacity = 4;
             physicsMinVel = 0.0001f;
             physicsObjectsStartingCapacity = 64;
-            gravity = 0.981f;
-            renderBoundingObjects = true;
-            pauseOnCollision = true;
+            gravity = 2f;
+            renderBoundingObjects = false;
+            pauseOnCollision = false;
+            renderCollisions = true;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -133,7 +135,7 @@ namespace hungrybee
         /// ***********************************************************************
         private void ReadSettings()
         {
-            csvHandleRead reader = new csvHandleRead(".\\settings.csv");
+            csvHandleRead reader = new csvHandleRead(".\\gameSettings\\settings.csv");
 
             if (reader.IsOpen())
             {
@@ -205,6 +207,9 @@ namespace hungrybee
                         case "pauseOnCollision":
                             this.pauseOnCollision = Convert.ToInt32(curToken[1]) == 1;
                             break;
+                        case "renderCollisions":
+                            this.renderCollisions = Convert.ToInt32(curToken[1]) == 1;
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -230,7 +235,7 @@ namespace hungrybee
         /// ***********************************************************************
         private void WriteSettings()
         {
-            csvHandleWrite writer = new csvHandleWrite(".\\settings.csv");
+            csvHandleWrite writer = new csvHandleWrite(".\\gameSettings\\settings.csv");
 
             writer.WriteNextToken("xWindowSize", this.xWindowSize);
             writer.WriteNextToken("yWindowSize", this.yWindowSize);
@@ -252,6 +257,7 @@ namespace hungrybee
             writer.WriteNextToken("gravity", this.gravity);
             writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0 );
             writer.WriteNextToken("pauseOnCollision", this.pauseOnCollision ? (int)1 : (int)0);
+            writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

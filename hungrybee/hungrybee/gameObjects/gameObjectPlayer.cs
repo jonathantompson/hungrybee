@@ -29,11 +29,10 @@ namespace hungrybee
     {
         #region Local Variables
 
-        public float acceleration;
-        public float stoppingTime;
+        public float maxAcceleration;
+        public float accelTime;
         public float playerHealth;
 
-        public force forceSlowDown;
         public force forcePlayerInput;
 
         #endregion
@@ -41,23 +40,21 @@ namespace hungrybee
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, float _acceleration, float _stoppingTime, float _maxVel)
+        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, float _maxAcceleration, float _accelTime, float _maxVel)
             : base(game, modelfile, _objType)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
-            acceleration = _acceleration;
-            stoppingTime = _stoppingTime;
+            maxAcceleration = _maxAcceleration;
+            accelTime = _accelTime;
             playerHealth = 100.0f;
             base.movable = true;
             base.collidable = true;
             base.maxVel = _maxVel;
 
             // Setup the force structures to describe movement
-            forceSlowDown = new forceSlowDown();
-            forcePlayerInput = new forcePlayerInput(Vector3.Zero);
+            forcePlayerInput = new forcePlayerInput(Vector3.Zero, accelTime, maxAcceleration);
 
             // Add the force structures to the forceList for enumeration at runtime
-            base.forceList.Add(forceSlowDown);
             base.forceList.Add(forcePlayerInput);
         }
         #endregion
@@ -71,56 +68,64 @@ namespace hungrybee
             base.Update(gameTime);
 
             // Get player input
-            GetPlayerInput(gameTime);
+            GetPlayerInputDesiredVelocity(gameTime);
         }
         #endregion
 
-        #region GetPlayerInput()
-        /// GetPlayerInput() - Move the player and set the desired orientation
+        #region GetPlayerInputVelocity()
+        /// GetPlayerInput() - Move the player and set the desired velocity (effectively an impulse
         /// ***********************************************************************
-        public void GetPlayerInput(GameTime gameTime)
+        public void GetPlayerInputDesiredVelocity(GameTime gameTime)
         {
             // Zero out the acceleration
             bool keyPressed = false;
-            Vector3 acc;
-            acc.X = 0.0f; acc.Y = 0.0f; acc.Z = 0.0f;
+            Vector3 desiredVelValue = new Vector3();
+            float playerVelocity = 2.5f;
 
             KeyboardState keyState = Keyboard.GetState();
-            if (keyState.IsKeyDown(Keys.Up) && !keyState.IsKeyDown(Keys.Down)) // Ignore case when both keys are pressed
+            if (keyState.IsKeyDown(Keys.Up) && !keyState.IsKeyDown(Keys.LeftShift)) // Ignore case when both keys are pressed
             {
-                acc.Y += acceleration;
+                desiredVelValue += new Vector3(0.0f, 1.0f, 0.0f);
                 keyPressed = true;
             }
 
-            if (keyState.IsKeyDown(Keys.Down) && !keyState.IsKeyDown(Keys.Up)) // Ignore case when both keys are pressed
+            if (keyState.IsKeyDown(Keys.Down) && !keyState.IsKeyDown(Keys.LeftShift)) // Ignore case when both keys are pressed
             {
-                acc.Y -= acceleration;
+                desiredVelValue += new Vector3(0.0f, -1.0f, 0.0f);
                 keyPressed = true;
             }
 
-            if (keyState.IsKeyDown(Keys.Left) && !keyState.IsKeyDown(Keys.Right)) // Ignore case when both keys are pressed
+            if (keyState.IsKeyDown(Keys.Left)) // Ignore case when both keys are pressed
             {
-                acc.X -= acceleration;
+                desiredVelValue += new Vector3(-1.0f, 0.0f, 0.0f);
                 keyPressed = true;
             }
 
-            if (keyState.IsKeyDown(Keys.Right) && !keyState.IsKeyDown(Keys.Left)) // Ignore case when both keys are pressed
+            if (keyState.IsKeyDown(Keys.Right)) // Ignore case when both keys are pressed
             {
-                acc.X += acceleration;
+                desiredVelValue += new Vector3(+1.0f, 0.0f, 0.0f);
+                keyPressed = true;
+            }
+            if (keyState.IsKeyDown(Keys.Up) && keyState.IsKeyDown(Keys.LeftShift))
+            {
+                desiredVelValue += new Vector3(0.0f, 0.0f, +1.0f);
+                keyPressed = true;
+            }
+            if (keyState.IsKeyDown(Keys.Down) && keyState.IsKeyDown(Keys.LeftShift))
+            {
+                desiredVelValue += new Vector3(0.0f, 0.0f, -1.0f);
                 keyPressed = true;
             }
 
-            // If there's no player input, slow the player down to a stop in the desired amount of time
-            if (!keyPressed)
+            if (keyPressed)
             {
-                ((forceSlowDown)forceSlowDown).SetStopTime((float)gameTime.TotalGameTime.TotalSeconds + stoppingTime);
-                ((forcePlayerInput)forcePlayerInput).SetAcceleration(Vector3.Zero);
+                desiredVelValue = Vector3.Normalize(desiredVelValue);
+                desiredVelValue = playerVelocity * desiredVelValue;
+                ((forcePlayerInput)forcePlayerInput).SetVelocity(desiredVelValue);
             }
-            // Otherwise add the acceleration and remove the decelleration
             else
             {
-                ((forceSlowDown)forceSlowDown).SetStopTime(0.0f);
-                ((forcePlayerInput)forcePlayerInput).SetAcceleration(acc);
+                ((forcePlayerInput)forcePlayerInput).SetVelocity(Vector3.Zero);
             }
         }
         #endregion
