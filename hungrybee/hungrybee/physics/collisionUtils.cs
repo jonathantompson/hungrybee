@@ -96,7 +96,7 @@ namespace hungrybee
         #region TestStaticCollision()
         /// TestStaticCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
-        public static bool TestStaticCollision(gameObject objA, gameObject objB) // normal defined for objA --> objB is just negative
+        public static bool TestStaticCollision(gameObject objA, gameObject objB, ref float separationDistance) // normal defined for objA --> objB is just negative
         {
             // Big dumb if else chain --> But easiest way to quickly parse through input types
             // --> Probably data directed programming would be better here, but not too many types
@@ -105,18 +105,18 @@ namespace hungrybee
 
             // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereSphereStatic(objA, objB);
+                return collisionUtils.TestCollisionSphereSphereStatic(objA, objB, ref separationDistance);
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionSphereAABBStatic(objA, objB);
+                return collisionUtils.TestCollisionSphereAABBStatic(objA, objB, ref separationDistance);
 
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereAABBStatic(objB, objA);
+                return collisionUtils.TestCollisionSphereAABBStatic(objB, objA, ref separationDistance);
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionAABBAABBStatic(objA, objB);
+                return collisionUtils.TestCollisionAABBAABBStatic(objA, objB, ref separationDistance);
 
             else
                 throw new Exception("collisionUtils::TestStaticCollision(): Trying to test collision on unrecognized object types");
@@ -131,6 +131,11 @@ namespace hungrybee
         /// ***********************************************************************
         protected static bool TestCollisionAABBAABB(gameObject objA, gameObject objB, ref List<collision> _cols ) // objA is a sphere, objB is an AABB
         {
+            throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
+
+            #region OLD CODE
+            /*
+
             BoundingBox mBox1 = (BoundingBox)objA.boundingObj;
             BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
 
@@ -206,6 +211,10 @@ namespace hungrybee
             FindAABBColPoints(Tcollision, ref objA, ref objB,  ref objAMin_t0, ref objAMax_t0, ref objBMin_t0, ref objBMax_t0, ref _cols);
 
             return true;
+            
+            */
+
+            #endregion
         }
         #endregion
 
@@ -470,16 +479,52 @@ namespace hungrybee
         #region TestCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float[] Ea, float[] Eb)
         protected static bool testCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float[] Ea, float[] Eb)
         {
+            throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
+
+            #region OLD CODE
+            /*
             Vector3 T = Pb - Pa;
             return ((float)Math.Abs(T.X)) <= (Ea[0] + Eb[0]) &&
                    ((float)Math.Abs(T.Y)) <= (Ea[1] + Eb[1]) &&
                    ((float)Math.Abs(T.Z)) <= (Ea[2] + Eb[2]); // All three regions must be overlapping (otherwise there's a seperating axis)
+            */
+            #endregion
+        }
+        #endregion
+
+        #region TestCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float[] Ea, float[] Eb, ref float separationDistance)
+        protected static bool testCollisionAABBAABBStatic(Vector3 Pa, Vector3 Pb, float[] Ea, float[] Eb, ref float separationDistance)
+        {
+            throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
+
+            #region OLD CODE
+            /*
+            Vector3 T = Pb - Pa;
+            separationDistance = 0.0f;
+            separationDistance += ((float)Math.Abs(T.X)) <= (Ea[0] + Eb[0]) ? 0.0f : (((float)Math.Abs(T.X)) - (Ea[0] + Eb[0])) * (((float)Math.Abs(T.X)) - (Ea[0] + Eb[0]));
+            separationDistance += ((float)Math.Abs(T.Y)) <= (Ea[1] + Eb[1]) ? 0.0f : (((float)Math.Abs(T.Y)) - (Ea[1] + Eb[1])) * (((float)Math.Abs(T.Y)) - (Ea[1] + Eb[1]));
+            separationDistance += ((float)Math.Abs(T.Z)) <= (Ea[2] + Eb[2]) ? 0.0f : (((float)Math.Abs(T.Z)) - (Ea[2] + Eb[2])) * (((float)Math.Abs(T.Z)) - (Ea[2] + Eb[2]));
+                
+            // All three regions must be overlapping (otherwise there's a seperating axis)
+            if (separationDistance <= 0.0f)
+                return true;
+            else
+            {
+                separationDistance = (float)Math.Sqrt(separationDistance);
+                return false;
+            }
+            */
+            #endregion
         }
         #endregion
 
         #region TestCollisionAABBAABBStatic(gameObject objA, gameObject objB)
-        protected static bool TestCollisionAABBAABBStatic(gameObject objA, gameObject objB)
+        protected static bool TestCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref float separationDistance)
         {
+            throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
+
+            #region OLD CODE
+            /*
             BoundingBox mBox1 = (BoundingBox)objA.boundingObj;
             BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
 
@@ -501,8 +546,9 @@ namespace hungrybee
             Eb[1] = 0.5f * (objBMax_t1.Y - objBMin_t1.Y);
             Eb[2] = 0.5f * (objBMax_t1.Z - objBMin_t1.Z);
 
-            return testCollisionAABBAABBStatic(objACenter_t0, objBCenter_t0, Ea, Eb);
-
+            return testCollisionAABBAABBStatic(objACenter_t1, objBCenter_t1, Ea, Eb, ref separationDistance);
+            */
+            #endregion
         }
         #endregion
 
@@ -659,7 +705,7 @@ namespace hungrybee
         #endregion
 
         #region TestCollisionSphereSphereStatic(gameObject objA, gameObject objB)
-        protected static bool TestCollisionSphereSphereStatic(gameObject objA, gameObject objB)
+        protected static bool TestCollisionSphereSphereStatic(gameObject objA, gameObject objB, ref float separationDistance)
         {
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
@@ -672,7 +718,15 @@ namespace hungrybee
             float rab = objARadius_t1 + objBRadius_t1;
             Vector3 AB = objBCenter_t1 - objACenter_t1; // Vector from A0 to B0
 
-            return (Vector3.Dot(AB, AB) <= rab * rab);
+            separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - rab;
+
+            if (separationDistance <= 0.0f)
+            {
+                separationDistance = 0.0f;
+                return true;
+            }
+            else
+                return false;
         }
         #endregion
 
@@ -897,7 +951,7 @@ namespace hungrybee
         #endregion
 
         #region TestCollisionSphereAABBStatic(gameObject objA, gameObject objB)
-        protected static bool TestCollisionSphereAABBStatic(gameObject objA, gameObject objB)
+        protected static bool TestCollisionSphereAABBStatic(gameObject objA, gameObject objB, ref float separationDistance)
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;
@@ -919,27 +973,33 @@ namespace hungrybee
             Vector3 sphereProjectedOnAABB = ClosestPointOnAABB(objACenter_t1, (BoundingBox)objB.boundingObj);
             Vector3 AB = sphereProjectedOnAABB - objACenter_t1;
 
-            return (Vector3.Dot(AB, AB) <= objARadius_t1 * objARadius_t1);
+            separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - objARadius_t1;
+
+            return (separationDistance <= 0.0f);
         }
         #endregion
 
         #region GetAABBNormalFromPointOnAABB()
         protected static Vector3 GetAABBNormalFromPointOnAABB(Vector3 point, Vector3 min, Vector3 max)
         {
+            Vector3 retVal = Vector3.Zero;
             if (MyExtensions.testFloatEquality(point.X, min.X))
-                return new Vector3(-1.0f, 0.0f, 0.0f);
+                retVal += new Vector3(-1.0f, 0.0f, 0.0f);
             else if (MyExtensions.testFloatEquality(point.X, max.X))
-                return new Vector3(+1.0f, 0.0f, 0.0f);
-            else if (MyExtensions.testFloatEquality(point.Y, min.Y))
-                return new Vector3(0.0f, -1.0f, 0.0f);
+                retVal += new Vector3(+1.0f, 0.0f, 0.0f);
+            if (MyExtensions.testFloatEquality(point.Y, min.Y))
+                retVal += new Vector3(0.0f, -1.0f, 0.0f);
             else if (MyExtensions.testFloatEquality(point.Y, max.Y))
-                return new Vector3(0.0f, +1.0f, 0.0f);
-            else if (MyExtensions.testFloatEquality(point.Z, min.Z))
-                return new Vector3(0.0f, 0.0f, -1.0f);
+                retVal += new Vector3(0.0f, +1.0f, 0.0f);
+            if (MyExtensions.testFloatEquality(point.Z, min.Z))
+                retVal += new Vector3(0.0f, 0.0f, -1.0f);
             else if (MyExtensions.testFloatEquality(point.Z, max.Z))
-                return new Vector3(0.0f, 0.0f, +1.0f);
-            else
+                retVal += new Vector3(0.0f, 0.0f, +1.0f);
+            
+            if((float)Math.Abs(retVal.X)+(float)Math.Abs(retVal.Y)+(float)Math.Abs(retVal.Z) == 0.0f) // If the vector is still zero, the point must not be on the AABB
                 throw new Exception("GetAABBNormalFromPointOnAABB() - Input point is not on the bounds of the AABB -> Cannot get normal");
+
+            return Vector3.Normalize(retVal);
         }
         #endregion
 

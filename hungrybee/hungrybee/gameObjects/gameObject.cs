@@ -41,6 +41,12 @@ namespace hungrybee
         public BoundingBox sweepAndPruneAABB;
         public Vector3 AABB_min, AABB_max;
         public bool dirtyAABB; // Flag for collision detection to avoid computing translated aabb twice
+        public static Vector3 AABB_min_t0 = new Vector3();
+        public static Vector3 AABB_max_t0 = new Vector3();
+        public static Vector3 AABB_min_t1 = new Vector3();
+        public static Vector3 AABB_max_t1 = new Vector3();
+        public static Matrix mat_t0 = new Matrix();
+        public static Matrix mat_t1 = new Matrix();
 
         public rboState state;
         public rboState prevState;
@@ -94,7 +100,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region Update(GameTime gameTime)
+        #region virtual Update(GameTime gameTime)
         /// Update - If we've moved the object then update the world transform
         /// ***********************************************************************
         public virtual void Update(GameTime gameTime)
@@ -103,7 +109,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region LoadContent()
+        #region virtual LoadContent()
         /// LoadContent - Load in the model from file
         /// ***********************************************************************
         public virtual void LoadContent()
@@ -154,7 +160,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region DrawUsingCurrentEffect()
+        #region virtual DrawUsingCurrentEffect()
         /// DrawUsingCurrentEffect - Assuemes higher level function has started the correct effect draw sequence
         /// ***********************************************************************
         public virtual void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
@@ -205,7 +211,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region ChangeEffectUsedByModel()
+        #region virtual ChangeEffectUsedByModel()
         /// Alters a model so it will draw using a custom effect, while preserving
         /// whatever textures were set on it as part of the original effects.
         /// /// ***********************************************************************
@@ -326,7 +332,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region GetForceTorque()
+        #region virtual GetForceTorque()
         /// GetForceTorque - Get the force and torque for each object to be used in the integrator
         /// ***********************************************************************
         public virtual void GetForceTorque(ref Vector3 force, ref Vector3 torque, ref rboState rboState, float time)
@@ -355,41 +361,48 @@ namespace hungrybee
         }
         #endregion
 
-        #region UpdateCoarseBoundingBox()
+        #region virtual UpdateCoarseBoundingBox()
         /// UpdateCoarseBoundingBox() - Update the bounding box used in Collision detection
         /// Box is formed by the origional static box swept through the vector (state.pos - prevState.pos)
         /// For fast moving objects this will be a very large Bounding box
-        /// ASSUMES ROTATION AND SCALE ARE CONSTANT BETWEEN FRAMES
         /// ***********************************************************************
-        public void UpdateCoarseBoundingBox()
+        public virtual void UpdateCoarseBoundingBox()
         {
             if (dirtyAABB)
             {
-                Matrix mat = CreateScale(state.scale) * Matrix.CreateFromQuaternion(state.orient) * Matrix.CreateTranslation(state.pos);
+                mat_t0 = CreateScale(prevState.scale) * Matrix.CreateFromQuaternion(prevState.orient) * Matrix.CreateTranslation(prevState.pos);
+                mat_t1 = CreateScale(state.scale) * Matrix.CreateFromQuaternion(state.orient) * Matrix.CreateTranslation(state.pos);
+
                 if (boundingObjType == boundingObjType.AABB)
-                    collisionUtils.UpdateBoundingBox(sweepAndPruneAABB, mat, ref AABB_min, ref AABB_max);
+                {
+                    collisionUtils.UpdateBoundingBox(sweepAndPruneAABB, mat_t0, ref AABB_min_t0, ref AABB_max_t0);
+                    collisionUtils.UpdateBoundingBox(sweepAndPruneAABB, mat_t1, ref AABB_min_t1, ref AABB_max_t1);
+                }
                 else if (boundingObjType == boundingObjType.SPHERE)
                 {
                     Vector3 center = Vector3.Zero;
                     float radius = 0.0f;
-                    collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat, state.scale, this, ref center, ref radius);
-                    AABB_min = center - new Vector3(radius, radius, radius);
-                    AABB_max = center + new Vector3(radius, radius, radius);
+                    collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat_t0, prevState.scale, this, ref center, ref radius);
+                    AABB_min_t0 = center - new Vector3(radius, radius, radius);
+                    AABB_max_t0 = center + new Vector3(radius, radius, radius);
+
+                    collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat_t1, prevState.scale, this, ref center, ref radius);
+                    AABB_min_t1 = center - new Vector3(radius, radius, radius);
+                    AABB_max_t1 = center + new Vector3(radius, radius, radius);
                 }
                 else
                     throw new Exception("UpdateCoarseBoundingBox() - Bounding object type not supported");
 
-                Vector3 displacement = state.pos - prevState.pos;
-
-                // Find smallest vector by sweeping sphere along the displacement between the two states
-                AABB_min.X = collisionUtils.Min(AABB_min.X, AABB_min.X + displacement.X);
-                AABB_min.Y = collisionUtils.Min(AABB_min.Y, AABB_min.Y + displacement.Y);
-                AABB_min.Z = collisionUtils.Min(AABB_min.Z, AABB_min.Z + displacement.Z);
+                // Find smallest vector from t0 or t1
+                AABB_min.X = collisionUtils.Min(AABB_min_t0.X, AABB_min_t1.X);
+                AABB_min.Y = collisionUtils.Min(AABB_min_t0.Y, AABB_min_t1.Y);
+                AABB_min.Z = collisionUtils.Min(AABB_min_t0.Z, AABB_min_t1.Z);
 
                 // Find largest vector by sweeping sphere along the displacement between the two states
-                AABB_max.X = collisionUtils.Max(AABB_max.X, AABB_max.X + displacement.X);
-                AABB_max.Y = collisionUtils.Max(AABB_max.Y, AABB_max.Y + displacement.Y);
-                AABB_max.Z = collisionUtils.Max(AABB_max.Z, AABB_max.Z + displacement.Z);
+                AABB_max.X = collisionUtils.Max(AABB_max_t0.X, AABB_max_t1.X);
+                AABB_max.Y = collisionUtils.Max(AABB_max_t0.Y, AABB_max_t1.Y);
+                AABB_max.Z = collisionUtils.Max(AABB_max_t0.Z, AABB_max_t1.Z);
+
                 dirtyAABB = false;
             }
         }

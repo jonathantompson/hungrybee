@@ -30,7 +30,10 @@ namespace hungrybee
         game h_game;
         public List<gameObject> h_GameObjects;      // Handler to the list of game objects
 
-        int numPlayers, numHeightMaps, numEnemys;
+        int numPlayers, numHeightMaps, numEnemys, numPhantoms;
+        static float frustrumBoundBoxThickness = 2.0f;
+        static float frustrumBoundBoxDepth = 20.0f;
+        static float EPSILON = 0.00001f;
 
         #endregion
 
@@ -41,7 +44,7 @@ namespace hungrybee
         {
             h_game = (game)game;
             h_GameObjects = new List<gameObject>();
-            numPlayers = 0; numHeightMaps = 0; numEnemys = 0;
+            numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0;
         }
         #endregion
 
@@ -103,6 +106,9 @@ namespace hungrybee
             
             // Load in the object descriptions from the csv file for the first level
             LoadLevel(1);
+
+            // Build the bounding boxes at the frustrum bounds.
+            BuildFrustrumBounds();
 
             if(h_game.GetGameSettings().renderBoundingObjects) // Add bounding objects to be rendered if we want
                 SpawnCollidables();
@@ -171,6 +177,32 @@ namespace hungrybee
                         else
                             throw new Exception("gameObjectManager::LoadContent(): Error reading enemy settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
                         break;
+                    case "phantom":
+                        if (curToken.Count > 2)
+                        {
+                            if (curToken[1] == "AABB")
+                            {
+                                if (curToken.Count != 8)
+                                    throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                                curObject = new gameObjectPhantom(h_game, boundingObjType.AABB,
+                                                                  (Object) new BoundingBox(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
+                                                                                           new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7]))));
+                            }
+                            else if (curToken[1] == "SPHERE")
+                            {
+                                if (curToken.Count != 6)
+                                    throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                                curObject = new gameObjectPhantom(h_game, boundingObjType.SPHERE,
+                                                                  (Object)new BoundingSphere(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
+                                                                                             float.Parse(curToken[5])));
+                            }
+                            else
+                                throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                            numPhantoms += 1;
+                        }
+                        else
+                            throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        break;
                     case "//": // Comment
                         curObject = null;
                         break;
@@ -196,6 +228,105 @@ namespace hungrybee
 
             }
             reader.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
+        }
+        #endregion
+
+        #region BuildFrustrumBounds()
+        /// SpanGameObjectPhysicsDebug - create phantoms at the extents of the bounding frustrum
+        /// ***********************************************************************
+        protected void BuildFrustrumBounds()
+        {
+            gameObjectHeightMap heightMap = GetHeightMap();
+            if (heightMap == null)
+                throw new Exception("gameObjectManager::BuildFrustrumBounds() - Could not find a heightmap!  Check Level_X.csv");
+
+            // Build a frustrum from the camera values and get the corners
+            camera camera = (camera)h_game.GetCamera();
+            BoundingFrustum frustrum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
+            // The Plane structure defines a plane by specifying it's normal vector and its NEGATIVE DISTANCE D TO THE ORIGIN
+            // ALONG THE DIRECTION OF IT'S NORMAL VECTOR
+
+            // Equation of a plane: n . (r - r0) = 0 --> n_x(x - x_0) + n_y(y - y_0) + n_z(z - z_0) = 0
+            // want to solve plane equation for:
+            // Left plane:     y = 0, z = 0, x = ? --> x = (n_y*y_0 + n_z*z_0) / n_x + x_0
+            // Right plane:    y = 0, z = 0, x = ? --> x = (n_y*y_0 + n_z*z_0) / n_x + x_0
+            // Top plane:      y = ?, z = 0, x = 0 --> y = (n_x*x_0 + n_z*z_0) / n_y + y_0
+            // Bottom plane:   y = ?, z = 0, x = 0 --> y = (n_x*x_0 + n_z*z_0) / n_y + y_0
+
+            Vector3 pointOnPlane;
+            Plane plane;
+
+            // Find the bound coordinates above
+            plane = frustrum.Left;
+            pointOnPlane = plane.Normal * (-1.0f) * plane.D;
+            float leftCoord = (plane.Normal.Y * pointOnPlane.Y + plane.Normal.Z * pointOnPlane.Z) / plane.Normal.X + pointOnPlane.X;
+
+            plane = frustrum.Top;
+            pointOnPlane = plane.Normal * (-1.0f) * plane.D;
+            float topCoord = (plane.Normal.X * pointOnPlane.X + plane.Normal.Z * pointOnPlane.Z) / plane.Normal.Y + pointOnPlane.Y;
+
+            plane = frustrum.Right;
+            pointOnPlane = plane.Normal * (-1.0f) * plane.D;
+            float rightCoord = (plane.Normal.Y * pointOnPlane.Y + plane.Normal.Z * pointOnPlane.Z) / plane.Normal.X + pointOnPlane.X;
+
+            plane = frustrum.Bottom;
+            pointOnPlane = plane.Normal * (-1.0f) * plane.D;
+            float bottomCoord = (plane.Normal.Y * pointOnPlane.Y + plane.Normal.Z * pointOnPlane.Z) / plane.Normal.X + pointOnPlane.X;
+
+            // Bottom coordinate is either set by the heightMap OR the bottom frustrum plane
+            heightMap.UpdateCoarseBoundingBox();
+            bottomCoord = Math.Max(heightMap.AABB_max.Y, bottomCoord);
+
+            if (bottomCoord > topCoord)
+                throw new Exception("gameObjectManager::BuildFrustrumBounds() - bottom coord is above top coord: maybe heightmap is too tall and is off screen?");
+
+            BoundingBox bAABB;
+            gameObject gameObj;
+
+
+            // Add the left bounding box
+            bAABB = new BoundingBox(new Vector3(leftCoord - frustrumBoundBoxThickness, bottomCoord + EPSILON, frustrumBoundBoxDepth * -0.5f),
+                                    new Vector3(leftCoord - EPSILON, topCoord, frustrumBoundBoxDepth * +0.5f));
+            gameObj = new gameObjectPhantom(h_game, boundingObjType.AABB, bAABB);
+            // Append the newly created object to the list
+            h_GameObjects.Add(gameObj);
+            // Load the content of the current object
+            gameObj.LoadContent();
+
+            // Add the Right bounding box
+            bAABB = new BoundingBox(new Vector3(rightCoord + EPSILON, bottomCoord + EPSILON, frustrumBoundBoxDepth * -0.5f),
+                                    new Vector3(rightCoord + frustrumBoundBoxThickness, topCoord, frustrumBoundBoxDepth * +0.5f));
+            gameObj = new gameObjectPhantom(h_game, boundingObjType.AABB, bAABB);
+            // Append the newly created object to the list
+            h_GameObjects.Add(gameObj);
+            // Load the content of the current object
+            gameObj.LoadContent();
+
+            // Add the Top bounding box
+            bAABB = new BoundingBox(new Vector3(leftCoord, topCoord, frustrumBoundBoxDepth * -0.5f),
+                                    new Vector3(rightCoord, topCoord + frustrumBoundBoxThickness, frustrumBoundBoxDepth * +0.5f));
+            gameObj = new gameObjectPhantom(h_game, boundingObjType.AABB, bAABB);
+            // Append the newly created object to the list
+            h_GameObjects.Add(gameObj);
+            // Load the content of the current object
+            gameObj.LoadContent();
+
+
+        }
+        #endregion
+
+        #region GetHeightMap()
+        /// GetHeightMap - The LoadLevel function ensures there is only one heightmap.  Iterate through to find it.
+        /// ***********************************************************************
+        public gameObjectHeightMap GetHeightMap()
+        {
+            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            {
+                if (ListEnum.Current is gameObjectHeightMap)
+                    return (gameObjectHeightMap)ListEnum.Current;
+            }
+            return null;
         }
         #endregion
 
@@ -229,7 +360,7 @@ namespace hungrybee
             gameObject newObj = new gameObjectPhysicsDebug(h_game,
                                                            inputObject.boundingObjType,
                                                            inputObject.boundingObj,
-                                                           inputObject);
+                                                           inputObject, Color.White);
             newObj.LoadContent();
             return newObj;
         }
@@ -247,12 +378,26 @@ namespace hungrybee
             gameObj.state.pos = inputObject.colPoint; // This is all we care about
 
             // Make sure both starting states are equal
-            rboState.CopyAtoB(ref gameObj.state, ref gameObj.prevState); 
+            rboState.CopyAtoB(ref gameObj.state, ref gameObj.prevState);
+
+            Color color;
+            switch (inputObject.colType)
+            {
+                case collisionType.VERTEX_FACE:
+                    color = Color.Blue;
+                    break;
+                case collisionType.EDGE_EDGE:
+                    color = Color.Red;
+                    break;
+                default:
+                    throw new Exception("gameObjectManager::SpawnGameObjectPhysicsDebug(collision inputObject) - collision type unrecognised or is COL_UNDEFINED");
+            }
 
             gameObject retObj = new gameObjectPhysicsDebug(h_game,
                                                            gameObj.boundingObjType,
                                                            gameObj.boundingObj,
-                                                           gameObj);
+                                                           gameObj,
+                                                           color);
             retObj.LoadContent();
             return retObj;
         }

@@ -86,6 +86,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="gameObjects\gameObjectPhantom.cs" />
+    <Compile Include="gameObjects\phantomType.cs" />
     <Compile Include="physics\AABBOverlap.cs" />
     <Compile Include="physics\collision.cs" />
     <Compile Include="physics\collisionUtils.cs" />

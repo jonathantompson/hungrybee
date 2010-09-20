@@ -34,6 +34,6 @@ namespace hungrybee
         #endregion
 
         // Resize function to be called when window size has changed.
-        void Resize();
+        void ResizeProjectionMatrix();
     }
 }

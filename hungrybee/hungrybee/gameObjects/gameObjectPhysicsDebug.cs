@@ -40,12 +40,16 @@ namespace hungrybee
 
         gameObject attachedGameObject;
         boundingObjType objType;
+        Color color;
+
         Object obj;
 
         #endregion
 
         #region Constructor - gameObjectPhysicsDebug(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
-        public gameObjectPhysicsDebug(game game, boundingObjType _objType, Object _obj, gameObject _attachedGameObject)
+        /// Constructor - Basic constructor
+        /// ***********************************************************************
+        public gameObjectPhysicsDebug(game game, boundingObjType _objType, Object _obj, gameObject _attachedGameObject, Color _color)
             : base(game, null, _objType)
         {
             objType = _objType;
@@ -58,6 +62,7 @@ namespace hungrybee
             base.movable = false;
             base.collidable = false;
             effect = null;
+            color = _color;
         }
         #endregion
 
@@ -77,6 +82,8 @@ namespace hungrybee
         #endregion
 
         #region UpdateContent()
+        /// UpdateContent - Update the bounding object for rendering
+        /// ***********************************************************************
         protected void UpdateContent()
         {
             // Create the vertex buffer depending on what the object type is
@@ -97,12 +104,12 @@ namespace hungrybee
                 if (lineVertices == null)
                     lineVertices = new VertexPositionColor[numLines * 2];
 
-                lineVertices[0] = new VertexPositionColor(up, Color.White);
-                lineVertices[1] = new VertexPositionColor(down, Color.White);
-                lineVertices[2] = new VertexPositionColor(left, Color.White);
-                lineVertices[3] = new VertexPositionColor(right, Color.White);
-                lineVertices[4] = new VertexPositionColor(forward, Color.White);
-                lineVertices[5] = new VertexPositionColor(back, Color.White);
+                lineVertices[0] = new VertexPositionColor(up, color);
+                lineVertices[1] = new VertexPositionColor(down, color);
+                lineVertices[2] = new VertexPositionColor(left, color);
+                lineVertices[3] = new VertexPositionColor(right, color);
+                lineVertices[4] = new VertexPositionColor(forward, color);
+                lineVertices[5] = new VertexPositionColor(back, color);
             }
             else if (objType == boundingObjType.AABB)
             {
@@ -116,43 +123,43 @@ namespace hungrybee
                     lineVertices = new VertexPositionColor[numLines * 2];
 
                 // top back
-                lineVertices[0] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), Color.White);
-                lineVertices[1] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), Color.White);
+                lineVertices[0] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), color);
+                lineVertices[1] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), color);
                 // top right
-                lineVertices[2] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), Color.White);
-                lineVertices[3] = new VertexPositionColor(new Vector3(max.X, max.Y, min.Z), Color.White);
+                lineVertices[2] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), color);
+                lineVertices[3] = new VertexPositionColor(new Vector3(max.X, max.Y, min.Z), color);
                 // top front
-                lineVertices[4] = new VertexPositionColor(new Vector3(max.X, max.Y, min.Z), Color.White);
-                lineVertices[5] = new VertexPositionColor(new Vector3(min.X, max.Y, min.Z), Color.White);
+                lineVertices[4] = new VertexPositionColor(new Vector3(max.X, max.Y, min.Z), color);
+                lineVertices[5] = new VertexPositionColor(new Vector3(min.X, max.Y, min.Z), color);
                 // top left
-                lineVertices[6] = new VertexPositionColor(new Vector3(min.X, max.Y, min.Z), Color.White);
-                lineVertices[7] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), Color.White);
+                lineVertices[6] = new VertexPositionColor(new Vector3(min.X, max.Y, min.Z), color);
+                lineVertices[7] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), color);
 
                 // side back left
-                lineVertices[8] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), Color.White);
-                lineVertices[9] = new VertexPositionColor(new Vector3(min.X, min.Y, max.Z), Color.White);
+                lineVertices[8] = new VertexPositionColor(new Vector3(min.X, max.Y, max.Z), color);
+                lineVertices[9] = new VertexPositionColor(new Vector3(min.X, min.Y, max.Z), color);
                 // side back right
-                lineVertices[10] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), Color.White);
-                lineVertices[11] = new VertexPositionColor(new Vector3(max.X, min.Y, max.Z), Color.White);
+                lineVertices[10] = new VertexPositionColor(new Vector3(max.X, max.Y, max.Z), color);
+                lineVertices[11] = new VertexPositionColor(new Vector3(max.X, min.Y, max.Z), color);
                 // side front right
-                lineVertices[12] = new VertexPositionColor(new Vector3(max.X, max.Y, min.Z), Color.White);
-                lineVertices[13] = new VertexPositionColor(new Vector3(max.X, min.Y, min.Z), Color.White);
+                lineVertices[12] = new VertexPositionColor(new Vector3(max.X, max.Y, min.Z), color);
+                lineVertices[13] = new VertexPositionColor(new Vector3(max.X, min.Y, min.Z), color);
                 // side front left
-                lineVertices[14] = new VertexPositionColor(new Vector3(min.X, max.Y, min.Z), Color.White);
-                lineVertices[15] = new VertexPositionColor(new Vector3(min.X, min.Y, min.Z), Color.White);
+                lineVertices[14] = new VertexPositionColor(new Vector3(min.X, max.Y, min.Z), color);
+                lineVertices[15] = new VertexPositionColor(new Vector3(min.X, min.Y, min.Z), color);
 
                 // bottom back
-                lineVertices[16] = new VertexPositionColor(new Vector3(min.X, min.Y, max.Z), Color.White);
-                lineVertices[17] = new VertexPositionColor(new Vector3(max.X, min.Y, max.Z), Color.White);
+                lineVertices[16] = new VertexPositionColor(new Vector3(min.X, min.Y, max.Z), color);
+                lineVertices[17] = new VertexPositionColor(new Vector3(max.X, min.Y, max.Z), color);
                 // bottom right
-                lineVertices[18] = new VertexPositionColor(new Vector3(max.X, min.Y, max.Z), Color.White);
-                lineVertices[19] = new VertexPositionColor(new Vector3(max.X, min.Y, min.Z), Color.White);
+                lineVertices[18] = new VertexPositionColor(new Vector3(max.X, min.Y, max.Z), color);
+                lineVertices[19] = new VertexPositionColor(new Vector3(max.X, min.Y, min.Z), color);
                 // bottom front
-                lineVertices[20] = new VertexPositionColor(new Vector3(max.X, min.Y, min.Z), Color.White);
-                lineVertices[21] = new VertexPositionColor(new Vector3(min.X, min.Y, min.Z), Color.White);
+                lineVertices[20] = new VertexPositionColor(new Vector3(max.X, min.Y, min.Z), color);
+                lineVertices[21] = new VertexPositionColor(new Vector3(min.X, min.Y, min.Z), color);
                 // bottom left
-                lineVertices[22] = new VertexPositionColor(new Vector3(min.X, min.Y, min.Z), Color.White);
-                lineVertices[23] = new VertexPositionColor(new Vector3(min.X, min.Y, max.Z), Color.White);
+                lineVertices[22] = new VertexPositionColor(new Vector3(min.X, min.Y, min.Z), color);
+                lineVertices[23] = new VertexPositionColor(new Vector3(min.X, min.Y, max.Z), color);
             }
             else // object type is not supported
                 throw new Exception("gameObjectPhysicsDebug::LoadContent() - Physics debug object is not yet supported");
@@ -160,7 +167,7 @@ namespace hungrybee
         #endregion
 
         #region DrawUsingCurrentEffect()
-        /// LoadContent - Load in the textures and initialize the heightmap
+        /// DrawUsingCurrentEffect - Draw the bounding object
         /// ***********************************************************************
         public override void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {

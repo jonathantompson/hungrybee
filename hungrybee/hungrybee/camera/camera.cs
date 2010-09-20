@@ -115,21 +115,27 @@ namespace hungrybee
             Mouse.SetPosition(h_game.Window.ClientBounds.Width / 2, h_game.Window.ClientBounds.Height / 2);
             oldMouseState = Mouse.GetState();
 
-            this.Resize();
+            this.ResizeProjectionMatrix();
             base.Initialize();
+
+            h_viewMatrix = Matrix.CreateLookAt(h_cameraPosition, h_cameraPosition + h_originalCameraForward, h_originalCameraUp);
         }
         #endregion
 
-        #region Resize()
+        #region ResizeProjectionMatrix()
         /// Reset the Perspective Matrix --> Required only on window resize 
         /// ***********************************************************************
-        public void Resize()
+        public void ResizeProjectionMatrix()
         {
             h_viewAngle = MathHelper.PiOver4;
             h_viewPort = h_game.GraphicsDevice.Viewport;
             h_nearPlane = 0.5f;
             h_farPlane = 10000.0f;
             h_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(h_viewAngle, h_viewPort.AspectRatio, h_nearPlane, h_farPlane);
+
+            //float width = 10.0f;
+            //float height = 10.0f;
+            //h_projectionMatrix = Matrix.CreateOrthographic(width, height, h_nearPlane, h_farPlane);
         }
         #endregion
 

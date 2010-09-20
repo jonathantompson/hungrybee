@@ -13,9 +13,8 @@ cameraRunningMult,4
 cameraRotationSpeed,0.002
 EPSILON,1E-08
 forceListCapacity,4
-physicsMinVel,0.0001
 physicsObjectsStartingCapacity,64
-gravity,0.981
+gravity,2
 renderBoundingObjects,1
 pauseOnCollision,0
 renderCollisions,1

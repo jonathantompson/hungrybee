@@ -51,7 +51,8 @@ namespace hungrybee
         protected float Tstep_remaining;
 
         protected static float EPSILON = 0.00000001f;
-        protected static float BISECTION_TOLLERANCE = 0.00016666666666f; //(1/60) * 0.01 (1% of a physics time step)
+        protected static float BISECTION_TOLLERANCE = 0.0001f;
+        protected static int BISECTION_MAXITERATIONS = 30;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
 
@@ -117,18 +118,25 @@ namespace hungrybee
                 // Try taking a RK4 Step for each object in h_game.gameObjectManager
                 TakeRK4Step(time, Tstep_remaining, h_game.GetGameObjectManager().h_GameObjects);
 
-                
-
                 // Run the coarse and find collision detection
                 firstCollision = CollisionDetection();
                 if (firstCollision != null && firstCollision.colTime <= 0.0f)
+                {
                     throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
+
+                }
 
                 // Resolve Collisions
                 if (firstCollision != null)
                 {
-                    // Find time to collision using the firstCollision value as an estimate
-                    float Tstep_to_colision = StepToCollisionTimeByBisection();
+                    // Find time to collision using the firstCollision value as an estimate --> Also rebuilds the collision list with more accurate collision data
+                    float Tstep_to_colision = StepToCollisionTimeByBisection(Tstep_remaining);
+
+                    // Step to the collision time
+                    TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
+
+                    // Resolve Collision
+                    ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
 
                     if(h_game.GetGameSettings().renderCollisions)
                         h_game.GetGameObjectManager().SpawnCollisions(ref collisions);
@@ -137,15 +145,10 @@ namespace hungrybee
                     {
                         // Pause the game
                         pauseGame = true;
+                        break;
                     }
                     else
-                    {
-                        // Resolve Collision
-                        ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
-
-                        // Remove the piecewise step from the time remaining
-                        Tstep_remaining -= Tstep_to_colision;
-                    }
+                        Tstep_remaining -= Tstep_to_colision; // Remove the piecewise step from the time remaining
                 }
                 else
                 {
@@ -177,26 +180,60 @@ namespace hungrybee
         #region StepToCollisionTimeByBisection()
         /// StepToCollisionTimeByBisection() - Uses an iterative algorithm to find the time (with some error) 
         /// ***********************************************************************
-        protected float StepToCollisionTimeByBisection()
+        protected float StepToCollisionTimeByBisection(float Time_remaining)
         {
-            float Tstep_to_colision = firstCollision.colTime * Tstep_remaining; // colTime from swept sphere tests is normalized 0->1.
+            float Tstep_to_colision = firstCollision.colTime * Tstep_remaining - EPSILON; // colTime from swept tests are normalized 0->1.
             float bisectionTimeRemaining = Tstep_to_colision;
             bool collided = false;
+            float minSeparationDistance = float.PositiveInfinity;
+            int curIteration = 1;
 
-            while (bisectionTimeRemaining > BISECTION_TOLLERANCE || collided) // While they're still interpenetrating & we haven't reached the desired accuracy
+            while (minSeparationDistance > BISECTION_TOLLERANCE || collided) // While they're still interpenetrating & we haven't reached the desired accuracy
             {
+                if (curIteration > BISECTION_MAXITERATIONS)
+                    throw new Exception("physicsManager::StepToCollisionTimeByBisection() - Could not reach convergence after " +
+                                        String.Format("{0}", BISECTION_MAXITERATIONS) + " iterations. Final Separation distance = " +
+                                        String.Format("{0:e}", minSeparationDistance) + ", collided = " + (collided ? "true" : "false"));
+
                 // Take a step to the estimated collision time
                 TakeRK4Step(time, Tstep_to_colision, h_game.GetGameObjectManager().h_GameObjects);
 
-                if (collided = StaticCollisionDetection()) // Doesn't use swept tests.  Just return binary if objects overlap
+                if (collided = StaticCollisionDetection(ref minSeparationDistance)) // Doesn't use swept tests.  Just return binary if objects overlap
                 {
-                    bisectionTimeRemaining /= 2.0f;
                     Tstep_to_colision -= bisectionTimeRemaining; // we went too far and now the objects overlap, add the bisection time back
+                    bisectionTimeRemaining /= 2.0f;
+                    Tstep_to_colision += bisectionTimeRemaining; // Try a half step
                 }
                 else 
                 {
-                    bisectionTimeRemaining /= 2.0f;
+                    if (minSeparationDistance < BISECTION_TOLLERANCE) // We've gone far enough
+                        break;
+                    if (Tstep_to_colision >= Time_remaining) // We've gone further than the current time step
+                    {
+                        ClearCollisions();
+                        Tstep_to_colision = Time_remaining;
+                        break;
+                    }
                     Tstep_to_colision += bisectionTimeRemaining;  // We didn't go far enough, add time
+                }
+                curIteration ++;
+            }
+
+            if (Tstep_to_colision < Time_remaining) // The intial list of collisions might have been wrong --> rebuild it
+            {
+                curIteration = 1;
+                ClearCollisions(); firstCollision = null;
+                float additionalTime = (Time_remaining - Tstep_to_colision) / 10.0f;
+                while (firstCollision == null)
+                {
+                    if (curIteration > BISECTION_MAXITERATIONS)
+                        throw new Exception("physicsManager::StepToCollisionTimeByBisection() - Could not find a new collision in " +
+                                            String.Format("{0}", BISECTION_MAXITERATIONS) + " iterations.");
+                    // Keep adding back small incruments to the bisectionTimeRemaining until the objects collide again
+                    TakeRK4Step(time, Tstep_to_colision + (curIteration * additionalTime), h_game.GetGameObjectManager().h_GameObjects);
+                    firstCollision = CollisionDetection(); // Full collision detection
+
+                    curIteration++;
                 }
             }
 
@@ -207,13 +244,13 @@ namespace hungrybee
         #region StaticCollisionDetection()
         /// StaticCollisionDetection() - Top level collision detection routine
         /// ***********************************************************************
-        protected bool StaticCollisionDetection()
+        protected bool StaticCollisionDetection(ref float minSeparationDistance)
         {
             // Coarse Collision detection
-            CoarseCollisionDetection();
+            // CoarseCollisionDetection(); --> DON'T RE-RUN THE COARSE COLLISION DETECTION - USE THE OBJECTS CACHED FROM BEFORE
 
             // Fine Collision detection
-            return StaticFineCollisionDetection();
+            return StaticFineCollisionDetection(ref minSeparationDistance);
         }
         #endregion
 
@@ -596,10 +633,10 @@ namespace hungrybee
         #region StaticFineCollisionDetection()
         /// StaticFineCollisionDetection() --> Don't do swept tests, just to quick bool operations
         /// ***********************************************************************
-        protected bool StaticFineCollisionDetection()
+        protected bool StaticFineCollisionDetection(ref float minSeparationDistance)
         {
-            ClearCollisions();
-
+            bool colDetected = false;
+            float curSeparationDistance = float.PositiveInfinity;
             // Loop through object pairs and check if they potentially overlap from the sweep and prune test
             for (int i = 0; i < (numObjects - 1); i++)
             {
@@ -611,15 +648,19 @@ namespace hungrybee
                         if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
                         {
                             // Objects potentially overlap --> Check the low level collision routines
-                            if (collisionUtils.TestStaticCollision(h_game.GetGameObjectManager().h_GameObjects[i],
-                                                                   h_game.GetGameObjectManager().h_GameObjects[j]))
-                                return true;
+                            colDetected = collisionUtils.TestStaticCollision(h_game.GetGameObjectManager().h_GameObjects[i],
+                                                                             h_game.GetGameObjectManager().h_GameObjects[j],
+                                                                             ref curSeparationDistance) ? true : colDetected;
+                            {
+                                if(minSeparationDistance > curSeparationDistance)
+                                    minSeparationDistance = curSeparationDistance;
+                            }
                         }
                     }
                 }
             }
 
-            return false;
+            return colDetected;
         }
         #endregion
 

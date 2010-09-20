@@ -41,7 +41,6 @@ namespace hungrybee
         public float    cameraRotationSpeed;
         public float    EPSILON;
         public int      forceListCapacity;
-        public float    physicsMinVel;
         public int      physicsObjectsStartingCapacity;
         public float    gravity;
         public bool     renderBoundingObjects;
@@ -78,15 +77,14 @@ namespace hungrybee
             postprocessEffectFile = "PostprocessEffect";
             fontFile = "arial";
             sketchTextureFile = "SketchTexture";
-            cameraSpeed = 0.05f;
+            cameraSpeed = 0.1f;
             cameraRunningMult = 4.0f;
             cameraRotationSpeed = 0.002f;
             EPSILON = 0.00000001f;
             forceListCapacity = 4;
-            physicsMinVel = 0.0001f;
             physicsObjectsStartingCapacity = 64;
-            gravity = 2f;
-            renderBoundingObjects = false;
+            gravity = 2.0f;
+            renderBoundingObjects = true;
             pauseOnCollision = false;
             renderCollisions = true;
 
@@ -110,7 +108,7 @@ namespace hungrybee
             h_game.GetGraphicsDeviceManager().PreferredBackBufferWidth = xWindowSize;
             h_game.GetGraphicsDeviceManager().PreferredBackBufferHeight = yWindowSize;
             h_game.GetGraphicsDeviceManager().ApplyChanges();
-            ((cameraInterface)h_game.GetCamera()).Resize();
+            ((cameraInterface)h_game.GetCamera()).ResizeProjectionMatrix();
 
             // Now write the settings back to disk 
             // (applicable if config.ini doesn't exist and we're building it for the first time)
@@ -192,9 +190,6 @@ namespace hungrybee
                         case "forceListCapacity":
                             this.forceListCapacity = Convert.ToInt32(curToken[1]);
                             break;
-                        case "physicsMinVel":
-                            this.physicsMinVel = float.Parse(curToken[1]);
-                            break;
                         case "gravity":
                             this.gravity = float.Parse(curToken[1]);
                             break;
@@ -252,7 +247,6 @@ namespace hungrybee
             writer.WriteNextToken("cameraRotationSpeed", this.cameraRotationSpeed);
             writer.WriteNextToken("EPSILON", this.EPSILON);
             writer.WriteNextToken("forceListCapacity", this.forceListCapacity);
-            writer.WriteNextToken("physicsMinVel", this.physicsMinVel);
             writer.WriteNextToken("physicsObjectsStartingCapacity", this.physicsObjectsStartingCapacity);
             writer.WriteNextToken("gravity", this.gravity);
             writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0 );

@@ -24,7 +24,7 @@ namespace hungrybee
     /// ** MOVABLE = FALSE                                                   **
     /// ***********************************************************************
     /// </summary>
-    class gameObjectHeightMap : gameObject
+    public class gameObjectHeightMap : gameObject
     {
         #region Local Variables
         /// Local Variables

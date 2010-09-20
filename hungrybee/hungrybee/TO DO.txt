@@ -1,11 +1,6 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
 2. Implement collision routine: 
-  a) Debug collisions --> Two issues. 1. AABB-AABB Collisions while rotating doesn't work. 3. Lots of overlapping objects
-  
-  The issue is that simulator steps to swept object collision time, but due to acceleration OR rotation, the step might be too far.
-  This causes the objects to begin overlapping at the start of the 
-  
-  
+  a) Given up on AABBs.  Bounding sphere messes up when hitting the corner of an AABB --> Debug
   b) Implement resting forces
   c) Implement collision Vs. screen bounds
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
