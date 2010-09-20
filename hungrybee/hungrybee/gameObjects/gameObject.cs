@@ -372,7 +372,7 @@ namespace hungrybee
                 {
                     Vector3 center = Vector3.Zero;
                     float radius = 0.0f;
-                    collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat, this, ref center, ref radius);
+                    collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat, state.scale, this, ref center, ref radius);
                     AABB_min = center - new Vector3(radius, radius, radius);
                     AABB_max = center + new Vector3(radius, radius, radius);
                 }

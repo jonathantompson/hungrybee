@@ -84,7 +84,7 @@ namespace hungrybee
             {
                 Vector3 Center = Vector3.Zero;
                 float Radius = 0.0f;
-                collisionUtils.UpdateBoundingSphere((BoundingSphere)obj, world, attachedGameObject, ref Center, ref Radius);
+                collisionUtils.UpdateBoundingSphere((BoundingSphere)obj, world, drawState.scale, attachedGameObject, ref Center, ref Radius);
 
                 Vector3 up =        Center + Radius * Vector3.Up;
                 Vector3 down =      Center + Radius * Vector3.Down;

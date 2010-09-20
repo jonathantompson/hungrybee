@@ -1,11 +1,11 @@
 //, NOTE NO SPACES
 
 //,player, modelfile, Bounding Object Type (AUTO, AABB, SPHERE), scale, acceleration rate, desired stopping time, max velocity
-//,player,Ship,AABB,1.0,10.0,0.2,10.0
+player,Ship,SPHERE,1.5,10.0,0.2,10.0
 
 //,enemy, modelfile, Bounding Object Type (AUTO, AABB, SPHERE), scale, max velocity, [Pos.x, Pos.y, Pos.z]
 enemy,Ship,SPHERE,1.5,10.0,0.0,3.0,0.0
-enemy,Ship,SPHERE,1.5,10.0,0.5,0.0,0.0
+//,enemy,Ship,SPHERE,1.5,10.0,0.5,0.0,0.0
 
 //,heightMap, heightMapFile, heightMapTextureFile, [xmin,ymin,zmin], [xmax,ymax,zmax]
 heightMap,false,heightmap,Grass,-8,-5,-5,8,-2,5

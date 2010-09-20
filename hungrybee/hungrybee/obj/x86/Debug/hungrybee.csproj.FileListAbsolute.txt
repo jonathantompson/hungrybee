@@ -36,3 +36,5 @@ C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hu
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\bee2.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\Level_1.csv
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\settings.csv
+C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\Level_1.csv
+C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\settings.csv
