@@ -939,6 +939,10 @@ namespace hungrybee
             // Calculate actual intersection (move point back into world coordinates).
             Vector3 i = new Vector3(signX * ix, signY * iy, signZ * iz);
             point = boxCenter + i;
+            Vector3 point_on_box = ClosestPointOnAABB(point, mBox.Min, mBox.Max);
+            // Make sure the collision point and the projection aren't too far away (they should be close if binomial stepping routine works)
+            if (Vector2.Dot(point - point_on_box, point - point_on_box) > 0.0001f)
+                throw new Exception("collisionUtils::TestCollisionSphereAABB() - Point projection onto box is > 0.0001f, check inputs");
             normal = GetAABBNormalFromPointOnAABB(point, mBox.Min, mBox.Max);
             point = Vector3.Transform(point, objBMat_t0);
             normal = Vector3.Transform(normal, objBMat_t0);
@@ -1465,6 +1469,18 @@ namespace hungrybee
             xClosestPoint.X = (Point.X < xBox.Min.X) ? xBox.Min.X : (Point.X > xBox.Max.X) ? xBox.Max.X : Point.X;
             xClosestPoint.Y = (Point.Y < xBox.Min.Y) ? xBox.Min.Y : (Point.Y > xBox.Max.Y) ? xBox.Max.Y : Point.Y;
             xClosestPoint.Z = (Point.Z < xBox.Min.Z) ? xBox.Min.Z : (Point.Z > xBox.Max.Z) ? xBox.Max.Z : Point.Z;
+
+            return xClosestPoint;
+        }
+        #endregion
+
+        #region ClosestPointOnAABB(Vector3 point, Vector3 Min, Vector3 Max)
+        protected static Vector3 ClosestPointOnAABB(Vector3 point, Vector3 Min, Vector3 Max)
+        {
+            Vector3 xClosestPoint;
+            xClosestPoint.X = (Point.X < Min.X) ? Min.X : (Point.X > Max.X) ? Max.X : Point.X;
+            xClosestPoint.Y = (Point.Y < Min.Y) ? Min.Y : (Point.Y > Max.Y) ? Max.Y : Point.Y;
+            xClosestPoint.Z = (Point.Z < Min.Z) ? Min.Z : (Point.Z > Max.Z) ? Max.Z : Point.Z;
 
             return xClosestPoint;
         }
