@@ -8,7 +8,7 @@ cartoonEffectFile,CartoonEffect
 postprocessEffectFile,PostprocessEffect
 fontFile,arial
 sketchTextureFile,SketchTexture
-cameraSpeed,0.05
+cameraSpeed,0.1
 cameraRunningMult,4
 cameraRotationSpeed,0.002
 EPSILON,1E-08
@@ -18,3 +18,4 @@ gravity,2
 renderBoundingObjects,1
 pauseOnCollision,0
 renderCollisions,1
+limitXYCollisionResponce,0

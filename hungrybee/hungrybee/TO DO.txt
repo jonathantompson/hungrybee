@@ -1,8 +1,7 @@
 ﻿1. Put together RK4 integrator for gameObjects --> Decide whether game controls should be force or impulse
 2. Implement collision routine: 
-  a) Given up on AABBs.  Bounding sphere messes up when hitting the corner of an AABB --> Debug
-  b) Implement resting forces
-  c) Implement collision Vs. screen bounds
+  a) Implement resting forces
+  b) Implement collision Vs. screen bounds
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
 5. Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)

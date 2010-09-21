@@ -51,7 +51,7 @@ namespace hungrybee
         protected float Tstep_remaining;
 
         protected static float EPSILON = 0.00000001f;
-        protected static float BISECTION_TOLLERANCE = 0.0001f;
+        public static float BISECTION_TOLLERANCE = 0.0001f;
         protected static int BISECTION_MAXITERATIONS = 30;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;

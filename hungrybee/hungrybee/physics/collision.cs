@@ -50,6 +50,7 @@ namespace hungrybee
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f);
+        protected static Vector3 temp = new Vector3();
         #endregion
 
         #region Constructor - collision(...)
@@ -66,6 +67,7 @@ namespace hungrybee
             e2 = _e2;
             coeffRestitution = _coeffRestitution;
             collisionScale = _collisionScale;
+
         }
         #endregion
 
@@ -122,18 +124,24 @@ namespace hungrybee
             force = j * n;
 
             // Apply impulse to the two bodies
+            temp = collisionScale * force;
+            temp.X *= gameSettings.collisionMask.X; temp.Y *= gameSettings.collisionMask.Y; temp.Z *= gameSettings.collisionMask.Z; 
             if (((gameObject)obj1).movable)
-            {
-                ((gameObject)obj1).state.linearMom += collisionScale * force;
-                ((gameObject)obj1).state.angularMom += collisionScale * Vector3.Cross(ra, force);
-                ((gameObject)obj1).state.RecalculateDerivedQuantities();
-            }
+                ((gameObject)obj1).state.linearMom += temp;
             if (((gameObject)obj2).movable)
-            {
-                ((gameObject)obj2).state.linearMom -= collisionScale * force;
-                ((gameObject)obj2).state.angularMom -= collisionScale * Vector3.Cross(rb, force);
-                ((gameObject)obj2).state.RecalculateDerivedQuantities();
-            }
+                ((gameObject)obj2).state.linearMom -= temp;
+
+            temp = collisionScale * Vector3.Cross(ra, force);
+            temp.X *= gameSettings.collisionMask.X; temp.Y *= gameSettings.collisionMask.Y; temp.Z *= gameSettings.collisionMask.Z; 
+            if (((gameObject)obj2).movable)
+                ((gameObject)obj1).state.angularMom += temp;
+            ((gameObject)obj1).state.RecalculateDerivedQuantities();
+
+            temp = collisionScale * Vector3.Cross(rb, force);
+            temp.X *= gameSettings.collisionMask.X; temp.Y *= gameSettings.collisionMask.Y; temp.Z *= gameSettings.collisionMask.Z; 
+            if (((gameObject)obj2).movable)
+                ((gameObject)obj2).state.angularMom -= temp;
+            ((gameObject)obj2).state.RecalculateDerivedQuantities();
         }
         #endregion
 

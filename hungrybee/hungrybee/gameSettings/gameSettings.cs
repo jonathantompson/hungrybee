@@ -46,6 +46,9 @@ namespace hungrybee
         public bool     renderBoundingObjects;
         public bool     pauseOnCollision;
         public bool     renderCollisions;
+        public bool     limitXYCollisionResponce;
+
+        public static Vector3 collisionMask = new Vector3();
 
         // VARIABLES NOT SAVED TO DISK
         private game h_game;
@@ -87,6 +90,7 @@ namespace hungrybee
             renderBoundingObjects = true;
             pauseOnCollision = false;
             renderCollisions = true;
+            limitXYCollisionResponce = true;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -115,6 +119,11 @@ namespace hungrybee
             this.WriteSettings();
 
             base.Initialize();
+
+            if (limitXYCollisionResponce)
+            { collisionMask.X = 1.0f; collisionMask.Y = 1.0f; collisionMask.Z = 0.0f; }
+            else
+            { collisionMask.X = 1.0f; collisionMask.Y = 1.0f; collisionMask.Z = 1.0f; }
         }
         #endregion
 
@@ -205,6 +214,9 @@ namespace hungrybee
                         case "renderCollisions":
                             this.renderCollisions = Convert.ToInt32(curToken[1]) == 1;
                             break;
+                        case "limitXYCollisionResponce":
+                            this.limitXYCollisionResponce = Convert.ToInt32(curToken[1]) == 1;
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -252,6 +264,7 @@ namespace hungrybee
             writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0 );
             writer.WriteNextToken("pauseOnCollision", this.pauseOnCollision ? (int)1 : (int)0);
             writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
+            writer.WriteNextToken("limitXYCollisionResponce", this.limitXYCollisionResponce ? (int)1 : (int)0);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***
