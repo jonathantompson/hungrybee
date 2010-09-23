@@ -107,6 +107,13 @@ namespace hungrybee
             // Load in the object descriptions from the csv file for the first level
             LoadLevel(1);
 
+            // If we're limiting XY collision Responces, then sphere's must be placed so that the sphere origin has
+            if (h_game.GetGameSettings().limitXYCollisionResponce)
+                for (int i = 0; i < h_GameObjects.Count; i++)
+                    if (h_GameObjects[i].boundingObjType == boundingObjType.SPHERE)
+                        h_GameObjects[i].CenterObjectOnZaxis();
+
+
             // Build the bounding boxes at the frustrum bounds.
             BuildFrustrumBounds();
 
@@ -282,7 +289,6 @@ namespace hungrybee
 
             BoundingBox bAABB;
             gameObject gameObj;
-
 
             // Add the left bounding box
             bAABB = new BoundingBox(new Vector3(leftCoord - frustrumBoundBoxThickness, bottomCoord + EPSILON, frustrumBoundBoxDepth * -0.5f),

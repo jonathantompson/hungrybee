@@ -45,7 +45,7 @@ namespace hungrybee
         protected static float numerator = 0.0f;
         protected static float term1 = 1.0f, term2 = 1.0f, term3 = 1.0f, term4 = 1.0f;
         protected static float j;
-        protected static float V_COLLIDING_THRESHOLD = 0.00000000001f;
+        protected static float V_COLLIDING_THRESHOLD = 0.000001f;
         protected static Matrix zeroMat = new Matrix(0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
@@ -72,15 +72,19 @@ namespace hungrybee
         #endregion
 
         #region ResolveCollision()
-        /// ResolveCollision() - Add impulse for collision contacts, and add contact forces for contact collisions
+        /// ResolveCollision() - Add impulse for collision contacts and return false in this case.  
+        /// Return true if the contact is a resting contact and needs processing later.
         /// ***********************************************************************
-        public void ResolveCollision(float time, float deltaTime, List<gameObject> gameObjects)
+        public bool ResolveCollision(float time, float deltaTime, List<gameObject> gameObjects)
         {
 
             if (CheckCollidingContact())
+            {
                 ResolveCollidingCollision();
+                return false;
+            }
             else
-                throw new Exception("Resting contacts not yet implemented");
+                return true;
         }
         #endregion
 

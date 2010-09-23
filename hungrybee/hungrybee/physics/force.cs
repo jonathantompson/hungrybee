@@ -87,6 +87,27 @@ namespace hungrybee
 
     /// <summary>
     /// ***********************************************************************
+    /// **                         forceAntiGravity                          **
+    /// ** Force to apply gravity to an object                               **
+    /// ***********************************************************************
+    /// </summary>
+    public class forceAntiGravity : force
+    {
+        public Vector3 acceleration;
+
+        public forceAntiGravity(Vector3 _acceleration)
+        {
+            acceleration = _acceleration;
+        }
+
+        public override Vector3 GetForce(ref rboState state, float time)
+        {
+            return acceleration * state.mass;
+        }
+    }
+
+    /// <summary>
+    /// ***********************************************************************
     /// **                       forcePlayerInput                            **
     /// ** Force to apply a constant acceleration for as long as a button is **
     /// ** pressed                                                           **

@@ -6,11 +6,14 @@
 3. Implement player controls: using quaternions to give half distances and RK4 integrator
 4. Load the fucking models in...  Having lots of difficulty
 5. Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
-6. Reduce redundant computations in collision detecdtion.
+6. Actually implement a LCP solver so that I can do Baraff's "Fast Contact Force Computation for Nonpenetrating Rigid Bodies"
+  a) Either implement the paper as is OR
+  b) Try and bring in Dave Eberly's Geometric tools LCP solver as C++ managed code.
+7. Reduce redundant computations in collision detecdtion.
   a) Only flag dirty AABB for objects that move.
   b) Cache matricies and transformed bounding objects for fine collision detection (nothing saved at all!)
-7. Coarse tune data structures are wasteful.  Some are O(n^2).  Reduce to only have (numCollidables choose 2).
-8. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
+8. Coarse tune data structures are wasteful.  Some are O(n^2).  Reduce to only have (numCollidables choose 2).
+9. Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around floating point accuracy for large velocities
 
 
 

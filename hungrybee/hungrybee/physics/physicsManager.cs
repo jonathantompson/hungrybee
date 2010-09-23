@@ -50,9 +50,14 @@ namespace hungrybee
         protected float time;
         protected float Tstep_remaining;
 
+        // Resting contacts
+        protected List<collision> restingContacts;
+
         protected static float EPSILON = 0.00000001f;
-        public static float BISECTION_TOLLERANCE = 0.0001f;
+        public static float BISECTION_TOLLERANCE = 0.001f;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.01f; // typically this is 10 x BISECTION_TOLLERANCE
         protected static int BISECTION_MAXITERATIONS = 30;
+        protected static int MAX_PHYSICS_ITERATIONS = 10;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
 
@@ -113,18 +118,21 @@ namespace hungrybee
             if(!pauseGame)
                 CopyStateToPrevState(time, h_game.GetGameObjectManager().h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
 
+            int curIteration = 0;
             while (Tstep_remaining > 0.0f && !pauseGame) // While there is still time to process
             {
+                if (curIteration >= MAX_PHYSICS_ITERATIONS)
+                    throw new Exception("physicsManager::Update() - Hit max number of iterations.  Physics system cannot make any progress.");
+
+                CheckRestingContacts();
+
                 // Try taking a RK4 Step for each object in h_game.gameObjectManager
                 TakeRK4Step(time, Tstep_remaining, h_game.GetGameObjectManager().h_GameObjects);
 
-                // Run the coarse and find collision detection
+                // Run the coarse and fine collision detections
                 firstCollision = CollisionDetection();
                 if (firstCollision != null && firstCollision.colTime <= 0.0f)
-                {
                     throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
-
-                }
 
                 // Resolve Collisions
                 if (firstCollision != null)
@@ -312,7 +320,13 @@ namespace hungrybee
             // This ensures that if two objects collide at EXACTLY the same time they will both be resolved --> Rare!
             for (int i = 0; i < collisions.Count; i++)
                 if (collisions[i].colTime <= deltaTime)
-                    collisions[i].ResolveCollision(time, deltaTime, gameObjects);
+                {
+                    if (collisions[i].ResolveCollision(time, deltaTime, gameObjects)) // if resolve collisions return true --> resting contact.
+                        restingContacts.Add(collisions[i]);
+                }
+
+            // This is a hack --> Just turns off gravity for those objects that have collided with the floor
+            ComputeContactForces();
 
             // Make the previous state equal to the time of collision again to copy over the impulse's added by the collisions
             CopyStateToPrevState(time, gameObjects); // Collision point velocities will be derived from "prevState" and added to "state"
@@ -596,7 +610,9 @@ namespace hungrybee
         /// ***********************************************************************
         public void initFineCollisionDetection()
         {
-            collisions = new List<collision>(numCollidableObjects * numCollidableObjects); // Worst case number of collsions O(n^2) from n choose 2
+            // Worst case number of collsions O(n^2) from n choose 2 (and AABB can collide with 4 contacts)
+            collisions = new List<collision>(numCollidableObjects * numCollidableObjects * 4);
+            restingContacts = new List<collision>(numCollidableObjects * numCollidableObjects * 4);
         }
         #endregion
 
@@ -688,6 +704,79 @@ namespace hungrybee
         protected void ClearCollisions()
         {
             collisions.Clear();
+        }
+        #endregion
+
+        #region ComputeContactForces()
+        /// ComputeContactForces() --> A massive hack.  See "TO DO.TXT" (listing 4th from the bottom) for what I should do instead.           
+        /// ***********************************************************************
+        protected void ComputeContactForces()
+        {
+            /// This is a MASSIVE hack.
+            /// For each resting contact just turn off the gravity force by adding anti gravity force.  
+            /// Will only work with resting contacts against the floor.
+            /// Won't allow for stackable objects --> Might be ok under most gameplay situations.
+
+            for (int i = 0; i < restingContacts.Count; i++)
+            {
+                if (!((gameObject)restingContacts[i].obj1).CheckAntiGravityForce() &&
+                    ((gameObject)restingContacts[i].obj1).movable )
+                    ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.GetGameSettings().gravity);
+                if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
+                    ((gameObject)restingContacts[i].obj2).movable)
+                    ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.GetGameSettings().gravity);
+            }
+        }
+        #endregion
+
+        #region CheckRestingContacts()
+        /// CheckRestingContacts() --> A massive hack.  See "TO DO.TXT" (listing 4th from the bottom)              
+        /// ***********************************************************************
+        protected void CheckRestingContacts()
+        {
+            float separationDistance = 0.0f;
+            bool anotherContactExists = false;
+
+            /// Go through each resting contact and check that they objects are still
+            /// in close proximity.  If they are not, and no other resting contact exists for this object
+            /// in the list then remove the antigravity force
+            for (int i = 0; i < restingContacts.Count; i++)
+            {
+                collisionUtils.TestStaticCollision((gameObject)restingContacts[i].obj1, 
+                                                   (gameObject)restingContacts[i].obj2, ref separationDistance);
+                // If the objects are no longer within close proximity (objects have been knocked apart or objs have slid away from each other)
+                if (separationDistance > RESTING_CONTACT_TOLLERANCE)
+                {
+                    if (((gameObject)restingContacts[i].obj1).collidable)
+                    {
+                        // Iterate through the rest of the restingContacts list and see if we can find another resing contact with the object
+                        anotherContactExists = false;
+                        for (int j = i + 1; j < restingContacts.Count; j++)
+                            if (restingContacts[j].obj1.Equals(restingContacts[i].obj1) || restingContacts[j].obj2.Equals(restingContacts[i].obj1))
+                                anotherContactExists = true;
+
+                        if (!anotherContactExists)
+                            ((gameObject)restingContacts[i].obj1).RemoveAntiGravityForce();
+                    }
+
+                    if (((gameObject)restingContacts[i].obj2).collidable)
+                    {
+                        // Iterate through the rest of the restingContacts list and see if we can find another resing contact with the object
+                        anotherContactExists = false;
+                        for (int j = i + 1; j < restingContacts.Count; j++)
+                            if (restingContacts[j].obj1.Equals(restingContacts[i].obj2) || restingContacts[j].obj2.Equals(restingContacts[i].obj2))
+                                anotherContactExists = true;
+
+                        if (!anotherContactExists)
+                            ((gameObject)restingContacts[i].obj2).RemoveAntiGravityForce();
+                    }
+
+                    // Remove the resting contact from the list
+                    restingContacts.RemoveAt(i);
+
+                }
+
+            }
         }
         #endregion
     }

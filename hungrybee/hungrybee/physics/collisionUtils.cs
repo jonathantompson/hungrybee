@@ -61,7 +61,6 @@ namespace hungrybee
         static float objBRadius_t1 = 0.0f;
 
         static float EPSILON = 0.000000000001f;
-        static float coeffRestitution = 0.8f;
 
         #region TestCollision()
         /// TestCollision() - Just grab input objects and send them to their proper functions
@@ -325,7 +324,13 @@ namespace hungrybee
                     }
                     point = BuildUpTo3DPoint(contactPoints_Xaxis[i], contactPoints_Yaxis[j], ref minA, ref maxA, ref commonCollisionCoord);
                     // Add the point
-                    _cols.Add(new collision(curCollisionType, curObjA, curObjB, Tcollision, point, Vector3.Normalize(normal), e1, e2, coeffRestitution, 0.25f)); // Vector3 should be normal
+                    _cols.Add(new collision(curCollisionType, 
+                                            curObjA, curObjB, Tcollision, 
+                                            point, 
+                                            Vector3.Normalize(normal), 
+                                            e1, e2, 
+                                            curObjA.h_game.GetGameSettings().coeffRestitution, 
+                                            0.25f)); // Vector3 should be normal
                 }
             }
             
@@ -659,7 +664,14 @@ namespace hungrybee
             if ( Vector3.Dot(AB,AB) <= rab * rab )
             {
                 Tcollision = 0.0f;
-                _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, coeffRestitution, 1.0f)); // Normal points out of face of B
+                _cols.Add(new collision(collisionType.COL_UNDEFINED, 
+                                        objA, objB, 
+                                        Tcollision, 
+                                        Vector3.Zero, 
+                                        Vector3.Zero, 
+                                        Vector3.Zero, Vector3.Zero,
+                                        objA.h_game.GetGameSettings().coeffRestitution, 
+                                        1.0f)); // Normal points out of face of B
                 return true;
             }
 
@@ -696,7 +708,14 @@ namespace hungrybee
                 point = objACenter_t1 + normal * objARadius_t0; // Center is along the vector between the two centers, at a distance of the radius
 
                 // sphere collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
-                _cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, Vector3.Negate(normal), e1, e2, coeffRestitution, 1.0f)); // Normal points out of face of B
+                _cols.Add(new collision(collisionType.VERTEX_FACE, 
+                                        objA, objB, 
+                                        Tcollision, 
+                                        point, 
+                                        Vector3.Negate(normal), 
+                                        e1, e2,
+                                        objA.h_game.GetGameSettings().coeffRestitution, 
+                                        1.0f)); // Normal points out of face of B
                 return true;
             }
             else
@@ -932,7 +951,14 @@ namespace hungrybee
             if (retVal == -1 || Tcollision == 0.0f) // -1 indicates collision before sweep
             {
                 Tcollision = 0.0f;
-                _cols.Add(new collision(collisionType.COL_UNDEFINED, objA, objB, Tcollision, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero, coeffRestitution, 1.0f)); // Normal points out of face of B
+                _cols.Add(new collision(collisionType.COL_UNDEFINED, 
+                                        objA, objB, 
+                                        Tcollision, 
+                                        Vector3.Zero, 
+                                        Vector3.Zero, 
+                                        Vector3.Zero, Vector3.Zero,
+                                        objA.h_game.GetGameSettings().coeffRestitution, 
+                                        1.0f)); // Normal points out of face of B
                 return true;
             }
 
@@ -948,7 +974,14 @@ namespace hungrybee
             point = Vector3.Transform(point, objBMat_t0);
             normal = Vector3.Transform(normal, objBMat_t0);
 
-            _cols.Add(new collision(collisionType.VERTEX_FACE, objA, objB, Tcollision, point, normal, e1, e2, coeffRestitution, 1.0f)); // Normal points out of face of B
+            _cols.Add(new collision(collisionType.VERTEX_FACE, 
+                                    objA, objB, 
+                                    Tcollision, 
+                                    point, 
+                                    normal, 
+                                    e1, e2,
+                                    objA.h_game.GetGameSettings().coeffRestitution, 
+                                    1.0f)); // Normal points out of face of B
 
             return true;
             

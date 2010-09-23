@@ -47,6 +47,7 @@ namespace hungrybee
         public bool     pauseOnCollision;
         public bool     renderCollisions;
         public bool     limitXYCollisionResponce;
+        public float    coeffRestitution;
 
         public static Vector3 collisionMask = new Vector3();
 
@@ -91,6 +92,7 @@ namespace hungrybee
             pauseOnCollision = false;
             renderCollisions = true;
             limitXYCollisionResponce = true;
+            coeffRestitution = 0.8f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -217,6 +219,9 @@ namespace hungrybee
                         case "limitXYCollisionResponce":
                             this.limitXYCollisionResponce = Convert.ToInt32(curToken[1]) == 1;
                             break;
+                        case "coeffRestitution":
+                            this.coeffRestitution = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -265,6 +270,7 @@ namespace hungrybee
             writer.WriteNextToken("pauseOnCollision", this.pauseOnCollision ? (int)1 : (int)0);
             writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
             writer.WriteNextToken("limitXYCollisionResponce", this.limitXYCollisionResponce ? (int)1 : (int)0);
+            writer.WriteNextToken("coeffRestitution", this.coeffRestitution);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

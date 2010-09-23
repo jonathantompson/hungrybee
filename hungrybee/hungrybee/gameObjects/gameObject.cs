@@ -416,5 +416,58 @@ namespace hungrybee
             dirtyAABB = true;
         }
         #endregion
+
+        #region CheckAntiGravityForce() --> Returns true if an antigravity force exists
+        public bool CheckAntiGravityForce()
+        {
+            for (int i = forceList.Count - 1; i >= 0; i-- ) // if the force exists, it will be somewhere near the end of the list
+            {
+                if (forceList[i] is forceAntiGravity)
+                    return true;
+            }
+            return false;
+        }
+        #endregion
+
+        #region AddAntiGravityForce()
+        public void AddAntiGravityForce(float acceleration)
+        {
+            forceList.Add(new forceAntiGravity(new Vector3(0.0f, acceleration, 0.0f)));
+        }
+        #endregion
+
+        #region RemoveAntiGravityForce()
+        public void RemoveAntiGravityForce()
+        {
+            for (int i = forceList.Count - 1; i >= 0; i--) // if the force exists, it will be somewhere near the end of the list
+            {
+                if (forceList[i] is forceAntiGravity)
+                    forceList.RemoveAt(i);
+            }
+        }
+        #endregion
+
+        #region CenterObjectOnZaxis()
+        // Centers the object so it's bounding object center lies on the Z=0 plane
+        public void CenterObjectOnZaxis()
+        {
+            if (boundingObjType == boundingObjType.SPHERE)
+            {
+                Matrix mat;
+                Vector3 objCenter = Vector3.Zero;
+                float objRadius = 0.0f;
+
+                mat = CreateScale(state.scale) * Matrix.CreateFromQuaternion(state.orient) * Matrix.CreateTranslation(state.pos);
+                collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat, state.scale, this, ref objCenter, ref objRadius);
+
+                float Zoffset = objCenter.Z;
+
+                state.pos -= new Vector3(0.0f, 0.0f, Zoffset);
+                prevState.pos -= new Vector3(0.0f, 0.0f, Zoffset);
+            }
+            else
+                throw new Exception("gameObject::CenterObjectOnZaxis() - Something went wrong.  CenterObjectOnZaxis should only be used on SPHERE bounding objects");
+        }
+        #endregion
     }
 }
