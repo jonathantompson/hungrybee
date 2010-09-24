@@ -75,12 +75,12 @@ namespace hungrybee
         /// ResolveCollision() - Add impulse for collision contacts and return false in this case.  
         /// Return true if the contact is a resting contact and needs processing later.
         /// ***********************************************************************
-        public bool ResolveCollision(float time, float deltaTime, List<gameObject> gameObjects)
+        public bool ResolveCollision(float time, float deltaTime, List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
         {
 
-            if (CheckCollidingContact())
+            if (CheckCollidingContact(ref obj1State, ref obj2State))
             {
-                ResolveCollidingCollision();
+                ResolveCollidingCollision(ref obj1State, ref obj2State);
                 return false;
             }
             else
@@ -91,21 +91,21 @@ namespace hungrybee
         #region ResolveCollidingCollision()
         /// ResolveCollidingCollision() - Add impulses for collision contacts
         /// ***********************************************************************
-        public void ResolveCollidingCollision()
+        public void ResolveCollidingCollision(ref rboState obj1State, ref rboState obj2State)
         {
-            padot = GetPointVelocity((gameObject)obj1, colPoint);
-            pbdot = GetPointVelocity((gameObject)obj2, colPoint);
+            padot = GetPointVelocity(ref obj1State, colPoint);
+            pbdot = GetPointVelocity(ref obj2State, colPoint);
             n = colNorm;
-            ra = colPoint - ((gameObject)obj1).state.pos;
-            rb = colPoint - ((gameObject)obj2).state.pos;
+            ra = colPoint - obj1State.pos;
+            rb = colPoint - obj2State.pos;
             vrel = Vector3.Dot(n, (padot - pbdot));
             numerator = -(1.0f + coeffRestitution) * vrel;
 
             // Calculate the denominator in four parts
             if (((gameObject)obj1).movable)
             {
-                term1 = 1.0f / ((gameObject)obj1).prevState.mass;
-                term3 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(ra, n), ((gameObject)obj1).prevState.Iinv), ra));
+                term1 = 1.0f / obj1State.mass;
+                term3 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(ra, n), obj1State.Iinv), ra));
             }
             else
             {
@@ -114,8 +114,8 @@ namespace hungrybee
             }
             if (((gameObject)obj2).movable)
             {
-                term2 = 1.0f / ((gameObject)obj2).prevState.mass;
-                term4 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(rb, n), ((gameObject)obj2).prevState.Iinv), rb));
+                term2 = 1.0f / obj2State.mass;
+                term4 = Vector3.Dot(n, Vector3.Cross(Vector3.Transform(Vector3.Cross(rb, n), obj2State.Iinv), rb));
             }
             else
             {
@@ -131,41 +131,40 @@ namespace hungrybee
             temp = collisionScale * force;
             temp.X *= gameSettings.collisionMask.X; temp.Y *= gameSettings.collisionMask.Y; temp.Z *= gameSettings.collisionMask.Z; 
             if (((gameObject)obj1).movable)
-                ((gameObject)obj1).state.linearMom += temp;
+                obj1State.linearMom += temp;
             if (((gameObject)obj2).movable)
-                ((gameObject)obj2).state.linearMom -= temp;
+                obj2State.linearMom -= temp;
 
             temp = collisionScale * Vector3.Cross(ra, force);
             temp.X *= gameSettings.collisionMask.X; temp.Y *= gameSettings.collisionMask.Y; temp.Z *= gameSettings.collisionMask.Z; 
             if (((gameObject)obj2).movable)
-                ((gameObject)obj1).state.angularMom += temp;
-            ((gameObject)obj1).state.RecalculateDerivedQuantities();
+                obj1State.angularMom += temp;
+            obj1State.RecalculateDerivedQuantities();
 
             temp = collisionScale * Vector3.Cross(rb, force);
             temp.X *= gameSettings.collisionMask.X; temp.Y *= gameSettings.collisionMask.Y; temp.Z *= gameSettings.collisionMask.Z; 
             if (((gameObject)obj2).movable)
-                ((gameObject)obj2).state.angularMom -= temp;
-            ((gameObject)obj2).state.RecalculateDerivedQuantities();
+                obj2State.angularMom -= temp;
+            obj2State.RecalculateDerivedQuantities();
         }
         #endregion
 
         #region GetPointVelocity()
         /// GetPointVelocity() - Return the velocity of a point on a rigid body
         /// ***********************************************************************
-        protected static Vector3 GetPointVelocity(gameObject obj, Vector3 point)
+        protected static Vector3 GetPointVelocity(ref rboState objState, Vector3 point)
         {
-
-            return obj.prevState.linearVel + Vector3.Cross(obj.prevState.angularVel, (point - obj.prevState.pos));
+            return objState.linearVel + Vector3.Cross(objState.angularVel, (point - objState.pos));
         }
         #endregion
 
         #region CheckCollidingContact()
         /// CheckCollidingContact() - Check if the current collision is colliding
         /// ***********************************************************************
-        protected bool CheckCollidingContact()
+        protected bool CheckCollidingContact(ref rboState obj1State, ref rboState obj2State)
         {
-            padot = GetPointVelocity((gameObject)obj1, colPoint);
-            pbdot = GetPointVelocity((gameObject)obj2, colPoint);
+            padot = GetPointVelocity(ref obj1State, colPoint);
+            pbdot = GetPointVelocity(ref obj2State, colPoint);
             vrel = Vector3.Dot(colNorm,(padot - pbdot));
 
             if (vrel > V_COLLIDING_THRESHOLD)

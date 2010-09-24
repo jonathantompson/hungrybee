@@ -117,6 +117,18 @@ namespace hungrybee
                 keyPressed = true;
             }
 
+            ///// ************************************
+            ///// ************* TEMP CODE ************
+            ///// ************************************
+            //if (!keyPressed)
+            //{
+            //    desiredVelValue += new Vector3(-1.0f, 0.0f, 0.0f);
+            //    keyPressed = true;
+            //}
+            ///// ************************************
+            ///// ************* TEMP CODE ************
+            ///// ************************************
+
             if (keyPressed)
             {
                 desiredVelValue = Vector3.Normalize(desiredVelValue);
@@ -129,5 +141,14 @@ namespace hungrybee
             }
         }
         #endregion
+
+        #region StopPlayerControls
+        public void StopPlayerControls()
+        {
+            ((forcePlayerInput)forcePlayerInput).SetVelocity(Vector3.Zero);
+        }
+        #endregion
     }
+
+
 }

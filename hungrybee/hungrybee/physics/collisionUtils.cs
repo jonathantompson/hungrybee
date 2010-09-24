@@ -65,7 +65,9 @@ namespace hungrybee
         #region TestCollision()
         /// TestCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
-        public static bool TestCollision(gameObject objA, gameObject objB, ref List<collision> _cols ) // normal defined for objA --> objB is just negative
+        public static bool TestCollision(gameObject objA, gameObject objB, ref List<collision> _cols,
+                                         ref rboState stateA0, ref rboState stateA1,
+                                         ref rboState stateB0, ref rboState stateB1) // normal defined for objA --> objB is just negative
         {
             // Big dumb if else chain --> But easiest way to quickly parse through input types
             // --> Probably data directed programming would be better here, but not too many types
@@ -74,18 +76,18 @@ namespace hungrybee
 
             // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereSphere(objA, objB, ref _cols);
+                return collisionUtils.TestCollisionSphereSphere(objA, objB, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionSphereAABB(objA, objB, ref _cols);
+                return collisionUtils.TestCollisionSphereAABB(objA, objB, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereAABB(objB, objA, ref _cols);
+                return collisionUtils.TestCollisionSphereAABB(objB, objA, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionAABBAABB(objA, objB, ref _cols);
+                return collisionUtils.TestCollisionAABBAABB(objA, objB, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             else
                 throw new Exception("collisionUtils::TestCollision(): Trying to test collision on unrecognized object types");
@@ -95,7 +97,8 @@ namespace hungrybee
         #region TestStaticCollision()
         /// TestStaticCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
-        public static bool TestStaticCollision(gameObject objA, gameObject objB, ref float separationDistance) // normal defined for objA --> objB is just negative
+        public static bool TestStaticCollision(gameObject objA, gameObject objB, ref float separationDistance, 
+                                               ref rboState stateA, ref rboState stateB ) // normal defined for objA --> objB is just negative
         {
             // Big dumb if else chain --> But easiest way to quickly parse through input types
             // --> Probably data directed programming would be better here, but not too many types
@@ -104,18 +107,18 @@ namespace hungrybee
 
             // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereSphereStatic(objA, objB, ref separationDistance);
+                return collisionUtils.TestCollisionSphereSphereStatic(objA, objB, ref separationDistance, ref stateA, ref stateB );
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionSphereAABBStatic(objA, objB, ref separationDistance);
+                return collisionUtils.TestCollisionSphereAABBStatic(objA, objB, ref separationDistance, ref stateA, ref stateB);
 
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereAABBStatic(objB, objA, ref separationDistance);
+                return collisionUtils.TestCollisionSphereAABBStatic(objB, objA, ref separationDistance, ref stateA, ref stateB);
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionAABBAABBStatic(objA, objB, ref separationDistance);
+                return collisionUtils.TestCollisionAABBAABBStatic(objA, objB, ref separationDistance, ref stateA, ref stateB);
 
             else
                 throw new Exception("collisionUtils::TestStaticCollision(): Trying to test collision on unrecognized object types");
@@ -128,7 +131,7 @@ namespace hungrybee
         ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
         /// ***********************************************************************
-        protected static bool TestCollisionAABBAABB(gameObject objA, gameObject objB, ref List<collision> _cols ) // objA is a sphere, objB is an AABB
+        protected static bool TestCollisionAABBAABB(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1) // objA is a sphere, objB is an AABB
         {
             throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
 
@@ -139,14 +142,14 @@ namespace hungrybee
             BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
 
             // Move the bounding boxes into world frame and update their size --> Boxes may grow
-            objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
+            objAMat_t0 = objA.CreateScale(stateA0.scale) * Matrix.CreateFromQuaternion(stateA0.orient) * Matrix.CreateTranslation(stateA0.pos);
             UpdateBoundingBox(mBox1, objAMat_t0, ref objAMin_t0, ref objAMax_t0);
-            Vector3 velA = objA.state.pos - objA.prevState.pos;
+            Vector3 velA = stateA1.pos - stateA0.pos;
             objACenter_t0 = 0.5f * (objAMax_t0 + objAMin_t0);
 
-            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
+            objBMat_t0 = objB.CreateScale(stateB0.scale) * Matrix.CreateFromQuaternion(stateB0.orient) * Matrix.CreateTranslation(stateB0.pos);
             UpdateBoundingBox(mBox2, objBMat_t0, ref objBMin_t0, ref objBMax_t0);
-            Vector3 velB = objB.state.pos - objB.prevState.pos;
+            Vector3 velB = stateB1.pos - stateB0.pos;
             objBCenter_t0 = 0.5f * (objBMax_t0 + objBMin_t0);
 
             // Algorithm uses half-width extents, so get them:
@@ -523,8 +526,8 @@ namespace hungrybee
         }
         #endregion
 
-        #region TestCollisionAABBAABBStatic(gameObject objA, gameObject objB)
-        protected static bool TestCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref float separationDistance)
+        #region TestCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref float separationDistance, ref rboState stateA, ref rboState stateB)
+        protected static bool TestCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref float separationDistance, ref rboState stateA, ref rboState stateB)
         {
             throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
 
@@ -534,10 +537,10 @@ namespace hungrybee
             BoundingBox mBox2 = (BoundingBox)objB.boundingObj;
 
             // Move the bounding boxes into world frame and update their size --> Boxes may grow
-            objAMat_t1 = objA.CreateScale(objA.state.scale) * Matrix.CreateFromQuaternion(objA.state.orient) * Matrix.CreateTranslation(objA.state.pos);
+            objAMat_t1 = objA.CreateScale(stateA.scale) * Matrix.CreateFromQuaternion(stateA.orient) * Matrix.CreateTranslation(stateA.pos);
             UpdateBoundingBox(mBox1, objAMat_t1, ref objAMin_t1, ref objAMax_t1);
 
-            objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
+            objBMat_t1 = objB.CreateScale(stateB.scale) * Matrix.CreateFromQuaternion(stateB.orient) * Matrix.CreateTranslation(stateB.pos);
             UpdateBoundingBox(mBox2, objBMat_t1, ref objBMin_t1, ref objBMax_t1);
 
             objACenter_t1 = 0.5f * (objAMax_t1 + objAMin_t1);
@@ -629,7 +632,7 @@ namespace hungrybee
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page2
         /// NOTE: There are faster methods to perform this test --> to avoid sqrt calls AND to avoid floating point accuracy issues for large velocities
         /// ***********************************************************************
-        protected static bool TestCollisionSphereSphere(gameObject objA, gameObject objB, ref List<collision> _cols)
+        protected static bool TestCollisionSphereSphere(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1)
         {
             float Tcollision = 0.0f;
             Vector3 point = Vector3.Zero;
@@ -639,15 +642,15 @@ namespace hungrybee
 
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
-            objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
-            objAMat_t1 = objA.CreateScale(objA.state.scale) * Matrix.CreateFromQuaternion(objA.state.orient) * Matrix.CreateTranslation(objA.state.pos);
-            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t0, objA.prevState.scale, objA, ref objACenter_t0, ref objARadius_t0);
-            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t1, objA.state.scale, objA, ref objACenter_t1, ref objARadius_t1);
+            objAMat_t0 = objA.CreateScale(stateA0.scale) * Matrix.CreateFromQuaternion(stateA0.orient) * Matrix.CreateTranslation(stateA0.pos);
+            objAMat_t1 = objA.CreateScale(stateA1.scale) * Matrix.CreateFromQuaternion(stateA1.orient) * Matrix.CreateTranslation(stateA1.pos);
+            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t0, stateA0.scale, objA, ref objACenter_t0, ref objARadius_t0);
+            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t1, stateA1.scale, objA, ref objACenter_t1, ref objARadius_t1);
 
-            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
-            objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
-            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t0, objB.prevState.scale, objB, ref objBCenter_t0, ref objBRadius_t0);
-            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t1, objB.state.scale, objB, ref objBCenter_t1, ref objBRadius_t1);
+            objBMat_t0 = objB.CreateScale(stateB0.scale) * Matrix.CreateFromQuaternion(stateB0.orient) * Matrix.CreateTranslation(stateB0.pos);
+            objBMat_t1 = objB.CreateScale(stateB1.scale) * Matrix.CreateFromQuaternion(stateB1.orient) * Matrix.CreateTranslation(stateB1.pos);
+            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t0, stateB0.scale, objB, ref objBCenter_t0, ref objBRadius_t0);
+            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t1, stateB1.scale, objB, ref objBCenter_t1, ref objBRadius_t1);
 
             // Find the velocities
             Vector3 va = objACenter_t1 - objACenter_t0; // Vector from A0 to A1
@@ -724,15 +727,15 @@ namespace hungrybee
         #endregion
 
         #region TestCollisionSphereSphereStatic(gameObject objA, gameObject objB)
-        protected static bool TestCollisionSphereSphereStatic(gameObject objA, gameObject objB, ref float separationDistance)
+        protected static bool TestCollisionSphereSphereStatic(gameObject objA, gameObject objB, ref float separationDistance, ref rboState stateA, ref rboState stateB)
         {
             // Bring both spheres into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
-            objAMat_t1 = objA.CreateScale(objA.state.scale) * Matrix.CreateFromQuaternion(objA.state.orient) * Matrix.CreateTranslation(objA.state.pos);
-            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t1, objA.state.scale, objA, ref objACenter_t1, ref objARadius_t1);
+            objAMat_t1 = objA.CreateScale(stateA.scale) * Matrix.CreateFromQuaternion(stateA.orient) * Matrix.CreateTranslation(stateA.pos);
+            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t1, stateA.scale, objA, ref objACenter_t1, ref objARadius_t1);
 
-            objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
-            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t1, objB.state.scale, objB, ref objBCenter_t1, ref objBRadius_t1);
+            objBMat_t1 = objB.CreateScale(stateB.scale) * Matrix.CreateFromQuaternion(stateB.orient) * Matrix.CreateTranslation(stateB.pos);
+            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t1, stateB.scale, objB, ref objBCenter_t1, ref objBRadius_t1);
 
             float rab = objARadius_t1 + objBRadius_t1;
             Vector3 AB = objBCenter_t1 - objACenter_t1; // Vector from A0 to B0
@@ -791,7 +794,7 @@ namespace hungrybee
         /// I also tried http://www.gamedev.net/community/forums/topic.asp?topic_id=335465 (much simpler anyway) --> Doesn't sweep box
         /// I finally used http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D). Includes the cases of moving spheres and boxes. "
         /// ***********************************************************************
-        protected static bool TestCollisionSphereAABB(gameObject objA, gameObject objB, ref List<collision> _cols ) // objA is a sphere, objB is an AABB
+        protected static bool TestCollisionSphereAABB(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1) // objA is a sphere, objB is an AABB
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;
@@ -804,21 +807,21 @@ namespace hungrybee
 
             // Bring the sphere into common world coordinates to find the center points at t0 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
-            objAMat_t0 = objA.CreateScale(objA.prevState.scale) * Matrix.CreateFromQuaternion(objA.prevState.orient) * Matrix.CreateTranslation(objA.prevState.pos);
-            UpdateBoundingSphere(mSphere, objAMat_t0, objA.prevState.scale, objA, ref objACenter_t0, ref objARadius_t0);
+            objAMat_t0 = objA.CreateScale(stateA0.scale) * Matrix.CreateFromQuaternion(stateA0.orient) * Matrix.CreateTranslation(stateA0.pos);
+            UpdateBoundingSphere(mSphere, objAMat_t0, stateA0.scale, objA, ref objACenter_t0, ref objARadius_t0);
             
 
             // Bring BoundingSphere into box coordinate system --> Means we don't need to recalculate AABB dimensions in world 
-            objBMat_t0 = objB.CreateScale(objB.prevState.scale) * Matrix.CreateFromQuaternion(objB.prevState.orient) * Matrix.CreateTranslation(objB.prevState.pos);
+            objBMat_t0 = objB.CreateScale(stateB0.scale) * Matrix.CreateFromQuaternion(stateB0.orient) * Matrix.CreateTranslation(stateB0.pos);
             objBMatInt_t0 = Matrix.Invert(objBMat_t0);
             objACenter_t0 = Vector3.Transform(objACenter_t0, objBMatInt_t0); // bring objA starting center into B's fram
             objARadius_t0 = objARadius_t0 * 
-                            (1.0f / Math.Max(Math.Max(objB.prevState.scale.X, objB.prevState.scale.Y), objB.prevState.scale.Z)) *
+                            (1.0f / Math.Max(Math.Max(stateB0.scale.X, stateB0.scale.Y), stateB0.scale.Z)) *
                             (1.0f / objB.modelScaleToNormalizeSize); // bring objA radius in B's frame
             
             // Find the velocities and then the relative velocity
-            Vector3 va = objA.state.pos - objA.prevState.pos; 
-            Vector3 vb = objB.state.pos - objB.prevState.pos;
+            Vector3 va = stateA1.pos - stateA0.pos; 
+            Vector3 vb = stateB1.pos - stateB0.pos;
             //Vector3 vab = vb - va; // Relative velocity (in normalized time)
             Vector3 vab = va - vb; // Relative velocity (in normalized time)
             vab = Vector3.Transform(vab, objBMatInt_t0); // bring relative velocity into A's frame
@@ -989,23 +992,23 @@ namespace hungrybee
         #endregion
 
         #region TestCollisionSphereAABBStatic(gameObject objA, gameObject objB)
-        protected static bool TestCollisionSphereAABBStatic(gameObject objA, gameObject objB, ref float separationDistance)
+        protected static bool TestCollisionSphereAABBStatic(gameObject objA, gameObject objB, ref float separationDistance, ref rboState stateA, ref rboState stateB)
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;
 
             // Bring the sphere into common world coordinates to find the center points at t1 and t1
             // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
-            objAMat_t1 = objA.CreateScale(objA.state.scale) * Matrix.CreateFromQuaternion(objA.state.orient) * Matrix.CreateTranslation(objA.state.pos);
-            UpdateBoundingSphere(mSphere, objAMat_t1, objA.state.scale, objA, ref objACenter_t1, ref objARadius_t1);
+            objAMat_t1 = objA.CreateScale(stateA.scale) * Matrix.CreateFromQuaternion(stateA.orient) * Matrix.CreateTranslation(stateA.pos);
+            UpdateBoundingSphere(mSphere, objAMat_t1, stateA.scale, objA, ref objACenter_t1, ref objARadius_t1);
 
 
             // Bring BoundingSphere into box coordinate system --> Means we don't need to recalculate AABB dimensions in world 
-            objBMat_t1 = objB.CreateScale(objB.state.scale) * Matrix.CreateFromQuaternion(objB.state.orient) * Matrix.CreateTranslation(objB.state.pos);
+            objBMat_t1 = objB.CreateScale(stateB.scale) * Matrix.CreateFromQuaternion(stateB.orient) * Matrix.CreateTranslation(stateB.pos);
             objBMatInt_t1 = Matrix.Invert(objBMat_t1);
             objACenter_t1 = Vector3.Transform(objACenter_t1, objBMatInt_t1); // bring objA starting center into B's fram
             objARadius_t1 = objARadius_t1 *
-                            (1.0f / Math.Max(Math.Max(objB.state.scale.X, objB.state.scale.Y), objB.state.scale.Z)) *
+                            (1.0f / Math.Max(Math.Max(stateB.scale.X, stateB.scale.Y), stateB.scale.Z)) *
                             (1.0f / objB.modelScaleToNormalizeSize); // bring objA radius in B's frame
 
             Vector3 sphereProjectedOnAABB = ClosestPointOnAABB(objACenter_t1, (BoundingBox)objB.boundingObj);
