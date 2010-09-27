@@ -138,6 +138,7 @@ namespace hungrybee
             Vector3 a = (desiredVelocity - state.linearVel) / timeToReachVelocity;
             if( (a.X * a.X + a.Y * a.Y + a.Z * a.Z) > maxAcceleration_squared)
                 a = Vector3.Normalize(a) * maxAcceleration;
+            a.Y = 0.0f; a.Z = 0.0f; // Remove vertical and z component accelerations --> Now just horizontal
             return a * state.mass;
         }
     }

@@ -1285,7 +1285,8 @@ namespace hungrybee
                 // to get "scraping" objects (as they hit the edge with the point)
                 // and the face region check will not catch it because the object is
                 // not moving towards the face.
-                if (dotPerp <= -sphereRadius * vx)
+//                if (dotPerp <= -sphereRadius * vx)
+                if (dotPerp <= ((-sphereRadius * vx) + 0.001f))
                 {
                     return FindJustEdgeIntersection(cy, ez, ey, ex, dz, dx, vz, vy,
                         vx, ref iz, ref iy, ref ix, sphereRadius, ref Tcollision);
@@ -1512,7 +1513,7 @@ namespace hungrybee
         #endregion
 
         #region ClosestPointOnAABB(Vector3 point, Vector3 Min, Vector3 Max)
-        protected static Vector3 ClosestPointOnAABB(Vector3 point, Vector3 Min, Vector3 Max)
+        public static Vector3 ClosestPointOnAABB(Vector3 point, Vector3 Min, Vector3 Max)
         {
             Vector3 xClosestPoint;
             xClosestPoint.X = (point.X < Min.X) ? Min.X : (point.X > Max.X) ? Max.X : point.X;

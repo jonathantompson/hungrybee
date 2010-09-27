@@ -54,6 +54,7 @@ namespace hungrybee
         public float maxVel;
         public bool movable; // Does the object react to RK4 integrator or move after collisions
         public bool collidable; // Does the object take part in collision detection
+        public bool resting;
 
         public List<force> forceList;
 
@@ -97,6 +98,7 @@ namespace hungrybee
             forceList = new List<force>(game.GetGameSettings().forceListCapacity);
             boundingObjType = objType;
             dirtyAABB = true;
+            resting = false;
         }
         #endregion
 

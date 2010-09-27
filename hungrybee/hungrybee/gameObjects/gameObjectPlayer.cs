@@ -32,6 +32,7 @@ namespace hungrybee
         public float maxAcceleration;
         public float accelTime;
         public float playerHealth;
+        public float jumpMomentum;
 
         public force forcePlayerInput;
 
@@ -40,7 +41,8 @@ namespace hungrybee
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, float _maxAcceleration, float _accelTime, float _maxVel)
+        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale,
+                                float _maxAcceleration, float _accelTime, float _maxVel, float _jumpMomentum, Vector3 _pos )
             : base(game, modelfile, _objType)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
@@ -50,12 +52,17 @@ namespace hungrybee
             base.movable = true;
             base.collidable = true;
             base.maxVel = _maxVel;
+            jumpMomentum = _jumpMomentum;
+            base.state.pos = _pos;
+            base.prevState.pos = _pos;
 
             // Setup the force structures to describe movement
             forcePlayerInput = new forcePlayerInput(Vector3.Zero, accelTime, maxAcceleration);
 
             // Add the force structures to the forceList for enumeration at runtime
             base.forceList.Add(forcePlayerInput);
+            // Add gravity
+            base.forceList.Add(new forceGravity(new Vector3(0.0f, -h_game.GetGameSettings().gravity,0.0f)));
         }
         #endregion
 
@@ -83,18 +90,6 @@ namespace hungrybee
             float playerVelocity = 2.5f;
 
             KeyboardState keyState = Keyboard.GetState();
-            if (keyState.IsKeyDown(Keys.Up) && !keyState.IsKeyDown(Keys.LeftShift)) // Ignore case when both keys are pressed
-            {
-                desiredVelValue += new Vector3(0.0f, 1.0f, 0.0f);
-                keyPressed = true;
-            }
-
-            if (keyState.IsKeyDown(Keys.Down) && !keyState.IsKeyDown(Keys.LeftShift)) // Ignore case when both keys are pressed
-            {
-                desiredVelValue += new Vector3(0.0f, -1.0f, 0.0f);
-                keyPressed = true;
-            }
-
             if (keyState.IsKeyDown(Keys.Left)) // Ignore case when both keys are pressed
             {
                 desiredVelValue += new Vector3(-1.0f, 0.0f, 0.0f);
@@ -106,29 +101,6 @@ namespace hungrybee
                 desiredVelValue += new Vector3(+1.0f, 0.0f, 0.0f);
                 keyPressed = true;
             }
-            if (keyState.IsKeyDown(Keys.Up) && keyState.IsKeyDown(Keys.LeftShift))
-            {
-                desiredVelValue += new Vector3(0.0f, 0.0f, +1.0f);
-                keyPressed = true;
-            }
-            if (keyState.IsKeyDown(Keys.Down) && keyState.IsKeyDown(Keys.LeftShift))
-            {
-                desiredVelValue += new Vector3(0.0f, 0.0f, -1.0f);
-                keyPressed = true;
-            }
-
-            ///// ************************************
-            ///// ************* TEMP CODE ************
-            ///// ************************************
-            //if (!keyPressed)
-            //{
-            //    desiredVelValue += new Vector3(-1.0f, 0.0f, 0.0f);
-            //    keyPressed = true;
-            //}
-            ///// ************************************
-            ///// ************* TEMP CODE ************
-            ///// ************************************
-
             if (keyPressed)
             {
                 desiredVelValue = Vector3.Normalize(desiredVelValue);
@@ -139,6 +111,13 @@ namespace hungrybee
             {
                 ((forcePlayerInput)forcePlayerInput).SetVelocity(Vector3.Zero);
             }
+
+            // Add a vertical impulse to trigger a jump, only if we're in resting contact with the gnd
+            if (keyState.IsKeyDown(Keys.Space) && base.resting )
+            {
+                prevState.linearMom += new Vector3(0.0f, jumpMomentum, 0.0f);
+                prevState.RecalculateDerivedQuantities();
+            }
         }
         #endregion
 
@@ -146,6 +125,10 @@ namespace hungrybee
         public void StopPlayerControls()
         {
             ((forcePlayerInput)forcePlayerInput).SetVelocity(Vector3.Zero);
+            state.linearMom = Vector3.Zero;
+            state.linearVel = Vector3.Zero;
+            state.angularMom = Vector3.Zero;
+            state.angularVel = Vector3.Zero;
         }
         #endregion
     }

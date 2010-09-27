@@ -53,7 +53,7 @@ namespace hungrybee
         protected static Vector3 temp = new Vector3();
         #endregion
 
-        #region Constructor - collision(...)
+        #region Constructor - collision(...full constructor...)
         public collision(collisionType _colType, gameObject _obj1, gameObject _obj2, float _Tcollision, 
                          Vector3 _colPoint, Vector3 _colNorm, Vector3 _e1, Vector3 _e2, float _coeffRestitution, float _collisionScale)
         {
@@ -67,6 +67,23 @@ namespace hungrybee
             e2 = _e2;
             coeffRestitution = _coeffRestitution;
             collisionScale = _collisionScale;
+
+        }
+        #endregion
+
+        #region Constructor - collision(float Tcollision)
+        public collision(float _Tcollision)
+        {
+            colType = collisionType.COL_UNDEFINED;
+            obj1 = null;
+            obj2 = null;
+            colPoint = Vector3.Zero;
+            colNorm = Vector3.Zero;
+            colTime = _Tcollision;
+            e1 = Vector3.Zero;
+            e2 = Vector3.Zero;
+            coeffRestitution = 1.0f;
+            collisionScale = 1.0f;
 
         }
         #endregion
@@ -169,8 +186,8 @@ namespace hungrybee
 
             if (vrel > V_COLLIDING_THRESHOLD)
                 return false;
-            if (vrel > -V_COLLIDING_THRESHOLD)
-                return false;
+            //if (vrel > -V_COLLIDING_THRESHOLD)
+            //    return false;
             else
                 return true;
         }

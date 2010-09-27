@@ -30,7 +30,7 @@ namespace hungrybee
         game h_game;
         public List<gameObject> h_GameObjects;      // Handler to the list of game objects
 
-        int numPlayers, numHeightMaps, numEnemys, numPhantoms;
+        int numPlayers, numHeightMaps, numEnemys, numPhantoms, numClouds;
         static float frustrumBoundBoxThickness = 2.0f;
         static float frustrumBoundBoxDepth = 20.0f;
         static float EPSILON = 0.00001f;
@@ -44,7 +44,7 @@ namespace hungrybee
         {
             h_game = (game)game;
             h_GameObjects = new List<gameObject>();
-            numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0;
+            numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0; numClouds = 0;
         }
         #endregion
 
@@ -141,7 +141,7 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 7 )
+                        if (numPlayers == 0 && curToken.Count == 11 )
                         {
                             curObject = new gameObjectPlayer(h_game, 
                                                              curToken[1],
@@ -149,7 +149,9 @@ namespace hungrybee
                                                              float.Parse(curToken[3]),
                                                              float.Parse(curToken[4]),
                                                              float.Parse(curToken[5]),
-                                                             float.Parse(curToken[6]));
+                                                             float.Parse(curToken[6]),
+                                                             float.Parse(curToken[7]),
+                                                             new Vector3(float.Parse(curToken[8]), float.Parse(curToken[9]), float.Parse(curToken[10])));
                             numPlayers += 1;
                         }
                         else
@@ -209,6 +211,20 @@ namespace hungrybee
                         }
                         else
                             throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        break;
+                    case "cloud":
+                        if (curToken.Count == 10)
+                        {
+                            curObject = new gameObjectCloud(h_game,
+                                                            int.Parse(curToken[1]),
+                                                            int.Parse(curToken[2]),
+                                                            int.Parse(curToken[3]),
+                                                            new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                            new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                            numClouds += 1;
+                        }
+                        else
+                            throw new Exception("gameObjectManager::LoadContent(): Error reading cloud settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
                         break;
                     case "//": // Comment
                         curObject = null;

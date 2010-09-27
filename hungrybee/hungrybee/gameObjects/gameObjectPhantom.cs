@@ -43,7 +43,7 @@ namespace hungrybee
 
         #endregion
 
-        #region Constructor - gameObjectPhysicsDebug(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
+        #region Constructor - gameObjectPhantom(game game, boundingObjType _objType, Object _obj) : base(game, null, _objType)
         /// Constructor - Basic constructor
         /// ***********************************************************************
         public gameObjectPhantom(game game, boundingObjType _objType, Object _obj)

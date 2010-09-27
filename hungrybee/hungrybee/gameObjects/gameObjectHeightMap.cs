@@ -111,7 +111,7 @@ namespace hungrybee
         #endregion
 
         #region DrawUsingCurrentEffect()
-        /// LoadContent - Load in the textures and initialize the heightmap
+        /// DrawUsingCurrentEffect - Draw the heightmap
         /// ***********************************************************************
         public override void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {

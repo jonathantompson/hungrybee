@@ -55,8 +55,8 @@ namespace hungrybee
 
         protected static float EPSILON = 0.00000001f;
         public static float BISECTION_TOLLERANCE = 0.001f;
-        public static float RESTING_CONTACT_TOLLERANCE = 0.01f; // typically this is 10 x BISECTION_TOLLERANCE
-        protected static int BISECTION_MAXITERATIONS = 30;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.001f; // typically this is 10 x BISECTION_TOLLERANCE
+        protected static int BISECTION_MAXITERATIONS = 10;
         protected static int MAX_PHYSICS_ITERATIONS = 10;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
@@ -126,18 +126,29 @@ namespace hungrybee
                 // Try taking a RK4 Step for each object in h_game.gameObjectManager
                 TakeRK4Step(time, Tstep_remaining, h_game.GetGameObjectManager().h_GameObjects);
 
-                // Run the coarse and fine collision detections
+                // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
                 firstCollision = CollisionDetection();
                 if (firstCollision != null && firstCollision.colTime <= 0.0f)
-                {
-                    float minSeperationDist = 0.0f;
-                    StaticCollisionDetection(ref minSeperationDist, true);
-                    if(minSeperationDist < (-1.0f * BISECTION_TOLLERANCE))
-                        throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
-                }
+                    throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
 
-                float d2 = 0.0f; StaticCollisionDetection(ref d2, false);
-                float d = 0.0f; StaticCollisionDetection(ref d, true);
+                /// ************************************
+                /// ************* HACK CODE ************
+                /// ************************************
+                /// Collision detection fails for glancing sphere AABB collisions 
+                /// (where velocity is close to perpendicular to face normal).
+                /// Do a static check on the final step. To remove obvious omissions.
+                if (firstCollision == null)
+                {
+                    float seperationDist = 0.0f;
+                    if (StaticCollisionDetection(ref seperationDist, true))
+                    {
+                        firstCollision = new collision(Tstep_remaining * 0.5f);
+                        collisions.Add(firstCollision); // Make up a new collision with some arbitrary est. collision time
+                    }
+                }
+                /// ************************************
+                /// *********** END HACK CODE **********
+                /// ************************************
 
                 // Resolve Collisions
                 if (firstCollision != null)
@@ -146,7 +157,7 @@ namespace hungrybee
                     float Tstep_to_collision = StepToCollisionTimeByBisection(Tstep_remaining);
 
                     //// Refresh collision list (previous collision estimate may have included more collisions than is realistic)
-                    // RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
+                    RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
 
                     // Resolve Collision
                     ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
@@ -163,7 +174,10 @@ namespace hungrybee
                         break;
                     }
                     else
+                    {
                         Tstep_remaining -= Tstep_to_collision; // Remove the piecewise step from the time remaining
+                        time += Tstep_to_collision;
+                    }
                 }
                 else
                 {
@@ -250,11 +264,11 @@ namespace hungrybee
             {
                 int curIteration = 1;
                 ClearCollisions(); firstCollision = null;
-                float additionalTime = (Time_remaining - Tstep_to_collision) / 20.0f;
+                float additionalTime = (Time_remaining - Tstep_to_collision) / 10.0f;
                 while (firstCollision == null)
                 {
                     if (curIteration > BISECTION_MAXITERATIONS)
-                        throw new Exception("physicsManager::StepToCollisionTimeByBisection() - Could not find a new collision in " +
+                        throw new Exception("physicsManager::RefreshCollisionList() - Could not find a new collision in " +
                                             String.Format("{0}", BISECTION_MAXITERATIONS) + " iterations.");
                     // Keep adding back small incruments to the bisectionTimeRemaining until the objects collide again
                     TakeRK4Step(time, Tstep_to_collision + (curIteration * additionalTime), h_game.GetGameObjectManager().h_GameObjects);
@@ -751,11 +765,17 @@ namespace hungrybee
             for (int i = 0; i < restingContacts.Count; i++)
             {
                 if (!((gameObject)restingContacts[i].obj1).CheckAntiGravityForce() &&
-                    ((gameObject)restingContacts[i].obj1).movable )
+                    ((gameObject)restingContacts[i].obj1).movable)
+                {
                     ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.GetGameSettings().gravity);
+                    ((gameObject)restingContacts[i].obj1).resting = true;
+                }
                 if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj2).movable)
+                {
                     ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.GetGameSettings().gravity);
+                    ((gameObject)restingContacts[i].obj2).resting = true;
+                }
             }
         }
         #endregion
@@ -788,7 +808,10 @@ namespace hungrybee
                                 anotherContactExists = true;
 
                         if (!anotherContactExists)
+                        {
                             ((gameObject)restingContacts[i].obj1).RemoveAntiGravityForce();
+                            ((gameObject)restingContacts[i].obj1).resting = false;
+                        }
                     }
 
                     if (((gameObject)restingContacts[i].obj2).collidable)
@@ -800,7 +823,10 @@ namespace hungrybee
                                 anotherContactExists = true;
 
                         if (!anotherContactExists)
+                        {
                             ((gameObject)restingContacts[i].obj2).RemoveAntiGravityForce();
+                            ((gameObject)restingContacts[i].obj2).resting = false;
+                        }
                     }
 
                     // Remove the resting contact from the list

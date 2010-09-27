@@ -92,6 +92,39 @@ namespace hungrybee
 
         // Jonno Tompson Code
         // Calculate Min and Max verticies and return a BoundingBox
+        public static BoundingBox CreateAABBFromVerticies(VertexPosition[] verticies)
+        {
+            Vector3 min = new Vector3();
+            Vector3 max = new Vector3();
+
+            // Initialize the min and max verticies to the first point
+            min.X = verticies[0].Position.X; min.Y = verticies[0].Position.Y; min.Z = verticies[0].Position.Z;
+            max.X = verticies[0].Position.X; max.Y = verticies[0].Position.Y; max.Z = verticies[0].Position.Z;
+
+            // Now try and find the min and max verticies
+            for (int curVertex = 0; curVertex < verticies.Length; curVertex++)
+            {
+                if (min.X > verticies[curVertex].Position.X)
+                    min.X = verticies[curVertex].Position.X;
+                if (min.Y > verticies[curVertex].Position.Y)
+                    min.Y = verticies[curVertex].Position.Y;
+                if (min.Z > verticies[curVertex].Position.Z)
+                    min.Z = verticies[curVertex].Position.Z;
+
+                if (max.X < verticies[curVertex].Position.X)
+                    max.X = verticies[curVertex].Position.X;
+                if (max.Y < verticies[curVertex].Position.Y)
+                    max.Y = verticies[curVertex].Position.Y;
+                if (max.Z < verticies[curVertex].Position.Z)
+                    max.Z = verticies[curVertex].Position.Z;
+            }
+
+            BoundingBox retVal = new BoundingBox(min, max);
+            return retVal;
+        }
+
+        // Jonno Tompson Code
+        // Calculate Min and Max verticies and return a BoundingBox
         public static BoundingBox CreateAABBFromModel(Model model)
         {
             BoundingBox retVal = new BoundingBox();
