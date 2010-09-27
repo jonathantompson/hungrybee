@@ -92,7 +92,7 @@ namespace hungrybee
         /// ResolveCollision() - Add impulse for collision contacts and return false in this case.  
         /// Return true if the contact is a resting contact and needs processing later.
         /// ***********************************************************************
-        public bool ResolveCollision(float time, float deltaTime, List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
+        public bool ResolveCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
         {
 
             if (CheckCollidingContact(ref obj1State, ref obj2State))

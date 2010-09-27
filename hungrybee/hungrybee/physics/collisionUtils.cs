@@ -62,12 +62,43 @@ namespace hungrybee
 
         static float EPSILON = 0.000000000001f;
 
-        #region TestCollision()
-        /// TestCollision() - Just grab input objects and send them to their proper functions
+        #region AddCollisionStatic()
+        /// AddCollisionStatic() - If the two objects are close to each other within some tollerence, add the collision to the list
         /// ***********************************************************************
-        public static bool TestCollision(gameObject objA, gameObject objB, ref List<collision> _cols,
-                                         ref rboState stateA0, ref rboState stateA1,
-                                         ref rboState stateB0, ref rboState stateB1) // normal defined for objA --> objB is just negative
+        public static void AddCollisionStatic(gameObject objA, gameObject objB, ref List<collision> _cols,
+                                              ref rboState stateA, ref rboState stateB )
+        {
+            // Big dumb if else chain --> But easiest way to quickly parse through input types
+            // --> Probably data directed programming would be better here, but not too many types
+            if (objA.boundingObjType == boundingObjType.UNDEFINED || objB.boundingObjType == boundingObjType.UNDEFINED)
+                throw new Exception("collisionUtils::TestStaticCollision(): Trying to test collision on UNDEFINED object types (maybe forgot to initialize objects?)");
+
+            // Inputs are: SPHERES
+            else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
+                collisionUtils.AddCollisionSphereSphereStatic(objA, objB, ref _cols, ref stateA, ref stateB);
+
+            // Inputs are: SPHERE AND AABB
+            else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
+                collisionUtils.TestCollisionSphereAABBStatic(objA, objB, ref _cols, ref stateA, ref stateB);
+
+            else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
+                collisionUtils.TestCollisionSphereAABBStatic(objB, objA, ref _cols, ref stateA, ref stateB);
+
+            // Inputs are: AABB
+            else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
+                collisionUtils.AddCollisionAABBAABBStatic(objA, objB, ref _cols, ref stateA, ref stateB);
+
+            else
+                throw new Exception("collisionUtils::TestStaticCollision(): Trying to test collision on unrecognized object types");
+        }
+        #endregion
+
+        #region TestSweptCollision()
+        /// TestSweptCollision() - Just grab input objects and send them to their proper functions
+        /// ***********************************************************************
+        public static bool TestSweptCollision(gameObject objA, gameObject objB, ref float estColTime,
+                                              ref rboState stateA0, ref rboState stateA1,
+                                              ref rboState stateB0, ref rboState stateB1)
         {
             // Big dumb if else chain --> But easiest way to quickly parse through input types
             // --> Probably data directed programming would be better here, but not too many types
@@ -76,18 +107,18 @@ namespace hungrybee
 
             // Inputs are: SPHERES
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereSphere(objA, objB, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
+                return collisionUtils.TestSweptCollisionSphereSphere(objA, objB, ref estColTime, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionSphereAABB(objA, objB, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
+                return collisionUtils.TestSweptCollisionSphereAABB(objA, objB, ref estColTime, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                return collisionUtils.TestCollisionSphereAABB(objB, objA, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
+                return collisionUtils.TestSweptCollisionSphereAABB(objB, objA, ref estColTime, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
-                return collisionUtils.TestCollisionAABBAABB(objA, objB, ref _cols, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
+                return collisionUtils.TestSweptCollisionAABBAABB(objA, objB, ref estColTime, ref stateA0, ref stateA1, ref stateB0, ref stateB1);
 
             else
                 throw new Exception("collisionUtils::TestCollision(): Trying to test collision on unrecognized object types");
@@ -98,7 +129,7 @@ namespace hungrybee
         /// TestStaticCollision() - Just grab input objects and send them to their proper functions
         /// ***********************************************************************
         public static bool TestStaticCollision(gameObject objA, gameObject objB, ref float separationDistance, 
-                                               ref rboState stateA, ref rboState stateB ) // normal defined for objA --> objB is just negative
+                                               ref rboState stateA, ref rboState stateB )
         {
             // Big dumb if else chain --> But easiest way to quickly parse through input types
             // --> Probably data directed programming would be better here, but not too many types
@@ -125,13 +156,13 @@ namespace hungrybee
         }
         #endregion
 
-        #region TestCollisionAABBAABB()
-        /// TestCollisionAABBAABB() - Test whether a swept AABB collides with another AABB between prevState and state
+        #region TestSweptCollisionAABBAABB()
+        /// TestSweptCollisionAABBAABB() - Test whether a swept AABB collides with another AABB between prevState and state
         /// A FEW ASSUMPTIONS:  1. Scale factor is constant between frames.
         ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page3
         /// ***********************************************************************
-        protected static bool TestCollisionAABBAABB(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1) // objA is a sphere, objB is an AABB
+        protected static bool TestSweptCollisionAABBAABB(gameObject objA, gameObject objB, ref float estColTime, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1) // objA is a sphere, objB is an AABB
         {
             throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
 
@@ -526,6 +557,13 @@ namespace hungrybee
         }
         #endregion
 
+        #region AddCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA, ref rboState stateB)
+        protected static void AddCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA, ref rboState stateB)
+        {
+            throw new Exception("AABB-AABB collisions are no longer supported.  Use AABB-Sphere or Sphere-Sphere");
+        }
+        #endregion
+
         #region TestCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref float separationDistance, ref rboState stateA, ref rboState stateB)
         protected static bool TestCollisionAABBAABBStatic(gameObject objA, gameObject objB, ref float separationDistance, ref rboState stateA, ref rboState stateB)
         {
@@ -625,16 +663,15 @@ namespace hungrybee
         }
         #endregion
 
-        #region TestCollisionSphereSphere()
-        /// TestCollisionSphereSphere() - Test whether two swept sphere collide between prevState and state
+        #region TestSweptCollisionSphereSphere()
+        /// TestSweptCollisionSphereSphere() - Test whether two swept sphere collide between prevState and state
         /// A FEW ASSUMPTIONS:  1. Scale factor is constant between frames.
         ///                     2. No acceleration --> spheres are linearly swept between the two points with constant velocity
         /// Code derived from: http://www.gamasutra.com/view/feature/3383/simple_intersection_tests_for_games.php?page2
         /// NOTE: There are faster methods to perform this test --> to avoid sqrt calls AND to avoid floating point accuracy issues for large velocities
         /// ***********************************************************************
-        protected static bool TestCollisionSphereSphere(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1)
+        protected static bool TestSweptCollisionSphereSphere(gameObject objA, gameObject objB, ref float estColTime, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1)
         {
-            float Tcollision = 0.0f;
             Vector3 point = Vector3.Zero;
             Vector3 normal = Vector3.Zero;
             Vector3 e1 = Vector3.Zero;
@@ -666,15 +703,7 @@ namespace hungrybee
             // Check if they're currently overlapping --> We actually don't want this.  It means that there are two points of collision
             if ( Vector3.Dot(AB,AB) <= rab * rab )
             {
-                Tcollision = 0.0f;
-                _cols.Add(new collision(collisionType.COL_UNDEFINED, 
-                                        objA, objB, 
-                                        Tcollision, 
-                                        Vector3.Zero, 
-                                        Vector3.Zero, 
-                                        Vector3.Zero, Vector3.Zero,
-                                        objA.h_game.GetGameSettings().coeffRestitution, 
-                                        1.0f)); // Normal points out of face of B
+                estColTime = 0.0f;
                 return true;
             }
 
@@ -686,7 +715,7 @@ namespace hungrybee
                 {
                     if( t0 >= 0.0f && t0 <= 1.0f) // t0 is within 0-->1
                     {
-                    Tcollision = t0;
+                    estColTime = t0;
                     retVal = true;
                     }
                 }
@@ -694,7 +723,7 @@ namespace hungrybee
                 {
                     if (t1 >= 0.0f && t1 <= 1.0f)  // t1 occured first and is within 0-->1
                     {
-                    Tcollision = t1;
+                    estColTime = t1;
                     retVal = true;
                     }
                 }
@@ -703,26 +732,47 @@ namespace hungrybee
             // Calculate the point of contact if it exists
             if (retVal)
             {
-                // Get the two centers at collision time
-                objACenter_t1 = objACenter_t0 + va * Tcollision;  // Reuse t1 variables to save stack (or heap) space
-                objBCenter_t1 = objBCenter_t0 + vb * Tcollision;
-                AB = objBCenter_t1 - objACenter_t1; // Vector from the center of A to the center of B at the time of collision
-                normal = Vector3.Normalize(AB);
-                point = objACenter_t1 + normal * objARadius_t0; // Center is along the vector between the two centers, at a distance of the radius
-
-                // sphere collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
-                _cols.Add(new collision(collisionType.VERTEX_FACE, 
-                                        objA, objB, 
-                                        Tcollision, 
-                                        point, 
-                                        Vector3.Negate(normal), 
-                                        e1, e2,
-                                        objA.h_game.GetGameSettings().coeffRestitution, 
-                                        1.0f)); // Normal points out of face of B
                 return true;
             }
             else
                 return false;
+        }
+        #endregion
+
+        #region AddCollisionSphereSphereStatic()
+        /// AddCollisionSphereSphereStatic() - Just find the collision point
+        /// ***********************************************************************
+        protected static void AddCollisionSphereSphereStatic(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA, ref rboState stateB)
+        {
+            // Bring both spheres into common world coordinates to find the center points at t0 and t1
+            // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
+            objAMat_t1 = objA.CreateScale(stateA.scale) * Matrix.CreateFromQuaternion(stateA.orient) * Matrix.CreateTranslation(stateA.pos);
+            UpdateBoundingSphere((BoundingSphere)objA.boundingObj, objAMat_t1, stateA.scale, objA, ref objACenter_t1, ref objARadius_t1);
+
+            objBMat_t1 = objB.CreateScale(stateB.scale) * Matrix.CreateFromQuaternion(stateB.orient) * Matrix.CreateTranslation(stateB.pos);
+            UpdateBoundingSphere((BoundingSphere)objB.boundingObj, objBMat_t1, stateB.scale, objB, ref objBCenter_t1, ref objBRadius_t1);
+
+            float rab = objARadius_t1 + objBRadius_t1;
+            Vector3 AB = objBCenter_t1 - objACenter_t1; // Vector from A0 to B0
+
+            float separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - rab;
+
+            if (separationDistance <= 0.0f)
+                throw new Exception("collisionUtils::AddCollisionSphereSphereStatic() - Objects are overlapping.  Binomial search must have failed");
+
+            // Get the two centers at collision time
+            Vector3 normal = Vector3.Normalize(AB);
+            Vector3 point = objACenter_t1 + normal * objARadius_t1; // Center is along the vector between the two centers, at a distance of the radius
+
+            // sphere collisions ALWAYS result in 1 vertex/face collision --> Add it to the collision array
+            _cols.Add(new collision(collisionType.VERTEX_FACE,
+                                    objA, objB,
+                                    stateA.time,
+                                    point,
+                                    Vector3.Negate(normal),
+                                    Vector3.Zero, Vector3.Zero, // e1, e2
+                                    objA.h_game.GetGameSettings().coeffRestitution,
+                                    1.0f)); // Normal points out of face of B
         }
         #endregion
 
@@ -786,20 +836,19 @@ namespace hungrybee
         }
         #endregion
 
-        #region TestCollisionSphereAABB()
-        /// TestCollisionSphereSphere() - Test whether a swept sphere collides with a stationary AABB between prevState and state
+        #region TestSweptCollisionSphereAABB()
+        /// TestSweptCollisionSphereAABB() - Test whether a swept sphere collides with a stationary AABB between prevState and state
         /// A FEW ASSUMPTIONS:  1. Scale factor is constant between frames.
         ///                     2. No acceleration --> sphere and AABB are linearly swept between the two points with constant velocity
         /// I tried code derived from: Pages 228-229 Real Time Collision Detection, Christer Ericson --> But it didn't work
         /// I also tried http://www.gamedev.net/community/forums/topic.asp?topic_id=335465 (much simpler anyway) --> Doesn't sweep box
         /// I finally used http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D). Includes the cases of moving spheres and boxes. "
         /// ***********************************************************************
-        protected static bool TestCollisionSphereAABB(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1) // objA is a sphere, objB is an AABB
+        protected static bool TestSweptCollisionSphereAABB(gameObject objA, gameObject objB, ref float estColTime, ref rboState stateA0, ref rboState stateA1, ref rboState stateB0, ref rboState stateB1) // objA is a sphere, objB is an AABB
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;
 
-            float Tcollision = 0.0f; 
             Vector3 point = Vector3.Zero;
             Vector3 normal = Vector3.Zero;
             Vector3 e1 = Vector3.Zero;
@@ -879,7 +928,7 @@ namespace hungrybee
                     {
                         // The sphere center is inside box.  Return it as the contact
                         // point, but report an "other" intersection type.
-                        Tcollision = 0.0f;
+                        estColTime = 0.0f;
                         retVal = -1;
                     }
                     else
@@ -887,7 +936,7 @@ namespace hungrybee
                         // Sphere above face on axis Z.
                         retVal = FindFaceRegionIntersection(Extent[0],
                             Extent[1], Extent[2], ax, ay, az, vx, vy,
-                            vz, ref ix, ref iy, ref iz, true, objARadius_t0, ref Tcollision);
+                            vz, ref ix, ref iy, ref iz, true, objARadius_t0, ref estColTime);
                     }
                 }
                 else
@@ -897,14 +946,14 @@ namespace hungrybee
                         // Sphere above face on axis Y.
                         retVal = FindFaceRegionIntersection(Extent[0],
                             Extent[2], Extent[1], ax, az, ay, vx, vz,
-                            vy, ref ix, ref iz, ref iy, true, objARadius_t0, ref Tcollision);
+                            vy, ref ix, ref iz, ref iy, true, objARadius_t0, ref estColTime);
                     }
                     else
                     {
                         // Sphere is above the edge formed by faces y and z.
                         retVal = FindEdgeRegionIntersection(Extent[1],
                             Extent[0], Extent[2], ay, ax, az, vy, vx,
-                            vz, ref iy, ref ix, ref iz, true, objARadius_t0, ref Tcollision);
+                            vz, ref iy, ref ix, ref iz, true, objARadius_t0, ref estColTime);
                     }
                 }
             }
@@ -917,14 +966,14 @@ namespace hungrybee
                         // Sphere above face on axis X.
                         retVal = FindFaceRegionIntersection(Extent[1],
                             Extent[2], Extent[0], ay, az, ax, vy, vz,
-                            vx, ref iy, ref iz, ref ix, true, objARadius_t0, ref Tcollision);
+                            vx, ref iy, ref iz, ref ix, true, objARadius_t0, ref estColTime);
                     }
                     else
                     {
                         // Sphere is above the edge formed by faces x and z.
                         retVal = FindEdgeRegionIntersection(Extent[0],
                             Extent[1], Extent[2], ax, ay, az, vx, vy,
-                            vz, ref ix, ref iy, ref iz, true, objARadius_t0, ref Tcollision);
+                            vz, ref ix, ref iy, ref iz, true, objARadius_t0, ref estColTime);
                     }
                 }
                 else
@@ -934,60 +983,76 @@ namespace hungrybee
                         // Sphere is above the edge formed by faces x and y.
                         retVal = FindEdgeRegionIntersection(Extent[0],
                             Extent[2], Extent[1], ax, az, ay, vx, vz,
-                            vy, ref ix, ref iz, ref iy, true, objARadius_t0, ref Tcollision);
+                            vy, ref ix, ref iz, ref iy, true, objARadius_t0, ref estColTime);
                     }
                     else
                     {
                         // sphere is above the corner formed by faces x,y,z
                         retVal = FindVertexRegionIntersection(Extent[0],
                             Extent[1], Extent[2], ax, ay, az, vx, vy,
-                            vz, ref ix, ref iy, ref iz, objARadius_t0, ref Tcollision);
+                            vz, ref ix, ref iy, ref iz, objARadius_t0, ref estColTime);
                     }
                 }
             }
 
-            if (retVal == 0 || Tcollision > 1.0f)
+            if (retVal == 0 || estColTime > 1.0f)
             {
                 return false;
             }
 
-            if (retVal == -1 || Tcollision == 0.0f) // -1 indicates collision before sweep
+            if (retVal == -1 || estColTime <= 0.0f) // -1 indicates collision before sweep
             {
-                Tcollision = 0.0f;
-                _cols.Add(new collision(collisionType.COL_UNDEFINED, 
-                                        objA, objB, 
-                                        Tcollision, 
-                                        Vector3.Zero, 
-                                        Vector3.Zero, 
-                                        Vector3.Zero, Vector3.Zero,
-                                        objA.h_game.GetGameSettings().coeffRestitution, 
-                                        1.0f)); // Normal points out of face of B
+                estColTime = 0.0f;
                 return true;
             }
 
-            // Calculate actual intersection (move point back into world coordinates).
-            Vector3 i = new Vector3(signX * ix, signY * iy, signZ * iz);
-            point = boxCenter + i;
-            Vector3 point_on_box = ClosestPointOnAABB(point, mBox.Min, mBox.Max);
-            // Make sure the collision point and the projection aren't too far away 
-            // --> they should be within the binomial stepping routine tollerence.
-            if (Vector3.Dot(point - point_on_box, point - point_on_box) > physicsManager.BISECTION_TOLLERANCE)
-                throw new Exception("collisionUtils::TestCollisionSphereAABB() - Point projection onto box is > 0.0001f, check inputs");
-            normal = GetAABBNormalFromPointOnAABB(point_on_box, mBox.Min, mBox.Max);
-            point = Vector3.Transform(point, objBMat_t0);
-            normal = Vector3.Transform(normal, objBMat_t0);
-
-            _cols.Add(new collision(collisionType.VERTEX_FACE, 
-                                    objA, objB, 
-                                    Tcollision, 
-                                    point, 
-                                    normal, 
-                                    e1, e2,
-                                    objA.h_game.GetGameSettings().coeffRestitution, 
-                                    1.0f)); // Normal points out of face of B
-
             return true;
             
+        }
+        #endregion
+
+        #region AddCollisionSphereAABBStatic(gameObject objA, gameObject objB)
+        protected static void TestCollisionSphereAABBStatic(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA, ref rboState stateB)
+        {
+            BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
+            BoundingBox mBox = (BoundingBox)objB.boundingObj;
+
+            // Bring the sphere into common world coordinates to find the center points at t1 and t1
+            // note, model center not necessarily at 0,0,0 in model coords --> Therefore need rotation as well
+            objAMat_t1 = objA.CreateScale(stateA.scale) * Matrix.CreateFromQuaternion(stateA.orient) * Matrix.CreateTranslation(stateA.pos);
+            UpdateBoundingSphere(mSphere, objAMat_t1, stateA.scale, objA, ref objACenter_t1, ref objARadius_t1);
+
+
+            // Bring BoundingSphere into box coordinate system --> Means we don't need to recalculate AABB dimensions in world 
+            objBMat_t1 = objB.CreateScale(stateB.scale) * Matrix.CreateFromQuaternion(stateB.orient) * Matrix.CreateTranslation(stateB.pos);
+            objBMatInt_t1 = Matrix.Invert(objBMat_t1);
+            objACenter_t1 = Vector3.Transform(objACenter_t1, objBMatInt_t1); // bring objA starting center into B's fram
+            objARadius_t1 = objARadius_t1 *
+                            (1.0f / Math.Max(Math.Max(stateB.scale.X, stateB.scale.Y), stateB.scale.Z)) *
+                            (1.0f / objB.modelScaleToNormalizeSize); // bring objA radius in B's frame
+
+            Vector3 point_on_box = ClosestPointOnAABB(objACenter_t1, (BoundingBox)objB.boundingObj);
+            Vector3 AB = point_on_box - objACenter_t1;
+            float separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - objARadius_t1;
+
+            if (separationDistance <= 0.0f)
+                throw new Exception("collisionUtils::AddCollisionSphereAABBStatic() - Objects are overlapping. Binomial search routine must have failed");
+            if (separationDistance > physicsManager.BISECTION_TOLLERANCE)
+                return;
+
+            // Transform point and the normal into world space
+            Vector3 normal_on_box = GetAABBNormalFromPointOnAABB(point_on_box, mBox.Min, mBox.Max);
+            Vector3 point = Vector3.Transform(point_on_box, objBMat_t0);
+            Vector3 normal = Vector3.Transform(normal_on_box, objBMat_t0);
+
+            _cols.Add(new collision(collisionType.VERTEX_FACE,
+                                    objA, objB,
+                                    stateA.time,
+                                    point,
+                                    normal,
+                                    Vector3.Zero, Vector3.Zero, // E1, E2
+                                    objA.h_game.GetGameSettings().coeffRestitution,
+                                    1.0f)); // Normal points out of face of B
         }
         #endregion
 

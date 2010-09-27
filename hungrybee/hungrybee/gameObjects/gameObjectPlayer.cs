@@ -33,6 +33,7 @@ namespace hungrybee
         public float accelTime;
         public float playerHealth;
         public float jumpMomentum;
+        public bool jumping;
 
         public force forcePlayerInput;
 
@@ -55,6 +56,7 @@ namespace hungrybee
             jumpMomentum = _jumpMomentum;
             base.state.pos = _pos;
             base.prevState.pos = _pos;
+            jumping = false;
 
             // Setup the force structures to describe movement
             forcePlayerInput = new forcePlayerInput(Vector3.Zero, accelTime, maxAcceleration);
@@ -112,11 +114,16 @@ namespace hungrybee
                 ((forcePlayerInput)forcePlayerInput).SetVelocity(Vector3.Zero);
             }
 
-            // Add a vertical impulse to trigger a jump, only if we're in resting contact with the gnd
-            if (keyState.IsKeyDown(Keys.Space) && base.resting )
+            // Add a vertical impulse to trigger a jump, only if we're in resting contact with the ground
+            if (keyState.IsKeyDown(Keys.Space) && base.resting && !jumping )
             {
                 prevState.linearMom += new Vector3(0.0f, jumpMomentum, 0.0f);
                 prevState.RecalculateDerivedQuantities();
+                jumping = true;
+            }
+            if (keyState.IsKeyUp(Keys.Space))
+            {
+                jumping = false;
             }
         }
         #endregion

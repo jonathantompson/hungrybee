@@ -46,18 +46,18 @@ namespace hungrybee
 
         // Fine collision detection
         protected List<collision> collisions;
-        protected collision firstCollision;
         protected float time;
         protected float Tstep_remaining;
+        protected bool intersection;
 
         // Resting contacts
         protected List<collision> restingContacts;
 
         protected static float EPSILON = 0.00000001f;
         public static float BISECTION_TOLLERANCE = 0.001f;
-        public static float RESTING_CONTACT_TOLLERANCE = 0.001f; // typically this is 10 x BISECTION_TOLLERANCE
-        protected static int BISECTION_MAXITERATIONS = 10;
-        protected static int MAX_PHYSICS_ITERATIONS = 10;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.01f; // typically this is 10 x BISECTION_TOLLERANCE
+        protected static int BISECTION_MAXITERATIONS = 20;
+        protected static int MAX_PHYSICS_ITERATIONS = 4;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
 
@@ -76,7 +76,7 @@ namespace hungrybee
             D4 = new rboDerivative();
             numCollidableObjects = 0;
             numObjects = 0;
-            firstCollision = null;
+            intersection = false;
         }
         #endregion
 
@@ -114,6 +114,7 @@ namespace hungrybee
 
             time = (float)gameTime.TotalGameTime.TotalSeconds;
             Tstep_remaining = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float estColTime = float.PositiveInfinity;
 
             int curIteration = 0;
             while (Tstep_remaining > 0.0f && !pauseGame) // While there is still time to process
@@ -127,40 +128,37 @@ namespace hungrybee
                 TakeRK4Step(time, Tstep_remaining, h_game.GetGameObjectManager().h_GameObjects);
 
                 // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
-                firstCollision = CollisionDetection();
-                if (firstCollision != null && firstCollision.colTime <= 0.0f)
+                intersection = SweptCollisionDetection(ref estColTime);
+                if (intersection && estColTime <= 0.0f)
                     throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
 
                 /// ************************************
                 /// ************* HACK CODE ************
                 /// ************************************
-                /// Collision detection fails for glancing sphere AABB collisions 
+                /// Swept collision detection fails for glancing sphere AABB collisions 
                 /// (where velocity is close to perpendicular to face normal).
                 /// Do a static check on the final step. To remove obvious omissions.
-                if (firstCollision == null)
+                if (!intersection)
                 {
                     float seperationDist = 0.0f;
                     if (StaticCollisionDetection(ref seperationDist, true))
-                    {
-                        firstCollision = new collision(Tstep_remaining * 0.5f);
-                        collisions.Add(firstCollision); // Make up a new collision with some arbitrary est. collision time
-                    }
+                        intersection = true;
                 }
                 /// ************************************
                 /// *********** END HACK CODE **********
                 /// ************************************
 
                 // Resolve Collisions
-                if (firstCollision != null)
+                if (intersection)
                 {
                     // Find time to collision using the firstCollision value as an estimate --> Also rebuilds the collision list with more accurate collision data
-                    float Tstep_to_collision = StepToCollisionTimeByBisection(Tstep_remaining);
+                    float Tstep_to_collision = StepToCollisionTimeByBisection(Tstep_remaining, estColTime);
 
-                    //// Refresh collision list (previous collision estimate may have included more collisions than is realistic)
+                    // Refresh collision list (previous collision estimate may have included more collisions than is realistic)
                     RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
 
                     // Resolve Collision
-                    ResolveCollisions(time, firstCollision.colTime, h_game.GetGameObjectManager().h_GameObjects);
+                    ResolveCollisions(h_game.GetGameObjectManager().h_GameObjects);
 
                     float d1 = 0.0f; StaticCollisionDetection(ref d1, false);
 
@@ -191,28 +189,26 @@ namespace hungrybee
         }
         #endregion
 
-        #region CollisionDetection()
-        /// CollisionDetection() - Top level collision detection routine
+        #region SweptCollisionDetection()
+        /// SweptCollisionDetection() - Top level collision detection routine
+        /// Uses swept shape tests to detect collision
         /// ***********************************************************************
-        protected collision CollisionDetection()
+        protected bool SweptCollisionDetection(ref float estColTime)
         {
             // Coarse Collision detection
             CoarseCollisionDetection();
 
             // Fine Collision detection
-            FineCollisionDetection();
-
-            // Return the (estimated) first collision
-            return GetFirstCollision();
+            return SweptFineCollisionDetection(ref estColTime);
         }
         #endregion
 
         #region StepToCollisionTimeByBisection()
         /// StepToCollisionTimeByBisection() - Uses an iterative algorithm to find the time (with some error) 
         /// ***********************************************************************
-        protected float StepToCollisionTimeByBisection(float Time_remaining)
+        protected float StepToCollisionTimeByBisection(float Time_remaining, float estColTime)
         {
-            float Tstep_to_collision = firstCollision.colTime * Tstep_remaining - EPSILON; // colTime from swept tests are normalized 0->1.
+            float Tstep_to_collision = estColTime * Tstep_remaining - EPSILON; // colTime from swept tests are normalized 0->1.
             float bisectionTimeRemaining = Tstep_to_collision;
             bool collided = false;
             float minSeparationDistance = float.PositiveInfinity;
@@ -256,27 +252,34 @@ namespace hungrybee
         }
         #endregion
 
-        #region RefreshCollisionList
-        // Move the simulated forward a little bit at a time until objects are colliding again
+        #region RefreshCollisionList()
+        // RefreshCollisionList() - Calculate the collision point based on the updated positions
         protected void RefreshCollisionList(float Time_remaining, float Tstep_to_collision)
         {
-            if (Tstep_to_collision < Time_remaining) // The intial list of collisions might have been wrong --> rebuild it
-            {
-                int curIteration = 1;
-                ClearCollisions(); firstCollision = null;
-                float additionalTime = (Time_remaining - Tstep_to_collision) / 10.0f;
-                while (firstCollision == null)
-                {
-                    if (curIteration > BISECTION_MAXITERATIONS)
-                        throw new Exception("physicsManager::RefreshCollisionList() - Could not find a new collision in " +
-                                            String.Format("{0}", BISECTION_MAXITERATIONS) + " iterations.");
-                    // Keep adding back small incruments to the bisectionTimeRemaining until the objects collide again
-                    TakeRK4Step(time, Tstep_to_collision + (curIteration * additionalTime), h_game.GetGameObjectManager().h_GameObjects);
-                    firstCollision = CollisionDetection(); // Full collision detection
+            ClearCollisions();
 
-                    curIteration++;
+            gameObject objA = null;
+            gameObject objB = null;
+
+            // Loop through object pairs and check if they potentially overlap from the sweep and prune test
+            for (int i = 0; i < (numObjects - 1); i++)
+            {
+                for (int j = i + 1; j < (numObjects); j++)
+                {
+                    if (h_game.GetGameObjectManager().h_GameObjects[i].collidable && h_game.GetGameObjectManager().h_GameObjects[j].collidable)
+                    {
+                        AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
+                        if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
+                        {
+                            objA = h_game.GetGameObjectManager().h_GameObjects[i];
+                            objB = h_game.GetGameObjectManager().h_GameObjects[j];
+                            // Objects potentially overlap --> Check the low level collision routines
+                            collisionUtils.AddCollisionStatic(objA, objB, ref collisions, ref objA.state, ref objB.state);
+                        }
+                    }
                 }
             }
+
         }
         #endregion 
 
@@ -341,25 +344,38 @@ namespace hungrybee
         #region ResolveCollisions()
         /// ResolveCollisions() - Add impulse for collision contacts, and add contact forces for contact collisions
         /// ***********************************************************************
-        protected void ResolveCollisions(float time, float deltaTime, List<gameObject> gameObjects)
+        protected void ResolveCollisions(List<gameObject> gameObjects)
         {
-            // Step through each collision and only resolve those collisions that happened from time to (time + deltaTime)
-            // All other contacts will be resolved on later iterations of the physics loop
-            // This ensures that if two objects collide at EXACTLY the same time they will both be resolved --> Rare!
+            // Step through each collision and resolve them
             for (int i = 0; i < collisions.Count; i++)
-                if (collisions[i].colTime <= deltaTime)
-                {
-                    gameObject obj1 = (gameObject)collisions[i].obj1;
-                    gameObject obj2 = (gameObject)collisions[i].obj2;
-                    if (obj1 is gameObjectPlayer)
-                        ((gameObjectPlayer)obj1).StopPlayerControls();
-                    if (collisions[i].ResolveCollision(time, deltaTime, gameObjects, ref obj1.prevState, ref obj2.prevState)) // if resolve collisions return true --> resting contact.
-                        restingContacts.Add(collisions[i]);
-                }
+            {
+                gameObject obj1 = (gameObject)collisions[i].obj1;
+                gameObject obj2 = (gameObject)collisions[i].obj2;
+                if (collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState)) // if resolve collisions return true --> resting contact.
+                    if(!FindRestingContact(ref obj1, ref obj2))
+                        restingContacts.Add(collisions[i]); // If a resting contact between the two doesn't exist, then add one
+                if (obj1 is gameObjectPlayer)
+                    ((gameObjectPlayer)obj1).StopPlayerControls();
+                if (obj2 is gameObjectPlayer)
+                    ((gameObjectPlayer)obj2).StopPlayerControls();
+            }
 
             // This is a hack --> Just turns off gravity for those objects that have collided with the floor
             ComputeContactForces();
+        }
+        #endregion
 
+        #region FindRestingContact
+        // Linearly search through the resting contacts and see if we can find one that exists between the two objects
+        protected bool FindRestingContact(ref gameObject obj1, ref gameObject obj2)
+        {
+            for (int i = 0; i < restingContacts.Count; i++)
+            {
+                if ((restingContacts[i].obj1.Equals(obj1) && restingContacts[i].obj2.Equals(obj2)) ||
+                   (restingContacts[i].obj2.Equals(obj1) && restingContacts[i].obj1.Equals(obj2)))
+                    return true;
+            }
+            return false;
         }
         #endregion
 
@@ -646,14 +662,13 @@ namespace hungrybee
         }
         #endregion
 
-        #region FineCollisionDetection()
-        /// FineCollisionDetection() --> Go through the coarse collision routine results and get run fine collision detection
+        #region SweptFineCollisionDetection()
+        /// SweptFineCollisionDetection() --> Go through the coarse collision routine results and get run fine collision detection
         /// I thought O(n^2) through array was dumb, but Christer Ericson does the same thing (Real Time Collision Detection, page 329-338)
         /// We're going to all the trouble to get O(n) in sweap and prune, then we just do an O(n^2) loop
         /// ***********************************************************************
-        protected void FineCollisionDetection()
+        protected bool SweptFineCollisionDetection(ref float estColTime)
         {
-            ClearCollisions();
             gameObject objA = null;
             gameObject objB = null;
 
@@ -671,14 +686,17 @@ namespace hungrybee
                             objA = h_game.GetGameObjectManager().h_GameObjects[i];
                             objB = h_game.GetGameObjectManager().h_GameObjects[j];
                             // Objects potentially overlap --> Check the low level collision routines
-                            collisionUtils.TestCollision(objA, objB,
-                                                         ref collisions,
-                                                         ref objA.prevState, ref objA.state,
-                                                         ref objB.prevState, ref objB.state);
+                            if (collisionUtils.TestSweptCollision(objA, objB,
+                                                                 ref estColTime,
+                                                                 ref objA.prevState, ref objA.state,
+                                                                 ref objB.prevState, ref objB.state))
+                                return true; // Don't need to continue if we've found at least one object collides
                         }
                     }
 				}
 			}
+
+            return false;
         }
         #endregion
 
@@ -725,24 +743,6 @@ namespace hungrybee
         }
         #endregion
 
-        #region GetFirstCollision()
-        /// GetFirstCollision() --> Return the collison that happens first
-        /// ***********************************************************************
-        protected collision GetFirstCollision()
-        {
-            if( collisions.Count < 1)
-                return null; // No collisions detected, return null
-
-            // Otherwise, linear search to find the first collison
-            collision firstCol = collisions[0];
-            for (int i = 1; i < collisions.Count; i++)
-                if (collisions[i].colTime < firstCol.colTime)
-                    firstCol = collisions[i];
-
-            return firstCol;
-        }
-        #endregion
-
         #region ClearCollisions()
         /// ClearCollisions() --> Clear the collisions list
         /// ***********************************************************************
@@ -769,12 +769,16 @@ namespace hungrybee
                 {
                     ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.GetGameSettings().gravity);
                     ((gameObject)restingContacts[i].obj1).resting = true;
+                    ((gameObject)restingContacts[i].obj1).prevState.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).prevState.linearVel.Y = 0.0f;
                 }
                 if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj2).movable)
                 {
                     ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.GetGameSettings().gravity);
                     ((gameObject)restingContacts[i].obj2).resting = true;
+                    ((gameObject)restingContacts[i].obj2).prevState.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).prevState.linearVel.Y = 0.0f;
                 }
             }
         }

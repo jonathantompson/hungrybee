@@ -1,4 +1,8 @@
-﻿- Implement player controls: using quaternions to give half distances and RK4 integrator
+﻿- DEBUG WHY HITTING THE CORNER OF THE AABB CAUSES FREEZE / PLAYER TO DISAPEAR / CRASH
+  A) I NOTICED RESTING CONTACTS BLOWS UP
+
+
+- Implement player controls: using quaternions to give half distances and RK4 integrator
 - Load the models in...  Having lots of difficulty
 - Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
 - Fix swept sphere collision code for AABB-sphere collisions --> Glancing collisions are failing to be detected.
