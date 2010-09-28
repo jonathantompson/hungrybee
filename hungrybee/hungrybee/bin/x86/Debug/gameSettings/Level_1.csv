@@ -1,7 +1,7 @@
 //, NOTE NO SPACES
 
 //,player, modelfile, Bounding Object Type (AUTO, AABB, SPHERE), scale, acceleration rate, desired stopping time, max velocity, jump momentum, [Pos.x, Pos.y, Pos.z]
-player,Ship,SPHERE,1.0,10.0,0.2,15.0,4.0,-3.0,-1.499,0
+player,Ship,SPHERE,1.0,10.0,0.2,15.0,6.0,-3.0,-1.499,0
 
 //,enemy, modelfile, Bounding Object Type (AUTO, AABB, SPHERE), scale, max velocity, [Pos.x, Pos.y, Pos.z]
 enemy,Ship,SPHERE,1.0,10.0,2.0,3.0,0.0
@@ -11,7 +11,7 @@ enemy,Ship,SPHERE,1.0,10.0,2.0,3.0,0.0
 //,phantom,AABB,-2,-1.999,-2,-1,0,1
 
 //,cloud, # circles, # stacks per circle, # slices per circle, [Min.x, Min.y, Min.z], [Max.x, Max.y, Max.z]
-cloud,20,20,20,-1,-1,-0.5,1,-0.5,0.5
+cloud,20,20,20,-1,-0.5,-0.5,1,0,0.5
 
 //,heightMap, heightMapFile, heightMapTextureFile, [xmin,ymin,zmin], [xmax,ymax,zmax]
 heightMap,false,heightmap,Grass,-8,-5,-5,8,-2,5

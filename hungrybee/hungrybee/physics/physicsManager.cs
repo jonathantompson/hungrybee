@@ -56,7 +56,7 @@ namespace hungrybee
         protected static float EPSILON = 0.00000001f;
         public static float BISECTION_TOLLERANCE = 0.001f;
         public static float RESTING_CONTACT_TOLLERANCE = 0.01f; // typically this is 10 x BISECTION_TOLLERANCE
-        protected static int BISECTION_MAXITERATIONS = 20;
+        protected static int BISECTION_MAXITERATIONS = 50;
         protected static int MAX_PHYSICS_ITERATIONS = 4;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
@@ -141,8 +141,10 @@ namespace hungrybee
                 if (!intersection)
                 {
                     float seperationDist = 0.0f;
+                    if (StaticCollisionDetection(ref seperationDist, false))
+                        throw new Exception("physicsManager::Update() - STATIC TEST Objects were interpenetrating before first physics step!  Something went wrong");
                     if (StaticCollisionDetection(ref seperationDist, true))
-                        intersection = true;
+                        intersection = true; // The objects will end up intersecting
                 }
                 /// ************************************
                 /// *********** END HACK CODE **********
@@ -346,18 +348,37 @@ namespace hungrybee
         /// ***********************************************************************
         protected void ResolveCollisions(List<gameObject> gameObjects)
         {
+            bool restingContact = false;
             // Step through each collision and resolve them
             for (int i = 0; i < collisions.Count; i++)
             {
                 gameObject obj1 = (gameObject)collisions[i].obj1;
                 gameObject obj2 = (gameObject)collisions[i].obj2;
-                if (collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState)) // if resolve collisions return true --> resting contact.
-                    if(!FindRestingContact(ref obj1, ref obj2))
-                        restingContacts.Add(collisions[i]); // If a resting contact between the two doesn't exist, then add one
-                if (obj1 is gameObjectPlayer)
-                    ((gameObjectPlayer)obj1).StopPlayerControls();
-                if (obj2 is gameObjectPlayer)
-                    ((gameObjectPlayer)obj2).StopPlayerControls();
+
+                // if resolve collisions return true --> resting contact.
+                restingContact = collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
+                
+                // Add a resting contact, if the collision normal is vertical (ie a collision against the ground)
+                // --> This adds an antigravity force to the two objects to counteract downward motion AND Y velocity and momentum set to zero
+                if (restingContact)
+                {
+                    if ((Math.Abs(collisions[i].colNorm.X) < EPSILON) && (Math.Abs(collisions[i].colNorm.Z) < EPSILON))
+                    {
+                        if (!FindRestingContact(ref obj1, ref obj2))
+                            restingContacts.Add(collisions[i]); // If a resting contact between the two doesn't exist, then add one
+                    }
+                    else
+                    {
+                        // Otherwise add a small impulse to push objects APART so that we are out of resting contact threshold
+                        collisions[i].GetVelForCollidingContact(ref obj1.prevState, ref obj2.prevState);
+
+                        // Then recover the collision as we normally would.
+                        if(collisions[i].CheckCollidingContact(ref obj1.prevState, ref obj2.prevState))
+                            collisions[i].ResolveCollidingCollision(ref obj1.prevState, ref obj2.prevState);
+                        else
+                            throw new Exception("physicsManager::ResolveCollisions() - Could not prevent resting contact, check GetVelAForCollidingContact() results");
+                    }
+                }
             }
 
             // This is a hack --> Just turns off gravity for those objects that have collided with the floor

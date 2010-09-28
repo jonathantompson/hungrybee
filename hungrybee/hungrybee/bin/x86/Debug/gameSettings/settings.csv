@@ -14,9 +14,9 @@ cameraRotationSpeed,0.002
 EPSILON,1E-08
 forceListCapacity,4
 physicsObjectsStartingCapacity,64
-gravity,4
+gravity,9.18
 renderBoundingObjects,1
 pauseOnCollision,0
 renderCollisions,0
 limitXYCollisionResponce,1
-coeffRestitution,0.3
+coeffRestitution,0.2

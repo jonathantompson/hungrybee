@@ -46,6 +46,7 @@ namespace hungrybee
         protected static float term1 = 1.0f, term2 = 1.0f, term3 = 1.0f, term4 = 1.0f;
         protected static float j;
         protected static float V_COLLIDING_THRESHOLD = 0.000001f;
+        protected static float IMPULSE_TO_PREVENT_RESTING = 0.01f;
         protected static Matrix zeroMat = new Matrix(0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
@@ -178,7 +179,7 @@ namespace hungrybee
         #region CheckCollidingContact()
         /// CheckCollidingContact() - Check if the current collision is colliding
         /// ***********************************************************************
-        protected bool CheckCollidingContact(ref rboState obj1State, ref rboState obj2State)
+        public bool CheckCollidingContact(ref rboState obj1State, ref rboState obj2State)
         {
             padot = GetPointVelocity(ref obj1State, colPoint);
             pbdot = GetPointVelocity(ref obj2State, colPoint);
@@ -186,10 +187,61 @@ namespace hungrybee
 
             if (vrel > V_COLLIDING_THRESHOLD)
                 return false;
-            //if (vrel > -V_COLLIDING_THRESHOLD)
-            //    return false;
+            if (vrel > -V_COLLIDING_THRESHOLD) // -vrel < V_COLLIDING_THESHOLD
+                return false;
             else
                 return true;
+        }
+        #endregion
+
+        #region GetVelForCollidingContact()
+        /// GetVelAForCollidingContact() - Find the VelA if we want to satisfy vref < -V_COLLIDING_THRESHOLD
+        /// ***********************************************************************
+        public void GetVelForCollidingContact(ref rboState obj1State, ref rboState obj2State)
+        {
+            pbdot = GetPointVelocity(ref obj2State, colPoint);
+
+            #region OLD CODE
+            /*
+            // Want, -V_COLLIDING_THRESHOLD > vrel
+            //   --> -V_COLLIDING_THRESHOLD > (padot - pbdot) . colNorm
+            //   --> -V_COLLIDING_THRESHOLD > (padot . colNorm) - (pbdot . colNorm) 
+            //   --> -V_COLLIDING_THRESHOLD + (pbdot . colNorm) > (padot . colNorm)
+            float LHS = -V_COLLIDING_THRESHOLD + Vector3.Dot(colNorm, pbdot);
+
+            //   -->  LHS > (linearVelA + [angularVelA x (p - posA)]) . colNorm
+            //   -->  LHS > (linearVelA . colNorm) + ([angularVelA x (p - posA)]) . colNorm)
+            //   -->  LHS - ([angularVelA x (p - posA)]) . colNorm) > (linearVelA . colNorm)
+            float LHS2 = LHS - Vector3.Dot(Vector3.Cross(obj1State.angularVel, (colPoint - obj1State.pos)), colNorm);
+
+            //   -->  LHS2 > (linearVelA + (deltaV*colNorm)) . colNorm)
+            //   -->  LHS2 > (linearVelA . colNorm) + (deltaV*colNorm . colNorm) 
+            //   Note: colNorm is normalized --> colNorm . colNorm = 1!
+            //   -->  LHS2 - linearVelA . colNorm > deltaV
+            float LHS3 = LHS2 - Vector3.Dot(obj1State.linearVel,colNorm);
+
+            // Add a little margin
+            float deltaV = LHS3 - V_IMPULSE_TO_PREVENT_RESTING;
+            // Return the deltaV in the direction of the collision norm added to the origional velocity.
+            return deltaV * colNorm + obj1State.linearVel;
+            */
+            #endregion
+
+            float vrel = GetRelativeVelocity(ref obj1State, ref obj2State);
+            obj1State.linearMom -= (colNorm * (((vrel * 0.5f) / obj1State.mass) + IMPULSE_TO_PREVENT_RESTING));
+            obj1State.RecalculateDerivedQuantities();
+            obj2State.linearMom += (colNorm * (((vrel * 0.5f) / obj2State.mass) + IMPULSE_TO_PREVENT_RESTING));
+            obj2State.RecalculateDerivedQuantities();
+        }
+        #endregion
+
+        #region GetRelativeVelocity()
+        public float GetRelativeVelocity(ref rboState obj1State, ref rboState obj2State)
+        {
+            padot = GetPointVelocity(ref obj1State, colPoint);
+            pbdot = GetPointVelocity(ref obj2State, colPoint);
+            vrel = Vector3.Dot(colNorm,(padot - pbdot));
+            return vrel;
         }
         #endregion
     }

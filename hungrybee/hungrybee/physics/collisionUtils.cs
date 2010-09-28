@@ -42,6 +42,7 @@ namespace hungrybee
         static Vector3 objACenter_t0 = new Vector3();
         static Vector3 objBCenter_t0 = new Vector3();
         static Vector3 objACenter_t1 = new Vector3();
+        static Vector3 objACenter_t1_Bs_Frame = new Vector3();
         static Vector3 objBCenter_t1 = new Vector3();
         static Vector3[] aabbverticies = new Vector3[8];
         static Vector3 objAMin_t0 = new Vector3();
@@ -58,6 +59,7 @@ namespace hungrybee
         static float objARadius_t0 = 0.0f;
         static float objBRadius_t0 = 0.0f;
         static float objARadius_t1 = 0.0f;
+        static float objARadius_t1_Bs_Frame = 0.0f;
         static float objBRadius_t1 = 0.0f;
 
         static float EPSILON = 0.000000000001f;
@@ -79,10 +81,10 @@ namespace hungrybee
 
             // Inputs are: SPHERE AND AABB
             else if (objA.boundingObjType == boundingObjType.SPHERE && objB.boundingObjType == boundingObjType.AABB)
-                collisionUtils.TestCollisionSphereAABBStatic(objA, objB, ref _cols, ref stateA, ref stateB);
+                collisionUtils.AddCollisionSphereAABBStatic(objA, objB, ref _cols, ref stateA, ref stateB);
 
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.SPHERE)
-                collisionUtils.TestCollisionSphereAABBStatic(objB, objA, ref _cols, ref stateA, ref stateB);
+                collisionUtils.AddCollisionSphereAABBStatic(objB, objA, ref _cols, ref stateA, ref stateB);
 
             // Inputs are: AABB
             else if (objA.boundingObjType == boundingObjType.AABB && objB.boundingObjType == boundingObjType.AABB)
@@ -1012,7 +1014,7 @@ namespace hungrybee
         #endregion
 
         #region AddCollisionSphereAABBStatic(gameObject objA, gameObject objB)
-        protected static void TestCollisionSphereAABBStatic(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA, ref rboState stateB)
+        protected static void AddCollisionSphereAABBStatic(gameObject objA, gameObject objB, ref List<collision> _cols, ref rboState stateA, ref rboState stateB)
         {
             BoundingSphere mSphere = (BoundingSphere)objA.boundingObj;
             BoundingBox mBox = (BoundingBox)objB.boundingObj;
@@ -1026,14 +1028,14 @@ namespace hungrybee
             // Bring BoundingSphere into box coordinate system --> Means we don't need to recalculate AABB dimensions in world 
             objBMat_t1 = objB.CreateScale(stateB.scale) * Matrix.CreateFromQuaternion(stateB.orient) * Matrix.CreateTranslation(stateB.pos);
             objBMatInt_t1 = Matrix.Invert(objBMat_t1);
-            objACenter_t1 = Vector3.Transform(objACenter_t1, objBMatInt_t1); // bring objA starting center into B's fram
-            objARadius_t1 = objARadius_t1 *
-                            (1.0f / Math.Max(Math.Max(stateB.scale.X, stateB.scale.Y), stateB.scale.Z)) *
-                            (1.0f / objB.modelScaleToNormalizeSize); // bring objA radius in B's frame
+            objACenter_t1_Bs_Frame = Vector3.Transform(objACenter_t1, objBMatInt_t1); // bring objA starting center into B's fram
+            objARadius_t1_Bs_Frame = objARadius_t1 *
+                                     (1.0f / Math.Max(Math.Max(stateB.scale.X, stateB.scale.Y), stateB.scale.Z)) *
+                                     (1.0f / objB.modelScaleToNormalizeSize); // bring objA radius in B's frame
 
-            Vector3 point_on_box = ClosestPointOnAABB(objACenter_t1, (BoundingBox)objB.boundingObj);
-            Vector3 AB = point_on_box - objACenter_t1;
-            float separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - objARadius_t1;
+            Vector3 point_on_box = ClosestPointOnAABB(objACenter_t1_Bs_Frame, (BoundingBox)objB.boundingObj);
+            Vector3 AB = point_on_box - objACenter_t1_Bs_Frame;
+            float separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - objARadius_t1_Bs_Frame;
 
             if (separationDistance <= 0.0f)
                 throw new Exception("collisionUtils::AddCollisionSphereAABBStatic() - Objects are overlapping. Binomial search routine must have failed");
@@ -1041,9 +1043,8 @@ namespace hungrybee
                 return;
 
             // Transform point and the normal into world space
-            Vector3 normal_on_box = GetAABBNormalFromPointOnAABB(point_on_box, mBox.Min, mBox.Max);
             Vector3 point = Vector3.Transform(point_on_box, objBMat_t0);
-            Vector3 normal = Vector3.Transform(normal_on_box, objBMat_t0);
+            Vector3 normal = Vector3.Normalize(objACenter_t1 - point);  // Vector pointing towards box center from the point on the box
 
             _cols.Add(new collision(collisionType.VERTEX_FACE,
                                     objA, objB,
