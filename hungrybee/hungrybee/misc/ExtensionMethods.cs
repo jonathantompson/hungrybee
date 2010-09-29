@@ -24,7 +24,7 @@ namespace ExtensionMethods
     /// </summary>
     public static class MyExtensions
     {
-        static float PRECISION = 0.0000001f;
+        static float PRECISION = 0.000001f;
 
         public static bool testFloatEquality(float f1, float f2)
         {
@@ -96,6 +96,25 @@ namespace ExtensionMethods
         public static float SquaredLength(this Vector3 vec)
         {
             return (vec.X * vec.X) + (vec.Y * vec.Y) + (vec.Z * vec.Z);
+        }
+
+        // http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/index.htm
+        static float q_w = 0.0f;
+        static float EPSILON = 0.00001f;
+        public static void GetAxisAngleFromQuaternion(ref Quaternion quat, ref Vector3 axis, ref float angle)
+        {
+            q_w = (float)Math.Sqrt(quat.X * quat.X + quat.Y * quat.Y + quat.Z * quat.Z + quat.W * quat.W);
+            if (Math.Abs(q_w - 1.0f) > EPSILON)
+                throw new Exception("forcePlayerInput::GetTorque() - rotError quaternion is not unit length!");
+            angle = 2.0f * (float)Math.Acos(quat.W);
+
+            float s = (float)Math.Sqrt(1 - quat.W * quat.W);
+            if (Math.Abs(s) < EPSILON) // Test so that we don't divide by zero
+            { axis.X = quat.X; axis.Y = quat.Y; axis.Z = quat.Z; }
+            else
+            { s = 1.0f / s; axis.X = quat.X * s; axis.Y = quat.Y * s; axis.Z = quat.Z * s; }
+
+            axis = Vector3.Normalize(axis);
         }
     }
 }

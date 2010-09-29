@@ -1,17 +1,21 @@
-﻿- DEBUG WHY HITTING THE CORNER OF THE AABB CAUSES FREEZE / PLAYER TO DISAPEAR / CRASH
-  A) I NOTICED RESTING CONTACTS BLOWS UP
-
-
-- Implement player controls: using quaternions to give half distances and RK4 integrator
+﻿- Implement player controls: using quaternions to give half distances and RK4 integrator
+- Implement enemy direction pointing --> Face where they're following (but use desired oritiontation to smooth out movements)
+- Implement HUD display for frame-rate and player health
+- Implement player Vs. enemy collision health or kill animation (set object to non-collidable, non-movable and increase scale)
 - Load the models in...  Having lots of difficulty
+
+STUFF I WOULD LIKE TO DO IF I HAVE TIME
 - Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
-- Fix swept sphere collision code for AABB-sphere collisions --> Glancing collisions are failing to be detected.
+- Fix swept sphere collision code for AABB-sphere collisions --> Glancing collisions are failing to be detected. (where velocity is nearly perpendicular to collision normal)
+- Fix swept collision bug where collision time returns 0.0f if the objects start close but not intersecting (0.0000001f distance)
 - Actually implement a LCP solver so that I can do Baraff's "Fast Contact Force Computation for Nonpenetrating Rigid Bodies"
-  a) Either implement the paper as is OR
-  b) Try and bring in Dave Eberly's Geometric tools LCP solver as C++ managed code.
+  a) Resting contact code is a hodge-podge of non-physical hacks.  Anti gravity force to allow resting vertically + small impulses to push resting objects apart.
+  b) Either implement the paper as is OR
+  c) Try and bring in Dave Eberly's Geometric tools LCP solver as C++ managed code.
 - Reduce redundant computations in collision detecdtion.
   a) Only flag dirty AABB for objects that move.
   b) Cache matricies and transformed bounding objects for fine collision detection (nothing saved at all!)
+  c) By-and-large the collision detection / responce routine is horribly unoptimized
 - Coarse tune data structures are wasteful.  Some are O(n^2).  Reduce to only have (numCollidables choose 2).
 - Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around 
     floating point accuracy for large velocities

@@ -45,8 +45,8 @@ namespace hungrybee
         protected static float numerator = 0.0f;
         protected static float term1 = 1.0f, term2 = 1.0f, term3 = 1.0f, term4 = 1.0f;
         protected static float j;
-        protected static float V_COLLIDING_THRESHOLD = 0.000001f;
-        protected static float IMPULSE_TO_PREVENT_RESTING = 0.01f;
+        protected static float V_COLLIDING_THRESHOLD = 0.0001f;
+        protected static float IMPULSE_TO_PREVENT_RESTING = 0.001f;
         protected static Matrix zeroMat = new Matrix(0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
@@ -194,19 +194,18 @@ namespace hungrybee
         }
         #endregion
 
-        #region GetVelForCollidingContact()
-        /// GetVelAForCollidingContact() - Find the VelA if we want to satisfy vref < -V_COLLIDING_THRESHOLD
+        #region GetMomForCollidingContact()
+        /// GetMomForCollidingContact() - Find the Momentum impulse if we want to satisfy vref < -V_COLLIDING_THRESHOLD
         /// ***********************************************************************
-        public void GetVelForCollidingContact(ref rboState obj1State, ref rboState obj2State)
+        public Vector3 GetMomForCollidingContact(ref rboState obj1State, ref rboState obj2State)
         {
-            pbdot = GetPointVelocity(ref obj2State, colPoint);
-
             #region OLD CODE
             /*
             // Want, -V_COLLIDING_THRESHOLD > vrel
             //   --> -V_COLLIDING_THRESHOLD > (padot - pbdot) . colNorm
             //   --> -V_COLLIDING_THRESHOLD > (padot . colNorm) - (pbdot . colNorm) 
             //   --> -V_COLLIDING_THRESHOLD + (pbdot . colNorm) > (padot . colNorm)
+            pbdot = GetPointVelocity(ref obj2State, colPoint);
             float LHS = -V_COLLIDING_THRESHOLD + Vector3.Dot(colNorm, pbdot);
 
             //   -->  LHS > (linearVelA + [angularVelA x (p - posA)]) . colNorm
@@ -228,10 +227,7 @@ namespace hungrybee
             #endregion
 
             float vrel = GetRelativeVelocity(ref obj1State, ref obj2State);
-            obj1State.linearMom -= (colNorm * (((vrel * 0.5f) / obj1State.mass) + IMPULSE_TO_PREVENT_RESTING));
-            obj1State.RecalculateDerivedQuantities();
-            obj2State.linearMom += (colNorm * (((vrel * 0.5f) / obj2State.mass) + IMPULSE_TO_PREVENT_RESTING));
-            obj2State.RecalculateDerivedQuantities();
+            return (colNorm * (vrel + IMPULSE_TO_PREVENT_RESTING));
         }
         #endregion
 

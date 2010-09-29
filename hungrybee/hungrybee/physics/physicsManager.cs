@@ -52,12 +52,13 @@ namespace hungrybee
 
         // Resting contacts
         protected List<collision> restingContacts;
+        protected static Vector3 lImpulse = new Vector3();
 
         protected static float EPSILON = 0.00000001f;
         public static float BISECTION_TOLLERANCE = 0.001f;
-        public static float RESTING_CONTACT_TOLLERANCE = 0.01f; // typically this is 10 x BISECTION_TOLLERANCE
-        protected static int BISECTION_MAXITERATIONS = 50;
-        protected static int MAX_PHYSICS_ITERATIONS = 4;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.003f; // typically this is >= 2 * BISECTION_TOLLERANCE
+        protected static int BISECTION_MAXITERATIONS = 100;
+        protected static int MAX_PHYSICS_ITERATIONS = 1000;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
 
@@ -129,12 +130,20 @@ namespace hungrybee
 
                 // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
                 intersection = SweptCollisionDetection(ref estColTime);
-                if (intersection && estColTime <= 0.0f)
-                    throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
 
                 /// ************************************
                 /// ************* HACK CODE ************
-                /// ************************************
+                /// *** *********************************
+                /// Swept collision detection sometimes triggers intersection at 
+                /// 0.0f if objects started very close together
+                if (intersection && estColTime <= 0.0f)
+                {
+                    float seperationDist = 0.0f;
+                    intersection = StaticCollisionDetection(ref seperationDist, false);
+                    if(intersection || seperationDist <= 0.0f)
+                        throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
+                }
+
                 /// Swept collision detection fails for glancing sphere AABB collisions 
                 /// (where velocity is close to perpendicular to face normal).
                 /// Do a static check on the final step. To remove obvious omissions.
@@ -144,7 +153,10 @@ namespace hungrybee
                     if (StaticCollisionDetection(ref seperationDist, false))
                         throw new Exception("physicsManager::Update() - STATIC TEST Objects were interpenetrating before first physics step!  Something went wrong");
                     if (StaticCollisionDetection(ref seperationDist, true))
+                    {
                         intersection = true; // The objects will end up intersecting
+                        estColTime = Tstep_remaining * 0.5f; // Arbitrarily estimate collision at half the time step
+                    }
                 }
                 /// ************************************
                 /// *********** END HACK CODE **********
@@ -162,8 +174,6 @@ namespace hungrybee
                     // Resolve Collision
                     ResolveCollisions(h_game.GetGameObjectManager().h_GameObjects);
 
-                    float d1 = 0.0f; StaticCollisionDetection(ref d1, false);
-
                     if(h_game.GetGameSettings().renderCollisions)
                         h_game.GetGameObjectManager().SpawnCollisions(ref collisions);
 
@@ -177,7 +187,15 @@ namespace hungrybee
                     {
                         Tstep_remaining -= Tstep_to_collision; // Remove the piecewise step from the time remaining
                         time += Tstep_to_collision;
+                        curIteration++;
                     }
+
+#if DEBUG
+                    /// If we're being really paranoid, check for collision after
+                    float d1 = 0.0f; StaticCollisionDetection(ref d1, false);
+                    if (d1 <= 0.0f)
+                        throw new Exception("Something went wrong...  Objects interpenetrate after step");
+#endif
                 }
                 else
                 {
@@ -362,7 +380,7 @@ namespace hungrybee
                 // --> This adds an antigravity force to the two objects to counteract downward motion AND Y velocity and momentum set to zero
                 if (restingContact)
                 {
-                    if ((Math.Abs(collisions[i].colNorm.X) < EPSILON) && (Math.Abs(collisions[i].colNorm.Z) < EPSILON))
+                    if ((Math.Abs(collisions[i].colNorm.X) < RESTING_CONTACT_TOLLERANCE) && (Math.Abs(collisions[i].colNorm.Z) < RESTING_CONTACT_TOLLERANCE))
                     {
                         if (!FindRestingContact(ref obj1, ref obj2))
                             restingContacts.Add(collisions[i]); // If a resting contact between the two doesn't exist, then add one
@@ -370,13 +388,36 @@ namespace hungrybee
                     else
                     {
                         // Otherwise add a small impulse to push objects APART so that we are out of resting contact threshold
-                        collisions[i].GetVelForCollidingContact(ref obj1.prevState, ref obj2.prevState);
+                        lImpulse = collisions[i].GetMomForCollidingContact(ref obj1.prevState, ref obj2.prevState);
+                        lImpulse.X *= gameSettings.collisionMask.X; lImpulse.Y *= gameSettings.collisionMask.Y; lImpulse.Z *= gameSettings.collisionMask.Z;
 
+                        if (obj1.movable && obj2.movable)
+                        {
+                            obj1.prevState.linearMom += lImpulse * 0.5f;
+                            obj2.prevState.linearMom -= lImpulse * 0.5f;
+                            obj1.prevState.RecalculateDerivedQuantities();
+                            obj2.prevState.RecalculateDerivedQuantities();
+                        }
+                        else if (obj1.movable && !obj2.movable)
+                        {
+                            obj1.prevState.linearMom += lImpulse * 1.0f;
+                            obj1.prevState.RecalculateDerivedQuantities();
+                        }
+                        else if (!obj1.movable && obj2.movable)
+                        {
+                            obj2.prevState.linearMom -= lImpulse * 1.0f;
+                            obj2.prevState.RecalculateDerivedQuantities();
+                        }
+                        else
+                            throw new Exception("physicsManager::ResolveCollisions() - Could not prevent resting contact, objects are not movable");
+
+                        /*
                         // Then recover the collision as we normally would.
                         if(collisions[i].CheckCollidingContact(ref obj1.prevState, ref obj2.prevState))
                             collisions[i].ResolveCollidingCollision(ref obj1.prevState, ref obj2.prevState);
                         else
                             throw new Exception("physicsManager::ResolveCollisions() - Could not prevent resting contact, check GetVelAForCollidingContact() results");
+                        */
                     }
                 }
             }
@@ -792,6 +833,7 @@ namespace hungrybee
                     ((gameObject)restingContacts[i].obj1).resting = true;
                     ((gameObject)restingContacts[i].obj1).prevState.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj1).prevState.linearVel.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).prevState.pos.Y += BISECTION_TOLLERANCE; // Push the object up slightly
                 }
                 if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj2).movable)
@@ -800,6 +842,7 @@ namespace hungrybee
                     ((gameObject)restingContacts[i].obj2).resting = true;
                     ((gameObject)restingContacts[i].obj2).prevState.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj2).prevState.linearVel.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).prevState.pos.Y += BISECTION_TOLLERANCE; // Push the object up slightly
                 }
             }
         }

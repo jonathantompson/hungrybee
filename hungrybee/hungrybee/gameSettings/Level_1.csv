@@ -1,13 +1,14 @@
-//, NOTE NO SPACES
+//, NOTE: NO SPACES
+//, NOTE: BOUNDING OBJECT TYPES ARE: bType = [AUTO, AABB, SPHERE]
 
-//,player, modelfile, Bounding Object Type (AUTO, AABB, SPHERE), scale, acceleration rate, desired stopping time, max velocity, jump momentum, [Pos.x, Pos.y, Pos.z]
-player,Ship,SPHERE,1.0,10.0,0.2,15.0,6.0,-3.0,-1.499,0
+//,player, modelfile, bType, scale, acceleration rate, time to reach velocity, time to reach orientation, max velocity, jump momentum, [Pos.x, Pos.y, Pos.z]
+player,Ship,SPHERE,1.0,10.0,0.2,1,15.0,6.0,-2,-1,0
 
-//,enemy, modelfile, Bounding Object Type (AUTO, AABB, SPHERE), scale, max velocity, [Pos.x, Pos.y, Pos.z]
-enemy,Ship,SPHERE,1.0,10.0,2.0,3.0,0.0
+//,enemy, modelfile, bType, scale, max velocity, [Pos.x, Pos.y, Pos.z], [Mom.x, Mom.y, Mom.z]
+enemy,Ship,SPHERE,1.0,10.0,-3.1,-1.5,0,0,0,0
 
-//,phantom,  Bounding Object Type [AABB], [Min.x, Min.y, Min.z], [Max.x, Max.y, Max.z]
-//,phantom,  Bounding Object Type [SPHERE], [Pos.x, Pos.y, Pos.z], Radius
+//,phantom,  bType[AABB], [Min.x, Min.y, Min.z], [Max.x, Max.y, Max.z]
+//,phantom,  bType[SPHERE], [Pos.x, Pos.y, Pos.z], Radius
 //,phantom,AABB,-2,-1.999,-2,-1,0,1
 
 //,cloud, # circles, # stacks per circle, # slices per circle, [Min.x, Min.y, Min.z], [Max.x, Max.y, Max.z]

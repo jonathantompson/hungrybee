@@ -30,7 +30,6 @@ namespace hungrybee
         #region Local Variables
 
         public float maxAcceleration;
-        public float accelTime;
         public float playerHealth;
         public float jumpMomentum;
         public bool jumping;
@@ -43,12 +42,11 @@ namespace hungrybee
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
         public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale,
-                                float _maxAcceleration, float _accelTime, float _maxVel, float _jumpMomentum, Vector3 _pos )
+                                float _maxAcceleration, float _accelVTime, float _accelOTime, float _maxVel, float _jumpMomentum, Vector3 _pos )
             : base(game, modelfile, _objType)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
             maxAcceleration = _maxAcceleration;
-            accelTime = _accelTime;
             playerHealth = 100.0f;
             base.movable = true;
             base.collidable = true;
@@ -59,7 +57,8 @@ namespace hungrybee
             jumping = false;
 
             // Setup the force structures to describe movement
-            forcePlayerInput = new forcePlayerInput(Vector3.Zero, accelTime, maxAcceleration);
+            forcePlayerInput = new forcePlayerInput(Vector3.Zero, Quaternion.Identity, _accelVTime, maxAcceleration, _accelOTime);
+            ((forcePlayerInput)forcePlayerInput).SetDesiredOrientationFromForwardVector(new Vector3(1,0,0)); // Player starts facing right
 
             // Add the force structures to the forceList for enumeration at runtime
             base.forceList.Add(forcePlayerInput);
@@ -77,14 +76,14 @@ namespace hungrybee
             base.Update(gameTime);
 
             // Get player input
-            GetPlayerInputDesiredVelocity(gameTime);
+            GetPlayerInput(gameTime);
         }
         #endregion
 
-        #region GetPlayerInputVelocity()
+        #region GetPlayerInput()
         /// GetPlayerInput() - Move the player and set the desired velocity (effectively an impulse
         /// ***********************************************************************
-        public void GetPlayerInputDesiredVelocity(GameTime gameTime)
+        public void GetPlayerInput(GameTime gameTime)
         {
             // Zero out the acceleration
             bool keyPressed = false;
@@ -92,13 +91,13 @@ namespace hungrybee
             float playerVelocity = 2.5f;
 
             KeyboardState keyState = Keyboard.GetState();
-            if (keyState.IsKeyDown(Keys.Left)) // Ignore case when both keys are pressed
+            if (keyState.IsKeyDown(Keys.Left) && !keyState.IsKeyDown(Keys.Right)) // Ignore case when both keys are pressed
             {
                 desiredVelValue += new Vector3(-1.0f, 0.0f, 0.0f);
                 keyPressed = true;
             }
 
-            if (keyState.IsKeyDown(Keys.Right)) // Ignore case when both keys are pressed
+            if (keyState.IsKeyDown(Keys.Right) && !keyState.IsKeyDown(Keys.Left))
             {
                 desiredVelValue += new Vector3(+1.0f, 0.0f, 0.0f);
                 keyPressed = true;
@@ -108,6 +107,7 @@ namespace hungrybee
                 desiredVelValue = Vector3.Normalize(desiredVelValue);
                 desiredVelValue = playerVelocity * desiredVelValue;
                 ((forcePlayerInput)forcePlayerInput).SetVelocity(desiredVelValue);
+                ((forcePlayerInput)forcePlayerInput).SetDesiredOrientationFromForwardVector(desiredVelValue);
             }
             else
             {

@@ -1039,8 +1039,6 @@ namespace hungrybee
 
             if (separationDistance <= 0.0f)
                 throw new Exception("collisionUtils::AddCollisionSphereAABBStatic() - Objects are overlapping. Binomial search routine must have failed");
-            if (separationDistance > physicsManager.BISECTION_TOLLERANCE)
-                return;
 
             // Transform point and the normal into world space
             Vector3 point = Vector3.Transform(point_on_box, objBMat_t0);

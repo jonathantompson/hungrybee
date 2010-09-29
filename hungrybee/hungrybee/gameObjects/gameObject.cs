@@ -348,6 +348,7 @@ namespace hungrybee
             for (int curForce = 0; curForce < forceList.Count; curForce++)
             {
                 force += forceList[curForce].GetForce(ref rboState, time);
+                torque += forceList[curForce].GetTorque(ref rboState, time);
             }
         }
         #endregion

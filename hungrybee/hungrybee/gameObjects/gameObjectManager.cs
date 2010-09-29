@@ -141,7 +141,7 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 11 )
+                        if (numPlayers == 0 && curToken.Count == 12 )
                         {
                             curObject = new gameObjectPlayer(h_game, 
                                                              curToken[1],
@@ -151,7 +151,8 @@ namespace hungrybee
                                                              float.Parse(curToken[5]),
                                                              float.Parse(curToken[6]),
                                                              float.Parse(curToken[7]),
-                                                             new Vector3(float.Parse(curToken[8]), float.Parse(curToken[9]), float.Parse(curToken[10])));
+                                                             float.Parse(curToken[8]),
+                                                             new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])));
                             numPlayers += 1;
                         }
                         else
@@ -173,14 +174,15 @@ namespace hungrybee
                             throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}",levelNumber) + ".csv");
                         break;
                     case "enemy":
-                        if (curToken.Count == 8)
+                        if (curToken.Count == 11)
                         {
                             curObject = new gameObjectEnemy(h_game,
                                                             curToken[1],
                                                             GetBoundingObjTypeFromString(curToken[2]),
                                                             float.Parse(curToken[3]),
                                                             float.Parse(curToken[4]),
-                                                            new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7])));
+                                                            new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7])),
+                                                            new Vector3(float.Parse(curToken[8]), float.Parse(curToken[9]), float.Parse(curToken[10])));
                             numEnemys += 1;
                         }
                         else
