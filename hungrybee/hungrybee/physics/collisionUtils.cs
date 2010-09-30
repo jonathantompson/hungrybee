@@ -1037,6 +1037,9 @@ namespace hungrybee
             Vector3 AB = point_on_box - objACenter_t1_Bs_Frame;
             float separationDistance = (float)Math.Sqrt(Vector3.Dot(AB, AB)) - objARadius_t1_Bs_Frame;
 
+            if (separationDistance - objARadius_t1_Bs_Frame > physicsManager.BISECTION_TOLLERANCE)
+                return; // Don't add any collisions to the list, we're too far away
+
             if (separationDistance <= 0.0f)
                 throw new Exception("collisionUtils::AddCollisionSphereAABBStatic() - Objects are overlapping. Binomial search routine must have failed");
 

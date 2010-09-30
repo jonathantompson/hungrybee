@@ -1,4 +1,5 @@
 ﻿- Implement player controls: using quaternions to give half distances and RK4 integrator
+  a) Need to center object properly --> After rotation, circle no longer lies in XY plane --> Results in some unstable behaviour I think
 - Implement enemy direction pointing --> Face where they're following (but use desired oritiontation to smooth out movements)
 - Implement HUD display for frame-rate and player health
 - Implement player Vs. enemy collision health or kill animation (set object to non-collidable, non-movable and increase scale)
