@@ -79,10 +79,10 @@ namespace hungrybee
             }
 
             // Create a basic effect
-            heightMapEffect = new BasicEffect(base.h_game.GetGraphicsDevice(), null);
+            heightMapEffect = new BasicEffect(base.h_game.h_GraphicsDevice, null);
 
             // Parse the heightMap data, creating the indicies and Normals
-            heightMapVertexDeclaration = new VertexDeclaration(base.h_game.GetGraphicsDevice(), VertexPositionNormalTexture.VertexElements);
+            heightMapVertexDeclaration = new VertexDeclaration(base.h_game.h_GraphicsDevice, VertexPositionNormalTexture.VertexElements);
             VertexPositionNormalTexture[] terrainVertices = CreateTerrainVertices();
             int[] terrainIndices = CreateTerrainIndices();
             terrainVertices = GenerateNormalsForTriangleStrip(terrainVertices, terrainIndices);
@@ -121,8 +121,8 @@ namespace hungrybee
             int width = heightMapData.GetLength(0);
             int height = heightMapData.GetLength(1);
             heightMapEffect.World = Matrix.Identity;
-            heightMapEffect.View = ((camera)base.h_game.GetCamera()).ViewMatrix;
-            heightMapEffect.Projection = ((camera)base.h_game.GetCamera()).ProjectionMatrix;
+            heightMapEffect.View = (base.h_game.h_Camera).ViewMatrix;
+            heightMapEffect.Projection = (base.h_game.h_Camera).ProjectionMatrix;
             heightMapEffect.Texture = heightMapTexture;
             heightMapEffect.TextureEnabled = true;
 
@@ -327,10 +327,10 @@ namespace hungrybee
         /// ***********************************************************************
         private void CreateBuffers(VertexPositionNormalTexture[] vertices, int[] indices)
         {
-            heightMapVertexBuffer = new VertexBuffer(base.h_game.GetGraphicsDevice(), VertexPositionNormalTexture.SizeInBytes * vertices.Length, BufferUsage.WriteOnly);
+            heightMapVertexBuffer = new VertexBuffer(base.h_game.h_GraphicsDevice, VertexPositionNormalTexture.SizeInBytes * vertices.Length, BufferUsage.WriteOnly);
             heightMapVertexBuffer.SetData(vertices);
 
-            heightMapIndexBuffer = new IndexBuffer(base.h_game.GetGraphicsDevice(), typeof(int), indices.Length, BufferUsage.WriteOnly);
+            heightMapIndexBuffer = new IndexBuffer(base.h_game.h_GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
             heightMapIndexBuffer.SetData(indices);
         }
         #endregion

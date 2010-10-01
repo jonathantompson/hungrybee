@@ -51,7 +51,6 @@ namespace hungrybee
         public rboState state;
         public rboState prevState;
         public rboState drawState;
-        public float maxVel;
         public bool movable; // Does the object react to RK4 integrator or move after collisions
         public bool collidable; // Does the object take part in collision detection
         public bool resting;
@@ -69,13 +68,12 @@ namespace hungrybee
             state = new rboState();
             prevState = new rboState();
             drawState = new rboState();
-            maxVel = float.PositiveInfinity;
             movable = false;
             collidable = false;
             h_game = game;
             modelFile = null;
             modelScaleToNormalizeSize = 1.0f;
-            forceList = new List<force>(game.GetGameSettings().forceListCapacity);
+            forceList = new List<force>(game.h_GameSettings.forceListCapacity);
             boundingObjType = boundingObjType.UNDEFINED;
             dirtyAABB = true;
         }
@@ -89,13 +87,12 @@ namespace hungrybee
             state = new rboState();
             prevState = new rboState();
             drawState = new rboState();
-            maxVel = float.PositiveInfinity;
             movable = false;
             collidable = false;
             h_game = game;
             modelFile = modelfile;
             modelScaleToNormalizeSize = 1.0f;
-            forceList = new List<force>(game.GetGameSettings().forceListCapacity);
+            forceList = new List<force>(game.h_GameSettings.forceListCapacity);
             boundingObjType = objType;
             dirtyAABB = true;
             resting = false;
@@ -124,7 +121,7 @@ namespace hungrybee
             // NOTE: bounding sphere wont change, only obj->world transform
 
             // Grab the Bounding sphere data
-            BoundingSphere bSphere = (BoundingSphere)model.Tag;
+            BoundingSphere bSphere = ((XNAUtils.ModelTag)model.Tag).bSphere;
 
             // Create a Bounding Box
             BoundingBox bBox = XNAUtils.CreateAABBFromModel(model);
@@ -168,7 +165,7 @@ namespace hungrybee
         public virtual void DrawUsingCurrentEffect(GameTime gameTime, GraphicsDevice device, Matrix view, Matrix projection, string effectTechniqueName)
         {
             // Set suitable renderstates for drawing a 3D model.
-            RenderState renderState = h_game.GetGraphicsDevice().RenderState;
+            RenderState renderState = h_game.h_GraphicsDevice.RenderState;
 
             renderState.AlphaBlendEnable = false;
             renderState.AlphaTestEnable = false;
@@ -450,26 +447,69 @@ namespace hungrybee
         }
         #endregion
 
-        #region CenterObjectOnZaxis()
+        #region CenterObjectAboutBoundingSphere()
         // Centers the object so it's bounding object center lies on the Z=0 plane
-        public void CenterObjectOnZaxis()
+        public void CenterObjectAboutBoundingSphere()
         {
             if (boundingObjType == boundingObjType.SPHERE)
             {
-                Matrix mat;
-                Vector3 objCenter = Vector3.Zero;
-                float objRadius = 0.0f;
+                BoundingSphere sphere = (BoundingSphere)boundingObj;
+                XNAUtils.ModelTag tag = (XNAUtils.ModelTag)model.Tag;
 
-                mat = CreateScale(state.scale) * Matrix.CreateFromQuaternion(state.orient) * Matrix.CreateTranslation(state.pos);
-                collisionUtils.UpdateBoundingSphere((BoundingSphere)boundingObj, mat, state.scale, this, ref objCenter, ref objRadius);
+                // Offset all the verticies by the BoundingSphere.Center if we haven't already
+                if (!tag.modelRecentered)
+                {
+                    Matrix boneMat = Matrix.Identity;
+                    Vector3 center_inBone = new Vector3();
+                    Matrix boneMat_inv = new Matrix();
+                    foreach (ModelMesh modelMesh in model.Meshes)
+                    {
+                        boneMat = GetAbsoluteTransform(modelMesh.ParentBone);
+                        boneMat_inv = Matrix.Invert(boneMat);
+                        center_inBone = Vector3.Transform(sphere.Center, boneMat_inv);
 
-                float Zoffset = objCenter.Z;
+                        // Get the bone vertex declaration
+                        ModelMeshPart part = modelMesh.MeshParts[0];  // a model can contain multiple MeshParts (just need first one to get declaration)
+                        VertexElement[] vertexElements = part.VertexDeclaration.GetVertexElements();
+                        int sizeInBytes = part.VertexStride;
 
-                state.pos -= new Vector3(0.0f, 0.0f, Zoffset);
-                prevState.pos -= new Vector3(0.0f, 0.0f, Zoffset);
+                        // Load the verticies from the model
+                        VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[modelMesh.VertexBuffer.SizeInBytes / part.VertexStride];
+                        modelMesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+
+                        // Offset the verticies
+                        for (int i = 0; i < vertices.Length; i++)
+                        {
+                            vertices[i].Position = vertices[i].Position - center_inBone;
+                        }
+
+                        // Store the verticies back in the model
+                        modelMesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices);
+
+                        modelMesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+                    }
+
+                }
+
+                // Now offset the BoundingSphere
+                sphere.Center = Vector3.Zero;
+                tag.modelRecentered = true;
+                tag.bSphere = sphere;
+                model.Tag = tag;
+                boundingObj = (Object)sphere;
+
             }
             else
                 throw new Exception("gameObject::CenterObjectOnZaxis() - Something went wrong.  CenterObjectOnZaxis should only be used on SPHERE bounding objects");
+        }
+        #endregion
+
+        #region GetAbsoluteTransform()
+        public static Matrix GetAbsoluteTransform(ModelBone bone)
+        {
+            if (bone == null)
+                return Matrix.Identity;
+            return bone.Transform * GetAbsoluteTransform(bone.Parent);
         }
         #endregion
     }

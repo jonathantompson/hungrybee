@@ -52,6 +52,8 @@ namespace hungrybee
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f);
         protected static Vector3 temp = new Vector3();
+        protected static float collisionAngleToHorizontal = 0.0f;
+
         #endregion
 
         #region Constructor - collision(...full constructor...)
@@ -95,7 +97,6 @@ namespace hungrybee
         /// ***********************************************************************
         public bool ResolveCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
         {
-
             if (CheckCollidingContact(ref obj1State, ref obj2State))
             {
                 ResolveCollidingCollision(ref obj1State, ref obj2State);
@@ -103,6 +104,43 @@ namespace hungrybee
             }
             else
                 return true;
+        }
+        #endregion
+
+        #region ResolvePlayerEnemyCollision()
+        /// ResolveCollision() - Add impulse for collision contacts and return false in this case.  
+        /// Return true if the contact is a resting contact and needs processing later.
+        /// ***********************************************************************
+        public bool ResolvePlayerEnemyCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State, float collisionAngleTollerence)
+        {
+            // Two Cases:
+            // A) Collision normal is too shallow --> player is hurt. Push player away and reduce health
+            // B) Else, set Enemy to die sequence.
+            if (obj1 is gameObjectEnemy)
+                colNorm = -1.0f * colNorm; // Normal defined from obj2 to obj1
+            colNorm.X = Math.Abs(colNorm.X); // Bring the normal into the Right half plane only
+
+            // Theta = arccos( a . b / (|a|*|b|))
+            //       = arccos( a . b )    if both vectors are normal
+            collisionAngleToHorizontal = Math.Abs((float)Math.Acos(Vector3.Dot(colNorm, Vector3.Right)));
+
+            if(collisionAngleToHorizontal < collisionAngleTollerence)
+            {
+                if(obj1 is gameObjectEnemy)
+                    obj1.KillEnemy();
+                else
+                    obj2.KillEnemy();
+            } else {
+                if(obj1 is gameObjectPlayer)
+                    obj1.HurtPlayer();
+                else
+                    obj2.HurtPlayer();
+            }
+
+            // Now bounce the player off the enemy
+            
+
+            return false;
         }
         #endregion
 

@@ -57,7 +57,7 @@ namespace hungrybee
             state.RecalculateDerivedQuantities();
 
             this.linearVel = state.linearVel;
-            //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.GetGameSettings().physicsMinVel, rboObject.maxVel);
+            //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.h_GameSettings.physicsMinVel, rboObject.maxVel);
 
             this.spin = state.spin;
             // Get force and torque from rboObject at time & deltaTime
@@ -72,7 +72,7 @@ namespace hungrybee
         public void Evaluate(ref rboState initialState, float time, gameObject rboObject)
         {
             this.linearVel = initialState.linearVel;
-            //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.GetGameSettings().physicsMinVel, rboObject.maxVel);
+            //physicsManager.ClipVelocity(ref this.linearVel, rboObject.h_game.h_GameSettings.physicsMinVel, rboObject.maxVel);
 
             this.spin = initialState.spin;
             // Get force and torque from rboObject at time & deltaTime

@@ -95,8 +95,8 @@ namespace hungrybee
         /// ***********************************************************************
         public void LoadContent()
         {
-            numCollidableObjects = h_game.GetGameObjectManager().GetNumberCollidableObjects();
-            numObjects = h_game.GetGameObjectManager().h_GameObjects.Count;
+            numCollidableObjects = h_game.h_GameObjectManager.GetNumberCollidableObjects();
+            numObjects = h_game.h_GameObjectManager.h_GameObjects.Count;
             initCoarseCollisionDetection();
             initFineCollisionDetection();
         }
@@ -126,7 +126,7 @@ namespace hungrybee
                 CheckRestingContacts();
 
                 // Try taking a RK4 Step for each object in h_game.gameObjectManager
-                TakeRK4Step(time, Tstep_remaining, h_game.GetGameObjectManager().h_GameObjects);
+                TakeRK4Step(time, Tstep_remaining, h_game.h_GameObjectManager.h_GameObjects);
 
                 // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
                 intersection = SweptCollisionDetection(ref estColTime);
@@ -172,12 +172,12 @@ namespace hungrybee
                     RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
 
                     // Resolve Collision
-                    ResolveCollisions(h_game.GetGameObjectManager().h_GameObjects);
+                    ResolveCollisions(h_game.h_GameObjectManager.h_GameObjects);
 
-                    if(h_game.GetGameSettings().renderCollisions)
-                        h_game.GetGameObjectManager().SpawnCollisions(ref collisions);
+                    if(h_game.h_GameSettings.renderCollisions)
+                        h_game.h_GameObjectManager.SpawnCollisions(ref collisions);
 
-                    if (h_game.GetGameSettings().pauseOnCollision && (pauseGame == false))
+                    if (h_game.h_GameSettings.pauseOnCollision && (pauseGame == false))
                     {
                         // Pause the game
                         pauseGame = true;
@@ -201,7 +201,7 @@ namespace hungrybee
                 {
                     // No collision detected, just step the remaining amount
                     Tstep_remaining -= Tstep_remaining;
-                    CopyStateToPrevState(time, h_game.GetGameObjectManager().h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
+                    CopyStateToPrevState(time, h_game.h_GameObjectManager.h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
                 }
             }
 
@@ -242,7 +242,7 @@ namespace hungrybee
                                         String.Format("{0:e}", minSeparationDistance) + ", collided = " + (collided ? "true" : "false"));
 
                 // Take a step to the estimated collision time
-                TakeRK4Step(time, Tstep_to_collision, h_game.GetGameObjectManager().h_GameObjects);
+                TakeRK4Step(time, Tstep_to_collision, h_game.h_GameObjectManager.h_GameObjects);
 
                 if (collided = StaticCollisionDetection(ref minSeparationDistance, true)) // Doesn't use swept tests.  Just return binary if objects overlap
                 {
@@ -266,7 +266,7 @@ namespace hungrybee
             }
 
             // Move the simulator forward to this new time
-            CopyStateToPrevState(time, h_game.GetGameObjectManager().h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
+            CopyStateToPrevState(time, h_game.h_GameObjectManager.h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
 
             return Tstep_to_collision;
         }
@@ -286,13 +286,13 @@ namespace hungrybee
             {
                 for (int j = i + 1; j < (numObjects); j++)
                 {
-                    if (h_game.GetGameObjectManager().h_GameObjects[i].collidable && h_game.GetGameObjectManager().h_GameObjects[j].collidable)
+                    if (h_game.h_GameObjectManager.h_GameObjects[i].collidable && h_game.h_GameObjectManager.h_GameObjects[j].collidable)
                     {
                         AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
                         if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
                         {
-                            objA = h_game.GetGameObjectManager().h_GameObjects[i];
-                            objB = h_game.GetGameObjectManager().h_GameObjects[j];
+                            objA = h_game.h_GameObjectManager.h_GameObjects[i];
+                            objB = h_game.h_GameObjectManager.h_GameObjects[j];
                             // Objects potentially overlap --> Check the low level collision routines
                             collisionUtils.AddCollisionStatic(objA, objB, ref collisions, ref objA.state, ref objB.state);
                         }
@@ -352,12 +352,12 @@ namespace hungrybee
                     // Calculate rbo Derived quantities
                     curObject.state.RecalculateDerivedQuantities();
                     curObject.state.time = time + deltaTime;
-                    // physicsManager.ClipVelocity(ref curObject.state.linearVel, h_game.GetGameSettings().physicsMinVel, curObject.maxVel);
+                    // physicsManager.ClipVelocity(ref curObject.state.linearVel, h_game.h_GameSettings.physicsMinVel, curObject.maxVel);
                 }
             }
 
             // We've moved the objects, so the AABB data is no longer valid --> Flag it
-            h_game.GetGameObjectManager().SetDirtyBoundingBoxes(); 
+            h_game.h_GameObjectManager.SetDirtyBoundingBoxes(); 
         }
         #endregion
 
@@ -373,8 +373,14 @@ namespace hungrybee
                 gameObject obj1 = (gameObject)collisions[i].obj1;
                 gameObject obj2 = (gameObject)collisions[i].obj2;
 
-                // if resolve collisions return true --> resting contact.
-                restingContact = collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
+                // Resolve collisions
+                // PLAYER - ENEMY
+                if((obj1 is gameObjectPlayer && obj2 is gameObjectEnemy) || (obj1 is gameObjectEnemy && obj2 is gameObjectPlayer))
+                    restingContact = collisions[i].ResolvePlayerEnemyCollision(gameObjects, ref obj1.prevState, ref obj2.prevState, h_game.h_GameSettings.enemyCollisionAngleTollerence);
+                
+                // GENERIC COLLISION --> RESOLVE WITH IMPULSE RESPONCE OR RESTING CONTACT
+                else // Resolve Generic Collsion
+                    restingContact = collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
                 
                 // Add a resting contact, if the collision normal is vertical (ie a collision against the ground)
                 // --> This adds an antigravity force to the two objects to counteract downward motion AND Y velocity and momentum set to zero
@@ -500,7 +506,7 @@ namespace hungrybee
         /// ***********************************************************************
         public void initCoarseCollisionDetection()
         {
-            int STARTING_VECTOR_SIZE = h_game.GetGameSettings().physicsObjectsStartingCapacity;
+            int STARTING_VECTOR_SIZE = h_game.h_GameSettings.physicsObjectsStartingCapacity;
 
             // Reset all object overlap statuses.
             AABBOverlapStatus = new List<AABBOverlap>(STARTING_VECTOR_SIZE);
@@ -514,7 +520,7 @@ namespace hungrybee
             AABBZaxis = new List<int>(STARTING_VECTOR_SIZE);
             for (int i = 0; i < numObjects; i++)
             {
-                if (h_game.GetGameObjectManager().h_GameObjects[i].collidable)
+                if (h_game.h_GameObjectManager.h_GameObjects[i].collidable)
                 {
                     AABBXaxis.Add(i); AABBYaxis.Add(i); AABBZaxis.Add(i);
                 }
@@ -534,40 +540,40 @@ namespace hungrybee
         public void CoarseCollisionDetection()
         {
 	        // Update Bounding boxes
-            h_game.GetGameObjectManager().UpdateCoarseBoundingBoxes();
+            h_game.h_GameObjectManager.UpdateCoarseBoundingBoxes();
 
             // Do an insertion sort on each axis list to order objects, by minimum BB vertex
             // Insertion sort is O(n) when almost sorted, therefore best for slowly moving objects
             InsertionSortAABBs(ref AABBXaxis, 
-                               ref h_game.GetGameObjectManager().h_GameObjects, 
+                               ref h_game.h_GameObjectManager.h_GameObjects, 
                                numCollidableObjects, 
                                new FUNC_AXISSELECT(xAxisMinSel));
             InsertionSortAABBs(ref AABBYaxis, 
-                               ref h_game.GetGameObjectManager().h_GameObjects,
+                               ref h_game.h_GameObjectManager.h_GameObjects,
                                numCollidableObjects, 
                                new FUNC_AXISSELECT(yAxisMinSel));
             InsertionSortAABBs(ref AABBZaxis, 
-                               ref h_game.GetGameObjectManager().h_GameObjects,
+                               ref h_game.h_GameObjectManager.h_GameObjects,
                                numCollidableObjects, 
                                new FUNC_AXISSELECT(zAxisMinSel));
 
             // Now Find all overlaps by doing sweep of each axis lists.
             SweepAxisList(ref AABBXaxis, 
-                          ref h_game.GetGameObjectManager().h_GameObjects,
+                          ref h_game.h_GameObjectManager.h_GameObjects,
                           numCollidableObjects,
                           numObjects,
                           new FUNC_AXISSELECT(xAxisMinSel),
                           new FUNC_AXISSELECT(xAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusXaxis));
             SweepAxisList(ref AABBYaxis,
-                          ref h_game.GetGameObjectManager().h_GameObjects,
+                          ref h_game.h_GameObjectManager.h_GameObjects,
                           numCollidableObjects,
                           numObjects,
                           new FUNC_AXISSELECT(yAxisMinSel),
                           new FUNC_AXISSELECT(yAxisMaxSel),
                           new FUNC_STATUSSELECT(SetOverlapStatusYaxis));
             SweepAxisList(ref AABBZaxis,
-                          ref h_game.GetGameObjectManager().h_GameObjects,
+                          ref h_game.h_GameObjectManager.h_GameObjects,
                           numCollidableObjects,
                           numObjects,
                           new FUNC_AXISSELECT(zAxisMinSel),
@@ -740,13 +746,13 @@ namespace hungrybee
 				for(int j = i+1; j < (numObjects); j ++)
 				{
 
-                    if (h_game.GetGameObjectManager().h_GameObjects[i].collidable && h_game.GetGameObjectManager().h_GameObjects[j].collidable)
+                    if (h_game.h_GameObjectManager.h_GameObjects[i].collidable && h_game.h_GameObjectManager.h_GameObjects[j].collidable)
                     {
                         AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
                         if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
                         {
-                            objA = h_game.GetGameObjectManager().h_GameObjects[i];
-                            objB = h_game.GetGameObjectManager().h_GameObjects[j];
+                            objA = h_game.h_GameObjectManager.h_GameObjects[i];
+                            objB = h_game.h_GameObjectManager.h_GameObjects[j];
                             // Objects potentially overlap --> Check the low level collision routines
                             if (collisionUtils.TestSweptCollision(objA, objB,
                                                                  ref estColTime,
@@ -777,13 +783,13 @@ namespace hungrybee
             {
                 for (int j = i + 1; j < (numObjects); j++)
                 {
-                    if (h_game.GetGameObjectManager().h_GameObjects[i].collidable && h_game.GetGameObjectManager().h_GameObjects[j].collidable)
+                    if (h_game.h_GameObjectManager.h_GameObjects[i].collidable && h_game.h_GameObjectManager.h_GameObjects[j].collidable)
                     {
                         AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
                         if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
                         {
-                            objA = h_game.GetGameObjectManager().h_GameObjects[i];
-                            objB = h_game.GetGameObjectManager().h_GameObjects[j];
+                            objA = h_game.h_GameObjectManager.h_GameObjects[i];
+                            objB = h_game.h_GameObjectManager.h_GameObjects[j];
                             // Objects potentially overlap --> Check the low level collision routines
                             if(endstate)
                                 colDetected = collisionUtils.TestStaticCollision(objA, objB,
@@ -829,7 +835,7 @@ namespace hungrybee
                 if (!((gameObject)restingContacts[i].obj1).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj1).movable)
                 {
-                    ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.GetGameSettings().gravity);
+                    ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.h_GameSettings.gravity);
                     ((gameObject)restingContacts[i].obj1).resting = true;
                     ((gameObject)restingContacts[i].obj1).prevState.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj1).prevState.linearVel.Y = 0.0f;
@@ -838,7 +844,7 @@ namespace hungrybee
                 if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj2).movable)
                 {
-                    ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.GetGameSettings().gravity);
+                    ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.h_GameSettings.gravity);
                     ((gameObject)restingContacts[i].obj2).resting = true;
                     ((gameObject)restingContacts[i].obj2).prevState.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj2).prevState.linearVel.Y = 0.0f;

@@ -134,7 +134,6 @@ namespace hungrybee
         public float timeToReachOrientation;
         public float maxAcceleration;
         public float maxAcceleration_squared;
-        public bool restartSlerp;  // bool to indicate the player has changed facing direction
 
         // Some temp values to avoid constant memory allocation
         public static Vector3 rotationAxis = new Vector3();
@@ -220,6 +219,93 @@ namespace hungrybee
                 angularAccel = 2.0f * (rotationAngle - angularVel * timeToReachOrientation) / (timeToReachOrientation * timeToReachOrientation);
             }
         
+            // torque = moment of inertia * angularAcceleration (angularAcceleration is a vector in direction of axis and length
+            return Vector3.Transform(angularAccel * rotationAxis, state.Itensor);
+
+        }
+    }
+    #endregion
+
+    /// ** forceSetOrientation
+    /// ** Force to apply torque to try and orient the model
+    /// ***********************************************************************
+    #region forceSetOrientation : force
+    public class forceSetOrientation : force
+    {
+        public Quaternion desiredOrientation;
+        public float timeToReachOrientation;
+
+        // Some temp values to avoid constant memory allocation
+        public static Vector3 rotationAxis = new Vector3();
+        public static float rotationAngle = 0.0f;
+        public static Quaternion rotError = new Quaternion();
+        public static Quaternion orientionInverse = new Quaternion();
+        public static float EPSILON = 0.00000000001f;
+
+        public forceSetOrientation(Quaternion _desiredOrientation, float _timeToReachOrientation)
+        {
+            timeToReachOrientation = _timeToReachOrientation;
+            desiredOrientation = _desiredOrientation;
+        }
+
+        public override Vector3 GetForce(ref rboState state, float time)
+        {
+            return Vector3.Zero;
+        }
+
+        public void SetDesiredOrientationFromForwardVector(Vector3 forward)
+        {
+            // Want desiredOrientation to be a Quaterion to move player from <0,0,1> to the forward vector
+            rotationAxis = Vector3.Normalize(Vector3.Cross(Vector3.Backward, forward));
+            // http://en.wikipedia.org/wiki/Dot_product --> theta = arccos( a . b / (||a|| ||b||))
+            //                                          --> theta = arccos( a . b )       <-- IF A AND B ARE UNIT NORMAL
+            // Could also get angle from un-normalized cross product a x b = a.b.sin(theta).n^
+            rotationAngle = -(float)Math.Acos(Vector3.Dot(Vector3.Backward, Vector3.Normalize(forward)));
+            desiredOrientation = Quaternion.CreateFromAxisAngle(rotationAxis, rotationAngle);
+        }
+
+        // arrive code is akin to AI for games textbook (Millington & Funge), arrive behaviour pg 60-63
+        protected static float TARGET_RADIUS = 0.0174532f; // (2pi / 360) radians = 1 degree
+        protected static float SLOW_DOWN_RADIUS = 0.174532f; // 10 degrees
+        public override Vector3 GetTorque(ref rboState state, float time)
+        {
+            // Note: q^-1 = q* / ||q||^2     (q* is the conjugate)
+            // Therefore for unit quaternions, q^-1 = q*
+            orientionInverse = state.orient; orientionInverse.Conjugate();
+            orientionInverse = Quaternion.Normalize(orientionInverse);
+            rotError = Quaternion.Multiply(desiredOrientation, orientionInverse);
+            rotError = Quaternion.Normalize(rotError);
+
+            // NOW GET AN AXIS ANGLE REPRESENTATION TO GO FROM Q1 TO Q2
+            MyExtensions.GetAxisAngleFromQuaternion(ref rotError, ref rotationAxis, ref rotationAngle);
+
+            // Work out the current angular velocity around the axis
+            float angularVel = Vector3.Dot(state.angularVel, rotationAxis);
+
+            if (rotationAngle < TARGET_RADIUS) // We're there, no need for any torque
+            {
+                state.angularVel = Vector3.Zero;
+                state.angularMom = Vector3.Zero;
+                return Vector3.Zero;
+            }
+
+            float angularAccel = 0.0f;
+            if (rotationAngle < SLOW_DOWN_RADIUS)
+            {
+                // We're close to where we want to be, so just try and stop the rotations in the desired time
+                // OMEGA = w_0 * t + 1/2 * a * t * t (want OMEGA = 0, in set t --> solve for a)
+                // --> a = -2 * w_0 / t
+                angularAccel = -2.0f * angularVel / timeToReachOrientation;
+            }
+            else
+            {
+                // Calculate the acceleration around the axis needed to get to the target orientation in the specified time
+                // NOTE: It will actually take longer than this since we begin to slow down
+                // OMEGA = w_0 * t + 1/2 * a * t * t
+                // --> a = 2 * (OMEGA - w_0 * t) / (t * t)                  (rad / s^2 )
+                angularAccel = 2.0f * (rotationAngle - angularVel * timeToReachOrientation) / (timeToReachOrientation * timeToReachOrientation);
+            }
+
             // torque = moment of inertia * angularAcceleration (angularAcceleration is a vector in direction of axis and length
             return Vector3.Transform(angularAccel * rotationAxis, state.Itensor);
 

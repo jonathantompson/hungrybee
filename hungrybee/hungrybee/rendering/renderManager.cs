@@ -68,24 +68,24 @@ namespace hungrybee
         public void LoadContent()
         {
 
-            spriteBatch = new SpriteBatch(h_game.GetGraphicsDevice());
-            spriteFont = h_game.Content.Load<SpriteFont>(h_game.GetGameSettings().fontFile);
-            postprocessEffect = h_game.Content.Load<Effect>(h_game.GetGameSettings().postprocessEffectFile);
-            sketchTexture = h_game.Content.Load<Texture2D>(h_game.GetGameSettings().sketchTextureFile);
+            spriteBatch = new SpriteBatch(h_game.h_GraphicsDevice);
+            spriteFont = h_game.Content.Load<SpriteFont>(h_game.h_GameSettings.fontFile);
+            postprocessEffect = h_game.Content.Load<Effect>(h_game.h_GameSettings.postprocessEffectFile);
+            sketchTexture = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.sketchTextureFile);
 
             // Change the model to use our custom cartoon shading effect.
-            Effect cartoonEffect = h_game.Content.Load<Effect>(h_game.GetGameSettings().cartoonEffectFile);
+            Effect cartoonEffect = h_game.Content.Load<Effect>(h_game.h_GameSettings.cartoonEffectFile);
 
-            h_game.GetGameObjectManager().ChangeEffectUsedByModels(cartoonEffect);
+            h_game.h_GameObjectManager.ChangeEffectUsedByModels(cartoonEffect);
 
             // Create two custom rendertargets.
-            PresentationParameters pp = h_game.GetGraphicsDevice().PresentationParameters;
+            PresentationParameters pp = h_game.h_GraphicsDevice.PresentationParameters;
 
-            sceneRenderTarget = new RenderTarget2D(h_game.GetGraphicsDevice(),
+            sceneRenderTarget = new RenderTarget2D(h_game.h_GraphicsDevice,
                 pp.BackBufferWidth, pp.BackBufferHeight, 1,
                 pp.BackBufferFormat, pp.MultiSampleType, pp.MultiSampleQuality);
 
-            normalDepthRenderTarget = new RenderTarget2D(h_game.GetGraphicsDevice(),
+            normalDepthRenderTarget = new RenderTarget2D(h_game.h_GraphicsDevice,
                 pp.BackBufferWidth, pp.BackBufferHeight, 1,
                 pp.BackBufferFormat, pp.MultiSampleType, pp.MultiSampleQuality);
         }
@@ -115,7 +115,7 @@ namespace hungrybee
         public override void Update(GameTime gameTime)
         {
             // Update the sketch overlay texture jitter animation.
-            if (h_game.GetGameSettings().RenderSettings.SketchJitterSpeed > 0)
+            if (h_game.h_GameSettings.RenderSettings.SketchJitterSpeed > 0)
             {
                 timeToNextJitter -= gameTime.ElapsedGameTime;
 
@@ -124,7 +124,7 @@ namespace hungrybee
                     sketchJitter.X = (float)random.NextDouble();
                     sketchJitter.Y = (float)random.NextDouble();
 
-                    timeToNextJitter += TimeSpan.FromSeconds(h_game.GetGameSettings().RenderSettings.SketchJitterSpeed);
+                    timeToNextJitter += TimeSpan.FromSeconds(h_game.h_GameSettings.RenderSettings.SketchJitterSpeed);
                 }
             }
             base.Update(gameTime);
@@ -140,50 +140,50 @@ namespace hungrybee
             // Get a pointer to the camera interface
             cameraInterface camera = (cameraInterface)h_game.Services.GetService(typeof(cameraInterface));
 
-            h_game.GetGraphicsDevice().Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
+            h_game.h_GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
 
             // Calculate the camera matrices.
             float time = (float)gameTime.TotalGameTime.TotalSeconds;
 
             // If we are doing edge detection, first off we need to render the
             // normals and depth of our model into a special rendertarget.
-            if (h_game.GetGameSettings().RenderSettings.EnableEdgeDetect)
+            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect)
             {
-                h_game.GetGraphicsDevice().SetRenderTarget(0, normalDepthRenderTarget);
-                h_game.GetGraphicsDevice().Clear(Color.Black);
+                h_game.h_GraphicsDevice.SetRenderTarget(0, normalDepthRenderTarget);
+                h_game.h_GraphicsDevice.Clear(Color.Black);
 
                 // Draw the models
-                h_game.GetGameObjectManager().DrawModels(gameTime, h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
+                h_game.h_GameObjectManager.DrawModels(gameTime, h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
             }
 
             // If we are doing edge detection and/or pencil sketch processing, we
             // need to draw the model into a special rendertarget which can then be
             // fed into the postprocessing shader. Otherwise can just draw it
             // directly onto the backbuffer.
-            if (h_game.GetGameSettings().RenderSettings.EnableEdgeDetect || h_game.GetGameSettings().RenderSettings.EnableSketch)
-                h_game.GetGraphicsDevice().SetRenderTarget(0, sceneRenderTarget);
+            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect || h_game.h_GameSettings.RenderSettings.EnableSketch)
+                h_game.h_GraphicsDevice.SetRenderTarget(0, sceneRenderTarget);
             else
-                h_game.GetGraphicsDevice().SetRenderTarget(0, null);
+                h_game.h_GraphicsDevice.SetRenderTarget(0, null);
 
-            h_game.GetGraphicsDevice().Clear(Color.CornflowerBlue);
+            h_game.h_GraphicsDevice.Clear(Color.CornflowerBlue);
             // Draw the model, using either the cartoon or lambert shading technique.
             string effectTechniqueName;
 
-            if (h_game.GetGameSettings().RenderSettings.EnableToonShading)
+            if (h_game.h_GameSettings.RenderSettings.EnableToonShading)
                 effectTechniqueName = "Toon";
             else
                 effectTechniqueName = "Lambert";
 
             // Draw the SkyPlane
-            h_game.GetSkyPlane().Draw(h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix);
+            h_game.h_SkyPlane.Draw(h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix);
 
             // Draw the models
-            h_game.GetGameObjectManager().DrawModels(gameTime, h_game.GetGraphicsDevice(), camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);
+            h_game.h_GameObjectManager.DrawModels(gameTime, h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);
 
             // Run the postprocessing filter over the scene that we just rendered.
-            if (h_game.GetGameSettings().RenderSettings.EnableEdgeDetect || h_game.GetGameSettings().RenderSettings.EnableSketch)
+            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect || h_game.h_GameSettings.RenderSettings.EnableSketch)
             {
-                h_game.GetGraphicsDevice().SetRenderTarget(0, null);
+                h_game.h_GraphicsDevice.SetRenderTarget(0, null);
 
                 ApplyPostprocess();
             }
@@ -204,31 +204,31 @@ namespace hungrybee
             string effectTechniqueName;
 
             // Set effect parameters controlling the pencil sketch effect.
-            if (h_game.GetGameSettings().RenderSettings.EnableSketch)
+            if (h_game.h_GameSettings.RenderSettings.EnableSketch)
             {
-                parameters["SketchThreshold"].SetValue(h_game.GetGameSettings().RenderSettings.SketchThreshold);
-                parameters["SketchBrightness"].SetValue(h_game.GetGameSettings().RenderSettings.SketchBrightness);
+                parameters["SketchThreshold"].SetValue(h_game.h_GameSettings.RenderSettings.SketchThreshold);
+                parameters["SketchBrightness"].SetValue(h_game.h_GameSettings.RenderSettings.SketchBrightness);
                 parameters["SketchJitter"].SetValue(sketchJitter);
                 parameters["SketchTexture"].SetValue(sketchTexture);
             }
 
             // Set effect parameters controlling the edge detection effect.
-            if (h_game.GetGameSettings().RenderSettings.EnableEdgeDetect)
+            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect)
             {
                 Vector2 resolution = new Vector2(sceneRenderTarget.Width,
                                                  sceneRenderTarget.Height);
 
                 Texture2D normalDepthTexture = normalDepthRenderTarget.GetTexture();
 
-                parameters["EdgeWidth"].SetValue(h_game.GetGameSettings().RenderSettings.EdgeWidth);
-                parameters["EdgeIntensity"].SetValue(h_game.GetGameSettings().RenderSettings.EdgeIntensity);
+                parameters["EdgeWidth"].SetValue(h_game.h_GameSettings.RenderSettings.EdgeWidth);
+                parameters["EdgeIntensity"].SetValue(h_game.h_GameSettings.RenderSettings.EdgeIntensity);
                 parameters["ScreenResolution"].SetValue(resolution);
                 parameters["NormalDepthTexture"].SetValue(normalDepthTexture);
 
                 // Choose which effect technique to use.
-                if (h_game.GetGameSettings().RenderSettings.EnableSketch)
+                if (h_game.h_GameSettings.RenderSettings.EnableSketch)
                 {
-                    if (h_game.GetGameSettings().RenderSettings.SketchInColor)
+                    if (h_game.h_GameSettings.RenderSettings.SketchInColor)
                         effectTechniqueName = "EdgeDetectColorSketch";
                     else
                         effectTechniqueName = "EdgeDetectMonoSketch";
@@ -239,7 +239,7 @@ namespace hungrybee
             else
             {
                 // If edge detection is off, just pick one of the sketch techniques.
-                if (h_game.GetGameSettings().RenderSettings.SketchInColor)
+                if (h_game.h_GameSettings.RenderSettings.SketchInColor)
                     effectTechniqueName = "ColorSketch";
                 else
                     effectTechniqueName = "MonoSketch";

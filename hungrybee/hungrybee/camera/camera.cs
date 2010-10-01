@@ -23,7 +23,7 @@ namespace hungrybee
     /// ** other projects)                                                   **
     /// ***********************************************************************
     /// </summary>
-    class camera : GameComponent, cameraInterface
+    public class camera : GameComponent, cameraInterface
     {
         #region Local Variables
         /// Local Variables
@@ -109,9 +109,9 @@ namespace hungrybee
             leftrightRot = 0.0f;
             updownRot = 0.0f;
             h_running = false;
-            h_cameraSpeed = h_game.GetGameSettings().cameraSpeed;
-            h_cameraRunningMult = h_game.GetGameSettings().cameraRunningMult;
-            h_cameraRotationSpeed = h_game.GetGameSettings().cameraRotationSpeed;
+            h_cameraSpeed = h_game.h_GameSettings.cameraSpeed;
+            h_cameraRunningMult = h_game.h_GameSettings.cameraRunningMult;
+            h_cameraRotationSpeed = h_game.h_GameSettings.cameraRotationSpeed;
             Mouse.SetPosition(h_game.Window.ClientBounds.Width / 2, h_game.Window.ClientBounds.Height / 2);
             oldMouseState = Mouse.GetState();
 

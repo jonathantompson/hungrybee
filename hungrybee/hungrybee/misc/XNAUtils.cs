@@ -19,6 +19,8 @@ namespace hungrybee
     /// </summary>
     public static class XNAUtils
     {
+        static float EPSILON = 0.0000000001f;
+
         // Jonno Tompson Code
         public static float GetAABBVolume(BoundingBox bBox)
         {
@@ -193,6 +195,17 @@ namespace hungrybee
             return transformedBoundingSphere;
         }
 
+        public class ModelTag
+        {
+            public BoundingSphere bSphere;
+            public bool modelRecentered;
+
+            public ModelTag(BoundingSphere _bSphere)
+            {
+                bSphere = _bSphere;
+            }
+        }
+
         public static Model LoadModelWithBoundingSphere(ref Matrix[] modelTransforms, string asset, ContentManager content)
         {
             Model newModel = content.Load<Model>(asset);
@@ -207,7 +220,9 @@ namespace hungrybee
                 BoundingSphere transMeshSphere = XNAUtils.TransformBoundingSphere(origMeshSphere, modelTransforms[mesh.ParentBone.Index]);
                 completeBoundingSphere = BoundingSphere.CreateMerged(completeBoundingSphere, transMeshSphere);
             }
-            newModel.Tag = completeBoundingSphere;
+
+            ModelTag tag = new ModelTag(completeBoundingSphere);
+            newModel.Tag = tag;
 
             return newModel;
         }
@@ -303,9 +318,9 @@ namespace hungrybee
 
         public static Matrix[] AutoScaleModelTransform(ref Model model, float requestedSize, ref float scalingFactor)
         {
-            BoundingSphere bSphere = (BoundingSphere)model.Tag;
+            BoundingSphere bSphere = ((ModelTag)model.Tag).bSphere;
             float originalSize = bSphere.Radius * 2;
-            scalingFactor = requestedSize / originalSize;
+            scalingFactor = requestedSize / originalSize - EPSILON; // Add a small value so they can sit next to each other
 
             // EDIT: TOMPSON - Done later
             // model.Root.Transform = model.Root.Transform * Matrix.CreateScale(scalingFactor);

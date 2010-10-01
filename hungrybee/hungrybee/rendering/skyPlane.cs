@@ -70,11 +70,11 @@ namespace hungrybee
         /// ***********************************************************************
         public void LoadContent()
         {
-            skyPlaneTexture = h_game.Content.Load<Texture2D>(h_game.GetGameSettings().skyPlaneTextureFile);
-            skyPlaneScale = h_game.GetGameSettings().skyPlaneScale;
-            skyPlaneEffect = new BasicEffect(h_game.GetGraphicsDevice(), null);
+            skyPlaneTexture = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.skyPlaneTextureFile);
+            skyPlaneScale = h_game.h_GameSettings.skyPlaneScale;
+            skyPlaneEffect = new BasicEffect(h_game.h_GraphicsDevice, null);
             CreateSkyPlaneVertexBuffer();
-            vertexDec = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPositionTexture.VertexElements);
+            vertexDec = new VertexDeclaration(h_game.h_GraphicsDevice, VertexPositionTexture.VertexElements);
         }
         #endregion
 
@@ -83,10 +83,10 @@ namespace hungrybee
         /// ***********************************************************************
         public void Draw(GraphicsDevice device, Matrix view, Matrix projection)
         {
-            h_game.GetGraphicsDevice().RenderState.DepthBufferWriteEnable = false;
+            h_game.h_GraphicsDevice.RenderState.DepthBufferWriteEnable = false;
 
-            h_game.GetGraphicsDevice().SamplerStates[0].AddressU = TextureAddressMode.Clamp;
-            h_game.GetGraphicsDevice().SamplerStates[0].AddressV = TextureAddressMode.Clamp;
+            h_game.h_GraphicsDevice.SamplerStates[0].AddressU = TextureAddressMode.Clamp;
+            h_game.h_GraphicsDevice.SamplerStates[0].AddressV = TextureAddressMode.Clamp;
 
             skyPlaneEffect.World = Matrix.Identity;
             skyViewMat = view;
@@ -100,18 +100,18 @@ namespace hungrybee
             {
                 pass.Begin();
 
-                h_game.GetGraphicsDevice().VertexDeclaration = vertexDec;
-                h_game.GetGraphicsDevice().Vertices[0].SetSource(skyPlaneVertexBuffer, 0, VertexPositionTexture.SizeInBytes);
-                h_game.GetGraphicsDevice().DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+                h_game.h_GraphicsDevice.VertexDeclaration = vertexDec;
+                h_game.h_GraphicsDevice.Vertices[0].SetSource(skyPlaneVertexBuffer, 0, VertexPositionTexture.SizeInBytes);
+                h_game.h_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
                 pass.End();
             }
             skyPlaneEffect.End();
 
-            h_game.GetGraphicsDevice().RenderState.DepthBufferWriteEnable = true;
+            h_game.h_GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
 
-            h_game.GetGraphicsDevice().SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            h_game.GetGraphicsDevice().SamplerStates[0].AddressV = TextureAddressMode.Wrap;
+            h_game.h_GraphicsDevice.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
+            h_game.h_GraphicsDevice.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
         }
         #endregion
 
@@ -142,7 +142,7 @@ namespace hungrybee
             vertices[i++] = new VertexPositionTexture(UR, texUR);
             vertices[i++] = new VertexPositionTexture(DR, texDR);
 
-            skyPlaneVertexBuffer = new VertexBuffer(h_game.GetGraphicsDevice(), vertices.Length * VertexPositionTexture.SizeInBytes, BufferUsage.WriteOnly);
+            skyPlaneVertexBuffer = new VertexBuffer(h_game.h_GraphicsDevice, vertices.Length * VertexPositionTexture.SizeInBytes, BufferUsage.WriteOnly);
             skyPlaneVertexBuffer.SetData<VertexPositionTexture>(vertices);
         }
         #endregion

@@ -167,16 +167,16 @@ namespace hungrybee
             indices[index++] = 2 + indexOffset; indices[index++] = 3 + indexOffset; indices[index++] = 6 + indexOffset; // Bottom Face, Tri 1
             indices[index++] = 3 + indexOffset; indices[index++] = 7 + indexOffset; indices[index++] = 6 + indexOffset; // Bottom Face, Tri 2
 
-            vb = new VertexBuffer(h_game.GetGraphicsDevice(), typeof(VertexPositionTexture), nVertices + nVerticiesCube, BufferUsage.None);
+            vb = new VertexBuffer(h_game.h_GraphicsDevice, typeof(VertexPositionTexture), nVertices + nVerticiesCube, BufferUsage.None);
             vb.SetData(vertices, 0, vertices.Length);
-            ib = new IndexBuffer(h_game.GetGraphicsDevice(), typeof(int), dwIndices + nIndiciesCube, BufferUsage.None);
+            ib = new IndexBuffer(h_game.h_GraphicsDevice, typeof(int), dwIndices + nIndiciesCube, BufferUsage.None);
             ib.SetData(indices, 0, indices.Length);
 
-            effect = new BasicEffect(h_game.GetGraphicsDevice(), null);
+            effect = new BasicEffect(h_game.h_GraphicsDevice, null);
             effect.TextureEnabled = false;
 
             // Initialize the vertex declaration
-            vdec = new VertexDeclaration(h_game.GetGraphicsDevice(), VertexPosition.VertexElements);
+            vdec = new VertexDeclaration(h_game.h_GraphicsDevice, VertexPosition.VertexElements);
             strideSize = VertexPosition.SizeInBytes;
 
             // Create the AABB and mark object as using AABB for collision detection

@@ -29,10 +29,8 @@ namespace hungrybee
     {
         #region Local Variables
 
-        public float maxAcceleration;
         public float playerHealth;
-        public float jumpMomentum;
-        public bool jumping;
+        public bool  jumping;
 
         public force forcePlayerInput;
 
@@ -41,29 +39,29 @@ namespace hungrybee
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale,
-                                float _maxAcceleration, float _accelVTime, float _accelOTime, float _maxVel, float _jumpMomentum, Vector3 _pos )
+        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 _pos )
             : base(game, modelfile, _objType)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
-            maxAcceleration = _maxAcceleration;
             playerHealth = 100.0f;
             base.movable = true;
             base.collidable = true;
-            base.maxVel = _maxVel;
-            jumpMomentum = _jumpMomentum;
             base.state.pos = _pos;
             base.prevState.pos = _pos;
             jumping = false;
 
             // Setup the force structures to describe movement
-            forcePlayerInput = new forcePlayerInput(Vector3.Zero, Quaternion.Identity, _accelVTime, maxAcceleration, _accelOTime);
+            forcePlayerInput = new forcePlayerInput(Vector3.Zero,                                  // Starting Velocity
+                                                    Quaternion.Identity,                           // Starting Orientation
+                                                    game.h_GameSettings.playerTimeToAccelerate, // Time to reach velocity
+                                                    game.h_GameSettings.playerMaxAcceleration,  // maximum acceleration
+                                                    game.h_GameSettings.playerTimeToOrient);    // time to reach orientation
             ((forcePlayerInput)forcePlayerInput).SetDesiredOrientationFromForwardVector(new Vector3(1,0,0)); // Player starts facing right
 
             // Add the force structures to the forceList for enumeration at runtime
             base.forceList.Add(forcePlayerInput);
             // Add gravity
-            base.forceList.Add(new forceGravity(new Vector3(0.0f, -h_game.GetGameSettings().gravity,0.0f)));
+            base.forceList.Add(new forceGravity(new Vector3(0.0f, -h_game.h_GameSettings.gravity, 0.0f)));
         }
         #endregion
 
@@ -88,7 +86,6 @@ namespace hungrybee
             // Zero out the acceleration
             bool keyPressed = false;
             Vector3 desiredVelValue = new Vector3();
-            float playerVelocity = 2.5f;
 
             KeyboardState keyState = Keyboard.GetState();
             if (keyState.IsKeyDown(Keys.Left) && !keyState.IsKeyDown(Keys.Right)) // Ignore case when both keys are pressed
@@ -105,7 +102,7 @@ namespace hungrybee
             if (keyPressed)
             {
                 desiredVelValue = Vector3.Normalize(desiredVelValue);
-                desiredVelValue = playerVelocity * desiredVelValue;
+                desiredVelValue = base.h_game.h_GameSettings.playerVelocity * desiredVelValue;
                 ((forcePlayerInput)forcePlayerInput).SetVelocity(desiredVelValue);
                 ((forcePlayerInput)forcePlayerInput).SetDesiredOrientationFromForwardVector(desiredVelValue);
             }
@@ -117,7 +114,7 @@ namespace hungrybee
             // Add a vertical impulse to trigger a jump, only if we're in resting contact with the ground
             if (keyState.IsKeyDown(Keys.Space) && base.resting && !jumping )
             {
-                prevState.linearMom += new Vector3(0.0f, jumpMomentum, 0.0f);
+                prevState.linearMom += new Vector3(0.0f, base.h_game.h_GameSettings.playerJumpMomentum, 0.0f);
                 prevState.RecalculateDerivedQuantities();
                 jumping = true;
             }

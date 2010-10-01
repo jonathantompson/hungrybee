@@ -29,14 +29,17 @@ namespace hungrybee
     public class game : Microsoft.Xna.Framework.Game
     {
         #region Local Variables
-        GraphicsDeviceManager   h_GraphicsDeviceManager;
-        GraphicsDevice          h_GraphicsDevice;       
-        GameComponent           h_GameSettings;        
-        GameComponent           h_Camera;               
-        GameComponent           h_RenderManager;        
-        GameComponent           h_SkyPlane;             // The background SkyPlane (like a skybox but with one side to save rendering calls)  
-        GameComponent           h_GameObjectManager;
-        GameComponent           h_PhysicsManager;
+
+        // Make these public to avoid large access function penalties (no inline in C#)
+        // THESE ALL DERIVE FROM GameComponent CLASS
+        public GraphicsDeviceManager   h_GraphicsDeviceManager;
+        public GraphicsDevice h_GraphicsDevice;
+        public gameSettings h_GameSettings;
+        public camera h_Camera;
+        public renderManager h_RenderManager;
+        public skyPlane h_SkyPlane;             // The background SkyPlane (like a skybox but with one side to save rendering calls)  
+        public gameObjectManager h_GameObjectManager;
+        public physicsManager h_PhysicsManager;
 
         #endregion
 
@@ -138,18 +141,6 @@ namespace hungrybee
             // Simply send a draw request off to the render manager...
             ((renderManager)h_RenderManager).Draw(gameTime);
         }
-        #endregion
-
-        #region Access and Modifier functions
-        /// A bunch of "inline" functions (though not supported in C#)
-        /// ***********************************************************************
-        public GraphicsDeviceManager GetGraphicsDeviceManager() { return h_GraphicsDeviceManager; }
-        public GraphicsDevice GetGraphicsDevice() { return h_GraphicsDevice; }
-        public GameComponent GetCamera() { return h_Camera; }
-        public gameSettings GetGameSettings() { return (gameSettings)h_GameSettings; }
-        public skyPlane GetSkyPlane() { return (skyPlane)h_SkyPlane; }
-        public gameObjectManager GetGameObjectManager() { return (gameObjectManager)h_GameObjectManager; }
-        public physicsManager GetPhysicsManager() { return (physicsManager)h_PhysicsManager; }
         #endregion
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+using ExtensionMethods;
 #endregion
 
 namespace hungrybee
@@ -32,13 +33,17 @@ namespace hungrybee
         public float enemyHealth;
 
         public force forceGravity;
+        public force forceSetOrientation;
+
+        public static Vector3 forward = new Vector3();
+        public static float velocity = 0.0f;
 
         #endregion
 
-        #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
-        /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
+        #region Constructor - gameObjectEnemy(game game, string modelfile, float scale)
+        /// Constructor - gameObjectEnemy(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, float _maxVel, Vector3 startingPos, Vector3 startingMom)
+        public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
             : base(game, modelfile, _objType)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
@@ -47,13 +52,19 @@ namespace hungrybee
             enemyHealth = 100.0f;
             base.movable = true;
             base.collidable = true;
-            base.maxVel = _maxVel;
 
             // Setup the force structures to describe movement
-            forceGravity = new forceGravity(new Vector3(0.0f, -1.0f * game.GetGameSettings().gravity,0.0f));
+            forceGravity = new forceGravity(new Vector3(0.0f, -1.0f * game.h_GameSettings.gravity,0.0f));
 
             // Add the force structures to the forceList for enumeration at runtime
             base.forceList.Add(forceGravity);
+
+            // Setup the force structures to describe movement
+            forceSetOrientation = new forceSetOrientation(Quaternion.Identity, game.h_GameSettings.enemyTimeToOrient);
+            ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(new Vector3(1, 0, 0)); // Player starts facing right
+
+            // Add the force structures to the forceList for enumeration at runtime
+            base.forceList.Add(forceSetOrientation);
         }
         #endregion
 
@@ -65,7 +76,11 @@ namespace hungrybee
             // Update the base
             base.Update(gameTime);
 
-            // Nothing to do yet
+            // Set the desired orientation in the x direction we're moving
+            if (prevState.linearVel.X > 0.0f)
+                ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(Vector3.Right);
+            else if (prevState.linearVel.X < 0.0f)
+                ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(Vector3.Left);
         }
         #endregion
 

@@ -102,26 +102,26 @@ namespace hungrybee
         /// ***********************************************************************
         public void LoadContent()
         {
-            h_GameObjects.Capacity = h_game.GetGameSettings().startingGameObjectCapacity;
+            h_GameObjects.Capacity = h_game.h_GameSettings.startingGameObjectCapacity;
             
             // Load in the object descriptions from the csv file for the first level
             LoadLevel(1);
 
-            // If we're limiting XY collision Responces, then sphere's must be placed so that the sphere origin has
-            if (h_game.GetGameSettings().limitXYCollisionResponce)
+            // If we're limiting XY collision Responces, then sphere's must be placed so that the sphere origin has Z=0
+            if (h_game.h_GameSettings.limitXYCollisionResponce)
                 for (int i = 0; i < h_GameObjects.Count; i++)
                     if (h_GameObjects[i].boundingObjType == boundingObjType.SPHERE)
-                        h_GameObjects[i].CenterObjectOnZaxis();
+                        h_GameObjects[i].CenterObjectAboutBoundingSphere();
 
 
             // Build the bounding boxes at the frustrum bounds.
             BuildFrustrumBounds();
 
-            if(h_game.GetGameSettings().renderBoundingObjects) // Add bounding objects to be rendered if we want
+            if (h_game.h_GameSettings.renderBoundingObjects) // Add bounding objects to be rendered if we want
                 SpawnCollidables();
 
             // Now initialize the physics manager content
-            h_game.GetPhysicsManager().LoadContent();
+            h_game.h_PhysicsManager.LoadContent();
         }
         #endregion
 
@@ -141,18 +141,14 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 12 )
+                        if (numPlayers == 0 && curToken.Count == 7 )
                         {
+                            // public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 _pos )
                             curObject = new gameObjectPlayer(h_game, 
                                                              curToken[1],
                                                              GetBoundingObjTypeFromString(curToken[2]),
                                                              float.Parse(curToken[3]),
-                                                             float.Parse(curToken[4]),
-                                                             float.Parse(curToken[5]),
-                                                             float.Parse(curToken[6]),
-                                                             float.Parse(curToken[7]),
-                                                             float.Parse(curToken[8]),
-                                                             new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])));
+                                                             new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])));
                             numPlayers += 1;
                         }
                         else
@@ -174,15 +170,15 @@ namespace hungrybee
                             throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}",levelNumber) + ".csv");
                         break;
                     case "enemy":
-                        if (curToken.Count == 11)
+                        if (curToken.Count == 10)
                         {
+                            // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
                             curObject = new gameObjectEnemy(h_game,
                                                             curToken[1],
                                                             GetBoundingObjTypeFromString(curToken[2]),
                                                             float.Parse(curToken[3]),
-                                                            float.Parse(curToken[4]),
-                                                            new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7])),
-                                                            new Vector3(float.Parse(curToken[8]), float.Parse(curToken[9]), float.Parse(curToken[10])));
+                                                            new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                            new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
                             numEnemys += 1;
                         }
                         else
@@ -266,7 +262,7 @@ namespace hungrybee
                 throw new Exception("gameObjectManager::BuildFrustrumBounds() - Could not find a heightmap!  Check Level_X.csv");
 
             // Build a frustrum from the camera values and get the corners
-            camera camera = (camera)h_game.GetCamera();
+            camera camera = h_game.h_Camera;
             BoundingFrustum frustrum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
             // The Plane structure defines a plane by specifying it's normal vector and its NEGATIVE DISTANCE D TO THE ORIGIN
             // ALONG THE DIRECTION OF IT'S NORMAL VECTOR

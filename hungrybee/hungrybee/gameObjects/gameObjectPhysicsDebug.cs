@@ -72,10 +72,10 @@ namespace hungrybee
         public override void LoadContent()
         {
             if( effect == null)
-                effect = new BasicEffect(base.h_game.GetGraphicsDevice(), null); // Create a basic effect if we haven't already
+                effect = new BasicEffect(base.h_game.h_GraphicsDevice, null); // Create a basic effect if we haven't already
             
             if(vertexDeclaration == null)
-                vertexDeclaration = new VertexDeclaration(base.h_game.GetGraphicsDevice(), VertexPositionColor.VertexElements); // Create the vertexDeclaration if we haven't already
+                vertexDeclaration = new VertexDeclaration(base.h_game.h_GraphicsDevice, VertexPositionColor.VertexElements); // Create the vertexDeclaration if we haven't already
 
             UpdateContent();
         }
@@ -199,8 +199,8 @@ namespace hungrybee
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
                 pass.Begin();
-                base.h_game.GetGraphicsDevice().VertexDeclaration = vertexDeclaration;
-                base.h_game.GetGraphicsDevice().DrawUserPrimitives<VertexPositionColor>(PrimitiveType.LineList, lineVertices, 0, numLines);
+                base.h_game.h_GraphicsDevice.VertexDeclaration = vertexDeclaration;
+                base.h_game.h_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.LineList, lineVertices, 0, numLines);
                 pass.End();
             }
             effect.End();

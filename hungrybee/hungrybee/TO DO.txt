@@ -1,9 +1,12 @@
-﻿- Implement player controls: using quaternions to give half distances and RK4 integrator
-  a) Need to center object properly --> After rotation, circle no longer lies in XY plane --> Results in some unstable behaviour I think
-- Implement enemy direction pointing --> Face where they're following (but use desired oritiontation to smooth out movements)
-- Implement HUD display for frame-rate and player health
+﻿- Implement HUD display for frame-rate and player health
 - Implement player Vs. enemy collision health or kill animation (set object to non-collidable, non-movable and increase scale)
+- Make Bee friends class --> Maybe consider sharing some functionality with enemyClass (ie NPC class)
+- Make Bee friends collectable (on collision AND have game complete logic)
+- Add cats and dogs class --> Which is just a sphereical projectile that dies after a set time.
 - Load the models in...  Having lots of difficulty
+- Make the audio responces
+- Make particle effects and enemy blow up effect
+- Profile performance: http://www.gamedev.net/community/forums/topic.asp?topic_id=474249
 
 STUFF I WOULD LIKE TO DO IF I HAVE TIME
 - Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)

@@ -28,18 +28,29 @@ namespace hungrybee
         #region Local Variables
         // VARIABLES SAVED TO DISK
         public int      xWindowSize, yWindowSize;
+
+        // Rendering
         public string   skyPlaneTextureFile;
         public float    skyPlaneScale;
+        private int renderSettingsIndex;
+        public string cartoonEffectFile;
+        public string postprocessEffectFile;
+        public string fontFile;
+        public string sketchTextureFile;
+
+        // Game Objects
         public int      startingGameObjectCapacity;
-        private int     renderSettingsIndex;
-        public string   cartoonEffectFile;
-        public string   postprocessEffectFile;
-        public string   fontFile;
-        public string   sketchTextureFile;
+
+        // Camera
         public float    cameraSpeed;
         public float    cameraRunningMult;
         public float    cameraRotationSpeed;
+
+        // Misc
         public float    EPSILON;
+        public float    enemyCollisionAngleTollerence;
+
+        // Physics
         public int      forceListCapacity;
         public int      physicsObjectsStartingCapacity;
         public float    gravity;
@@ -48,6 +59,14 @@ namespace hungrybee
         public bool     renderCollisions;
         public bool     limitXYCollisionResponce;
         public float    coeffRestitution;
+
+        // Movement
+        public float    enemyTimeToOrient;
+        public float    playerTimeToOrient;
+        public float    playerTimeToAccelerate;
+        public float    playerMaxAcceleration;
+        public float    playerVelocity;
+        public float    playerJumpMomentum;
 
         public static Vector3 collisionMask = new Vector3();
 
@@ -93,6 +112,13 @@ namespace hungrybee
             renderCollisions = true;
             limitXYCollisionResponce = true;
             coeffRestitution = 0.8f;
+            enemyTimeToOrient = 0.2f;
+            playerTimeToOrient = 0.2f;
+            playerTimeToAccelerate = 0.2f;
+            playerMaxAcceleration = 10.0f;
+            playerVelocity = 2.5f;
+            playerJumpMomentum = 6.0f;
+            enemyCollisionAngleTollerence = 0.52359877f; // 30deg
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -111,10 +137,10 @@ namespace hungrybee
             this.ReadSettings();
 
             // Set the window size and call reset of graphics device
-            h_game.GetGraphicsDeviceManager().PreferredBackBufferWidth = xWindowSize;
-            h_game.GetGraphicsDeviceManager().PreferredBackBufferHeight = yWindowSize;
-            h_game.GetGraphicsDeviceManager().ApplyChanges();
-            ((cameraInterface)h_game.GetCamera()).ResizeProjectionMatrix();
+            h_game.h_GraphicsDeviceManager.PreferredBackBufferWidth = xWindowSize;
+            h_game.h_GraphicsDeviceManager.PreferredBackBufferHeight = yWindowSize;
+            h_game.h_GraphicsDeviceManager.ApplyChanges();
+            ((cameraInterface)h_game.h_Camera).ResizeProjectionMatrix();
 
             // Now write the settings back to disk 
             // (applicable if config.ini doesn't exist and we're building it for the first time)
@@ -222,6 +248,27 @@ namespace hungrybee
                         case "coeffRestitution":
                             this.coeffRestitution = float.Parse(curToken[1]);
                             break;
+                        case "enemyTimeToOrient":
+                            this.enemyTimeToOrient = float.Parse(curToken[1]);
+                            break;
+                        case "playerTimeToOrient":
+                            this.playerTimeToOrient = float.Parse(curToken[1]);
+                            break;
+                        case "playerTimeToAccelerate":
+                            this.playerTimeToAccelerate = float.Parse(curToken[1]);
+                            break;
+                        case "playerMaxAcceleration":
+                            this.playerMaxAcceleration = float.Parse(curToken[1]);
+                            break;
+                        case "playerVelocity":
+                            this.playerVelocity = float.Parse(curToken[1]);
+                            break;
+                        case "playerJumpMomentum":
+                            this.playerJumpMomentum = float.Parse(curToken[1]);
+                            break;
+                        case "enemyCollisionAngleTollerence":
+                            this.enemyCollisionAngleTollerence = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -271,7 +318,14 @@ namespace hungrybee
             writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
             writer.WriteNextToken("limitXYCollisionResponce", this.limitXYCollisionResponce ? (int)1 : (int)0);
             writer.WriteNextToken("coeffRestitution", this.coeffRestitution);
-
+            writer.WriteNextToken("enemyTimeToOrient", this.enemyTimeToOrient);
+            writer.WriteNextToken("playerTimeToOrient", this.playerTimeToOrient);
+            writer.WriteNextToken("playerTimeToAccelerate", this.playerTimeToAccelerate);
+            writer.WriteNextToken("playerMaxAcceleration", this.playerMaxAcceleration);
+            writer.WriteNextToken("playerVelocity", this.playerVelocity);
+            writer.WriteNextToken("playerJumpMomentum", this.playerJumpMomentum);
+            writer.WriteNextToken("enemyCollisionAngleTollerence", this.enemyCollisionAngleTollerence);
+            
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***
             //// ************************************

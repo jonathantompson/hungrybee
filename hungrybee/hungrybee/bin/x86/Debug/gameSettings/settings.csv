@@ -20,3 +20,9 @@ pauseOnCollision,0
 renderCollisions,0
 limitXYCollisionResponce,1
 coeffRestitution,0.2
+enemyTimeToOrient,0.2
+playerTimeToOrient,0.2
+playerTimeToAccelerate,0.2
+playerMaxAcceleration,10
+playerVelocity,2.5
+playerJumpMomentum,6

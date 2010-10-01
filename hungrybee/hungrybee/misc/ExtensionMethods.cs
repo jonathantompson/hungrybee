@@ -26,6 +26,11 @@ namespace ExtensionMethods
     {
         static float PRECISION = 0.000001f;
 
+        public static float Vector3Length(ref Vector3 vec)
+        {
+            return (float)Math.Sqrt(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z);
+        }
+
         public static bool testFloatEquality(float f1, float f2)
         {
             // Note: if f1 = a and f2 = -a --> (f1 - f2) = (a - (-a)) = 0 --> So need to check both cases

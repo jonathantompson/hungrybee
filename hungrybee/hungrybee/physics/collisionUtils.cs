@@ -365,7 +365,7 @@ namespace hungrybee
                                             point, 
                                             Vector3.Normalize(normal), 
                                             e1, e2, 
-                                            curObjA.h_game.GetGameSettings().coeffRestitution, 
+                                            curObjA.h_game.h_GameSettings.coeffRestitution, 
                                             0.25f)); // Vector3 should be normal
                 }
             }
@@ -773,7 +773,7 @@ namespace hungrybee
                                     point,
                                     Vector3.Negate(normal),
                                     Vector3.Zero, Vector3.Zero, // e1, e2
-                                    objA.h_game.GetGameSettings().coeffRestitution,
+                                    objA.h_game.h_GameSettings.coeffRestitution,
                                     1.0f)); // Normal points out of face of B
         }
         #endregion
@@ -1053,7 +1053,7 @@ namespace hungrybee
                                     point,
                                     normal,
                                     Vector3.Zero, Vector3.Zero, // E1, E2
-                                    objA.h_game.GetGameSettings().coeffRestitution,
+                                    objA.h_game.h_GameSettings.coeffRestitution,
                                     1.0f)); // Normal points out of face of B
         }
         #endregion
