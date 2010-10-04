@@ -19,23 +19,23 @@ namespace hungrybee
 {
     /// <summary>
     /// ***********************************************************************
-    /// **                         gameObjectEnemy                           **
-    /// ** This is a class to store the data for each enemy game object      **
+    /// **                         gameObjectFriend                          **
+    /// ** This is a class to store the data for each friend game object     **
     /// ** COLLIDABLE = TRUE                                                 **
     /// ** MOVABLE = TRUE                                                    **
     /// ***********************************************************************
     /// </summary>
-    class gameObjectEnemy : gameObjectNPC
+    class gameObjectFriend : gameObjectNPC
     {
         #region Local Variables
 
 
         #endregion
 
-        #region Constructor - gameObjectEnemy()
-        /// Constructor - gameObjectEnemy()
+        #region Constructor - gameObjectFriend(game game, string modelfile, float scale)
+        /// Constructor - gameObjectFriend(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
+        public gameObjectFriend(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
             : base(game, modelfile, _objType, _scale, startingPos, startingMom)
         {
             // Nothing to do yet

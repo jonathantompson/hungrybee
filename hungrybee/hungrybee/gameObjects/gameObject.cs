@@ -429,10 +429,29 @@ namespace hungrybee
         }
         #endregion
 
+        #region CheckPhantomForce() --> Returns true if a forcePhantom exists
+        public bool CheckPhantomForce()
+        {
+            for (int i = forceList.Count - 1; i >= 0; i--) // if the force exists, it will be somewhere near the end of the list
+            {
+                if (forceList[i] is forcePhantom)
+                    return true;
+            }
+            return false;
+        }
+        #endregion
+
         #region AddAntiGravityForce()
         public void AddAntiGravityForce(float acceleration)
         {
             forceList.Add(new forceAntiGravity(new Vector3(0.0f, acceleration, 0.0f)));
+        }
+        #endregion
+
+        #region AddPhantomForce()
+        public void AddPhantomForce(Vector3 force)
+        {
+            forceList.Add(new forcePhantom(force));
         }
         #endregion
 
@@ -442,6 +461,17 @@ namespace hungrybee
             for (int i = forceList.Count - 1; i >= 0; i--) // if the force exists, it will be somewhere near the end of the list
             {
                 if (forceList[i] is forceAntiGravity)
+                    forceList.RemoveAt(i);
+            }
+        }
+        #endregion
+
+        #region RemovePhantomForce()
+        public void RemovePhantomForce()
+        {
+            for (int i = forceList.Count - 1; i >= 0; i--) // if the force exists, it will be somewhere near the end of the list
+            {
+                if (forceList[i] is forcePhantom)
                     forceList.RemoveAt(i);
             }
         }

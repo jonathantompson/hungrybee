@@ -93,41 +93,56 @@ namespace hungrybee
 
         #region ResolveCollision()
         /// ResolveCollision() - Add impulse for collision contacts and return false in this case.  
-        /// Return true if the contact is a resting contact and needs processing later.
+        /// Return 0 if the contact is colliding (no further processing needed)
+        /// Return 1 if the contact is a resting contact and needs processing later.
+        /// Return 2 if the contact is a phantom contact and needs processing later.
         /// ***********************************************************************
-        public bool ResolveCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
+        public int ResolveCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
         {
-            if (CheckCollidingContact(ref obj1State, ref obj2State))
+            if ((obj1 is gameObjectPhantom && ((gameObjectPhantom)obj1).phantomType == phantomType.SOFT_BOUNDRY) ||
+                (obj2 is gameObjectPhantom && ((gameObjectPhantom)obj2).phantomType == phantomType.SOFT_BOUNDRY))
+                return 2; // Phantom Contact
+
+            else if (CheckCollidingContact(ref obj1State, ref obj2State))
             {
                 ResolveCollidingCollision(ref obj1State, ref obj2State);
-                return false;
+                return 0; // Colliding Contact
             }
+
             else
-                return true;
+                return 1; // Must be a resting contact
         }
         #endregion
 
         #region ResolvePlayerEnemyCollision()
         /// ResolveCollision() - Add impulse for collision contacts and return false in this case.  
-        /// Return true if the contact is a resting contact and needs processing later.
         /// ***********************************************************************
-        public bool ResolvePlayerEnemyCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State, float collisionAngleTollerence)
+        public int ResolvePlayerEnemyCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State, float collisionAngleTollerence)
         {
             if (obj1 is gameObjectPlayer)
             {
+                temp = GetMomForCollidingContact(ref obj1State, ref obj2State);
                 obj1State.linearVel = Vector3.Normalize(obj1State.linearVel);
-                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj1State.linearVel;
+                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj1State.linearVel + (temp / obj1State.mass);
+                ((gameObject)obj2).movable = false;
             }
             else
             {
+                temp = GetMomForCollidingContact(ref obj1State, ref obj2State);
                 obj2State.linearVel = Vector3.Normalize(obj2State.linearVel);
-                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj2State.linearVel;
+                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj2State.linearVel + (temp / obj2State.mass);
+                ((gameObject)obj1).movable = false;
             }
 
             if (CheckCollidingContact(ref obj1State, ref obj2State))
                 ResolveCollidingCollision(ref obj1State, ref obj2State);
             else
                 throw new Exception("collision::ResolvePlayerEnemyCollision() - collision isn't colliding!");
+
+            if (obj1 is gameObjectPlayer)
+                ((gameObject)obj2).movable = true;
+            else
+                ((gameObject)obj1).movable = true;
 
             gameObjectEnemy enemy = null;
             gameObjectPlayer player = null;
@@ -159,12 +174,12 @@ namespace hungrybee
 
             if(collisionAngleToHorizontal > collisionAngleTollerence)
             {
-                enemy.KillEnemy();
+                enemy.KillNPC();
             } else {
                 player.HurtPlayer();
             }
 
-            return false;
+            return 0;
         }
         #endregion
 

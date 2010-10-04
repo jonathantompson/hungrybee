@@ -29,5 +29,8 @@ playerJumpMomentum,6
 enemyCollisionAngleTollerence,0.5235988
 deathSequenceDuration,0.2
 enemyHealthImpact,25
-enemyPlayerCollisionVelocity,5
+enemyPlayerCollisionVelocity,2
 deathSequenceScaleRateIncrease,10
+beeFaceTextureFile,bee-cartoon_COMBINDED_transparent
+beeFaceTextureWidth,564
+beeFaceTextureHeight,180

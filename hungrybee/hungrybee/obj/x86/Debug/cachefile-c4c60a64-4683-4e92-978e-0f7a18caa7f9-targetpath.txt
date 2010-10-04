@@ -8,5 +8,6 @@ Content\clouds_resize.xnb
 Content\clouds.xnb
 Content\heightmap.xnb
 Content\Grass.xnb
-Content\ShipDiffuse_0.xnb
 Content\hudArialFont.xnb
+Content\ShipDiffuse_0.xnb
+Content\bee-cartoon_COMBINDED_transparent.xnb

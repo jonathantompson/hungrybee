@@ -45,6 +45,7 @@ namespace hungrybee
         static Vector3 objACenter_t1_Bs_Frame = new Vector3();
         static Vector3 objBCenter_t1 = new Vector3();
         static Vector3[] aabbverticies = new Vector3[8];
+        /* USED IN OLD OBB - OBB COLLISION CODE
         static Vector3 objAMin_t0 = new Vector3();
         static Vector3 objAMax_t0 = new Vector3();
         static Vector3 objBMin_t0 = new Vector3();
@@ -53,6 +54,7 @@ namespace hungrybee
         static Vector3 objAMax_t1 = new Vector3();
         static Vector3 objBMin_t1 = new Vector3();
         static Vector3 objBMax_t1 = new Vector3();
+        */
         static float[] Ea = new float[3];
         static float[] Eb = new float[3];
 
@@ -893,31 +895,6 @@ namespace hungrybee
             // Now perform the routine in :
             // http://www.geometrictools.com/LibMathematics/Intersection/Intersection.html --> "Intersection of boxes and spheres (3D)" --> Find (...)
 
-            // Flip coordinate frame into the first octant.
-            int signX = 1;
-            if (ax < 0.0f)
-            {
-                ax = -ax;
-                vx = -vx;
-                signX = -1;
-            }
-
-            int signY = 1;
-            if (ay < 0.0f)
-            {
-                ay = -ay;
-                vy = -vy;
-                signY = -1;
-            }
-
-            int signZ = 1;
-            if (az < 0.0f)
-            {
-                az = -az;
-                vz = -vz;
-                signZ = -1;
-            }
-
             // Intersection coordinates.
             float ix = 0.0f, iy = 0.0f, iz = 0.0f;
             int retVal;
@@ -1040,21 +1017,34 @@ namespace hungrybee
             if (separationDistance - objARadius_t1_Bs_Frame > physicsManager.BISECTION_TOLLERANCE)
                 return; // Don't add any collisions to the list, we're too far away
 
-            if (separationDistance <= 0.0f)
-                throw new Exception("collisionUtils::AddCollisionSphereAABBStatic() - Objects are overlapping. Binomial search routine must have failed");
-
             // Transform point and the normal into world space
             Vector3 point = Vector3.Transform(point_on_box, objBMat_t0);
             Vector3 normal = Vector3.Normalize(objACenter_t1 - point);  // Vector pointing towards box center from the point on the box
 
-            _cols.Add(new collision(collisionType.VERTEX_FACE,
-                                    objA, objB,
-                                    stateA.time,
-                                    point,
-                                    normal,
-                                    Vector3.Zero, Vector3.Zero, // E1, E2
-                                    objA.h_game.h_GameSettings.coeffRestitution,
-                                    1.0f)); // Normal points out of face of B
+            if (separationDistance <= 0.0f)
+            {
+                // Objects are overlapping.  Add a collision arbitrarily at the mid-point of A --> Most likely this is a SOFT_BOUNDRY collision
+                _cols.Add(new collision(collisionType.VERTEX_FACE,
+                        objA, objB,
+                        stateA.time,
+                        point,
+                        normal,
+                        Vector3.Zero, Vector3.Zero, // E1, E2
+                        objA.h_game.h_GameSettings.coeffRestitution,
+                        1.0f)); // Normal points out of face of B
+            }
+            else
+            {
+                // Otherwise, add a collision normally
+                _cols.Add(new collision(collisionType.VERTEX_FACE,
+                                        objA, objB,
+                                        stateA.time,
+                                        point,
+                                        normal,
+                                        Vector3.Zero, Vector3.Zero, // E1, E2
+                                        objA.h_game.h_GameSettings.coeffRestitution,
+                                        1.0f)); // Normal points out of face of B
+            }
         }
         #endregion
 

@@ -32,11 +32,14 @@ namespace hungrybee
         // Rendering
         public string   skyPlaneTextureFile;
         public float    skyPlaneScale;
-        private int renderSettingsIndex;
-        public string cartoonEffectFile;
-        public string postprocessEffectFile;
-        public string fontFile;
-        public string sketchTextureFile;
+        private int     renderSettingsIndex;
+        public string   cartoonEffectFile;
+        public string   postprocessEffectFile;
+        public string   fontFile;
+        public string   sketchTextureFile;
+        public string   beeFaceTextureFile;
+        public int      beeFaceTextureWidth;
+        public int      beeFaceTextureHeight;
 
         // Game Objects
         public int      startingGameObjectCapacity;
@@ -129,6 +132,9 @@ namespace hungrybee
             enemyHealthImpact = 25.0f;
             enemyPlayerCollisionVelocity = 5.0f;
             deathSequenceScaleRateIncrease = 2.0f;
+            beeFaceTextureFile = "bee-cartoon_COMBINDED_transparent";
+            beeFaceTextureWidth = 564;
+            beeFaceTextureHeight = 180;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -291,7 +297,16 @@ namespace hungrybee
                        case "deathSequenceScaleRateIncrease":
                             this.deathSequenceScaleRateIncrease = float.Parse(curToken[1]);
                             break;
-
+                       case "beeFaceTextureFile":
+                            this.beeFaceTextureFile = curToken[1];
+                            break;
+                       case "beeFaceTextureWidth":
+                            this.beeFaceTextureWidth = Convert.ToInt32(curToken[1]);
+                            break;
+                       case "beeFaceTextureHeight":
+                            this.beeFaceTextureHeight = Convert.ToInt32(curToken[1]);
+                            break;
+                           
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
                         //// ************************************
@@ -351,7 +366,10 @@ namespace hungrybee
             writer.WriteNextToken("enemyHealthImpact", this.enemyHealthImpact);
             writer.WriteNextToken("enemyPlayerCollisionVelocity", this.enemyPlayerCollisionVelocity);
             writer.WriteNextToken("deathSequenceScaleRateIncrease", this.deathSequenceScaleRateIncrease);
-            
+            writer.WriteNextToken("beeFaceTextureFile", this.beeFaceTextureFile);
+            writer.WriteNextToken("beeFaceTextureWidth", this.beeFaceTextureWidth);
+            writer.WriteNextToken("beeFaceTextureHeight", this.beeFaceTextureHeight);
+
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***
             //// ************************************

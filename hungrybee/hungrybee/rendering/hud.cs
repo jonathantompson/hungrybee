@@ -23,7 +23,12 @@ namespace hungrybee
         SpriteFont font;
         StringBuilder stringBuilder;
         Vector2 fpsPosition;
-        Vector2 healthPosition;
+        Rectangle healthPosition;
+        Rectangle happyFace;
+        Rectangle okFace;
+        Rectangle crazyFace;
+        Rectangle currentSourceRectangle;
+        Texture2D beeTexture;
         int frameRate = 0;
         int frameCounter = 0;
         TimeSpan elapsedTime;
@@ -41,7 +46,7 @@ namespace hungrybee
             frameRate = 0;
             elapsedTime = TimeSpan.Zero;
             fpsPosition = new Vector2();
-            healthPosition = new Vector2();
+            healthPosition = new Rectangle();
         }
         #endregion
 
@@ -50,8 +55,9 @@ namespace hungrybee
         {
             frameCounter++;
 
-            h_game.h_RenderManager.spriteBatch.Begin();
+            h_game.h_RenderManager.spriteBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.BackToFront, SaveStateMode.None);
             h_game.h_RenderManager.spriteBatch.DrawString(font, stringBuilder, fpsPosition, Color.White, 0, new Vector2(0, 0), 0.5f, SpriteEffects.None, 0);
+            h_game.h_RenderManager.spriteBatch.Draw(beeTexture, healthPosition, currentSourceRectangle, Color.White, 0, Vector2.Zero, SpriteEffects.None, 0.5f);
             h_game.h_RenderManager.spriteBatch.End();
         }
         #endregion
@@ -72,6 +78,14 @@ namespace hungrybee
 
             stringBuilder.Length = 0;
             stringBuilder.Append(string.Format("fps: {0}", frameRate));
+
+            // Pick the correct texture to rend
+            if (((gameObjectPlayer)h_game.h_GameObjectManager.player).playerHealth > 75.0f)
+                currentSourceRectangle = happyFace;
+            else if (((gameObjectPlayer)h_game.h_GameObjectManager.player).playerHealth > 50.0f)
+                currentSourceRectangle = okFace;
+            else
+                currentSourceRectangle = crazyFace;
         }
         #endregion
 
@@ -92,8 +106,24 @@ namespace hungrybee
             font = h_game.Content.Load<SpriteFont>(h_game.h_GameSettings.fontFile);
             stringBuilder = new StringBuilder();
 
-            fpsPosition.X = h_game.h_GameSettings.xWindowSize * 0.05f; // Offset 5% from the top-left of the window
-            fpsPosition.Y= h_game.h_GameSettings.yWindowSize * 0.05f;
+            float fpsOffset = 0.05f; // Offset % from the top-left of the window
+            fpsPosition.X = (float)h_game.h_GameSettings.xWindowSize * fpsOffset;
+            fpsPosition.Y = (float)h_game.h_GameSettings.yWindowSize * fpsOffset;
+
+            beeTexture = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.beeFaceTextureFile);
+            int width = h_game.h_GameSettings.beeFaceTextureWidth;
+            int height = h_game.h_GameSettings.beeFaceTextureHeight;
+            happyFace = new Rectangle(0, 0, width/3, height);
+            okFace = new Rectangle(width / 3, 0, width / 3, height);
+            crazyFace = new Rectangle(2 * width / 3, 0, width / 3, height);
+
+            float aspectRatio = (width / 3.0f) / height;
+            float healthSize = 0.15f; // percentage of window size (y dimension)
+            float healthOffset = 0.05f; // // Offset % from the bottom-left of the window
+            healthPosition.X = (int)((float)h_game.h_GameSettings.xWindowSize * healthOffset);
+            healthPosition.Y = (int)((float)h_game.h_GameSettings.yWindowSize * (1.0f - healthSize - healthOffset));
+            healthPosition.Height = (int)((float)h_game.h_GameSettings.yWindowSize * healthSize);
+            healthPosition.Width = (int)((float)h_game.h_GameSettings.yWindowSize * healthSize * aspectRatio);
         }
         #endregion
     }

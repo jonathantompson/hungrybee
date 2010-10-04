@@ -37,14 +37,17 @@ namespace hungrybee
         boundingObjType objType;
         Color color;
 
-        phantomType phantomType;
+        public phantomType phantomType;
+        public Vector3     softBoundaryForceVector;
+        public bool        softBoundryPlayerReact;
+        public bool        softBoundryNPCReact;
 
         Object obj;
 
         #endregion
 
-        #region Constructor - gameObjectPhantom(game game, boundingObjType _objType, Object _obj) : base(game, null, _objType)
-        /// Constructor - Basic constructor
+        #region Constructor - gameObjectPhantom() - HARD BOUNDRY
+        /// Constructor - Basic constructor for HARD_BOUNDRY
         /// ***********************************************************************
         public gameObjectPhantom(game game, boundingObjType _objType, Object _obj)
             : base(game, null, _objType)
@@ -55,7 +58,29 @@ namespace hungrybee
             base.movable = false;
             base.collidable = true;
             color = Color.DarkGreen;
-            phantomType = phantomType.UNDEFINED;
+            phantomType = phantomType.HARD_BOUNDRY;
+            softBoundaryForceVector = Vector3.Zero;
+            softBoundryPlayerReact = false;
+            softBoundryNPCReact = false;
+        }
+        #endregion
+
+        #region Constructor - gameObjectPhantom() - SOFT BOUDNRY
+        /// Constructor - Basic constructor for SOFT_BOUNDRY
+        /// ***********************************************************************
+        public gameObjectPhantom(game game, boundingObjType _objType, Object _obj, Vector3 _softBoundaryForceVector, bool playerReact, bool NPCReact)
+            : base(game, null, _objType)
+        {
+            objType = _objType;
+            obj = _obj;
+            base.boundingObj = _obj;
+            base.movable = false;
+            base.collidable = true;
+            color = Color.DarkGreen;
+            phantomType = phantomType.SOFT_BOUNDRY;
+            softBoundaryForceVector = _softBoundaryForceVector;
+            softBoundryPlayerReact = playerReact;
+            softBoundryNPCReact = NPCReact;
         }
         #endregion
 

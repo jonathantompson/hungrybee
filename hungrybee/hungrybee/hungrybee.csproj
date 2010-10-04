@@ -86,7 +86,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="gameObjects\gameObjectFriend.cs" />
     <Compile Include="gameObjects\gameObjectCloud.cs" />
+    <Compile Include="gameObjects\gameObjectNPC.cs" />
     <Compile Include="gameObjects\gameObjectPhantom.cs" />
     <Compile Include="gameObjects\phantomType.cs" />
     <Compile Include="physics\AABBOverlap.cs" />

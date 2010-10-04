@@ -31,7 +31,11 @@ namespace hungrybee
         public List<gameObject> h_GameObjects;      // Handler to the list of game objects
         public List<gameObject> h_GameObjectsRemoveList;
 
-        int numPlayers, numHeightMaps, numEnemys, numPhantoms, numClouds;
+        public gameObject player;
+        public List<gameObject> enemyList;
+        public List<gameObject> friendList;
+
+        int numPlayers, numHeightMaps, numEnemys, numPhantoms, numClouds, numFriends;
         static float frustrumBoundBoxThickness = 2.0f;
         static float frustrumBoundBoxDepth = 20.0f;
         static float EPSILON = 0.00001f;
@@ -45,8 +49,10 @@ namespace hungrybee
         {
             h_game = (game)game;
             h_GameObjects = new List<gameObject>();
-            numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0; numClouds = 0;
+            numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0; numClouds = 0; numFriends = 0;
             h_GameObjectsRemoveList = new List<gameObject>();
+            enemyList = new List<gameObject>();
+            friendList = new List<gameObject>();
         }
         #endregion
 
@@ -59,26 +65,13 @@ namespace hungrybee
         }
         #endregion
 
-        #region Update() - Update accelerations for physicsManager
-        /// Perform initialization - Nothing to initialize
+        #region Update() - Remove objects on h_GameObjectsRemoveList and Update() each object
+        /// Update()
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
             // Remove all objects on the remove list
-            for (int i = 0; i < h_GameObjectsRemoveList.Count; i++)
-            {
-                // Need to find the gameObjectPhysicsDebug that is tied to this gameObject if we're rendering it.
-                if(h_game.h_GameSettings.renderBoundingObjects)
-                    for (int j = 0; j < h_GameObjects.Count; j ++)
-                        if (h_GameObjects[j] is gameObjectPhysicsDebug && ((gameObjectPhysicsDebug)h_GameObjects[j]).attachedGameObject.Equals(h_GameObjectsRemoveList[i]))
-                        { h_GameObjects.Remove(h_GameObjects[j]); h_game.h_PhysicsManager.numObjects--; break; }
-                
-                // Remove the actual object
-                h_GameObjects.Remove(h_GameObjectsRemoveList[i]);
-                h_game.h_PhysicsManager.numObjects--;
-                h_game.h_PhysicsManager.numCollidableObjects--;
-            }
-            h_GameObjectsRemoveList.Clear();
+            ProcessRemovals();
 
             // enumerate through each element in the list and update them
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
@@ -87,6 +80,60 @@ namespace hungrybee
                 ListEnum.Current.Update(gameTime);
             }
             base.Update(gameTime);
+        }
+        #endregion
+
+        #region ProcessRemovals()
+        protected void ProcessRemovals()
+        {
+            // Remove all objects on the remove list
+            for (int i = 0; i < h_GameObjectsRemoveList.Count; i++)
+            {
+                int j;
+
+                // Find which index of the gameObjects list we want to remove
+                int curIndex = -1;
+                for (j = 0; i < h_GameObjects.Count; j++)
+                    if (h_GameObjects[j].Equals(h_GameObjectsRemoveList[i]))
+                    { curIndex = j; break; }
+
+                // AABB insertion sort lists now contain an index that doesn't exist --> Fix it
+                // Also remove any phatomContacts or restingContacts involving this object
+                h_game.h_PhysicsManager.ProcessRemoval(curIndex);
+
+                // Need to find the gameObjectPhysicsDebug that is tied to this gameObject if we're rendering it.
+                if (h_game.h_GameSettings.renderBoundingObjects)
+                    for (j = 0; j < h_GameObjects.Count; j++)
+                        if (h_GameObjects[j] is gameObjectPhysicsDebug && ((gameObjectPhysicsDebug)h_GameObjects[j]).attachedGameObject.Equals(h_GameObjectsRemoveList[i]))
+                        { h_GameObjects.RemoveAt(j); h_game.h_PhysicsManager.numObjects--; break; }
+
+                // If the object is an enemy, remove it from the enemy list
+                if (h_GameObjectsRemoveList[i] is gameObjectEnemy)
+                    for (j = 0; j < enemyList.Count; j++)
+                        if (enemyList[j].Equals(h_GameObjectsRemoveList[i]))
+                        { enemyList.RemoveAt(j); numEnemys--; break; }
+
+                // If the object is a friend, remove it from the friend list
+                else if (h_GameObjectsRemoveList[i] is gameObjectFriend)
+                    for (j = 0; j < friendList.Count; j++)
+                        if (friendList[j].Equals(h_GameObjectsRemoveList[i]))
+                        { friendList.RemoveAt(j); numFriends--; break; }
+                    
+                else if (h_GameObjectsRemoveList[i] is gameObjectCloud)
+                    numClouds--;
+                else if (h_GameObjectsRemoveList[i] is gameObjectHeightMap)
+                    numHeightMaps--;
+                else if (h_GameObjectsRemoveList[i] is gameObjectPhantom)
+                    numPhantoms--;
+                else if (h_GameObjectsRemoveList[i] is gameObjectPlayer)
+                    numPlayers--;
+
+                // Remove the actual object
+                h_GameObjects.Remove(h_GameObjectsRemoveList[i]);
+                h_game.h_PhysicsManager.numObjects--;
+                h_game.h_PhysicsManager.numCollidableObjects--;
+            }
+            h_GameObjectsRemoveList.Clear();
         }
         #endregion
 
@@ -159,88 +206,22 @@ namespace hungrybee
                 switch (curToken[0])
                 {
                     case "player":
-                        if (numPlayers == 0 && curToken.Count == 7 )
-                        {
-                            // public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 _pos )
-                            curObject = new gameObjectPlayer(h_game, 
-                                                             curToken[1],
-                                                             GetBoundingObjTypeFromString(curToken[2]),
-                                                             float.Parse(curToken[3]),
-                                                             new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])));
-                            numPlayers += 1;
-                        }
-                        else
-                            throw new Exception("gameObjectManager::LoadContent(): Error reading player settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        curObject = SpawnPlayerFromToken(ref curToken, levelNumber);
                         break;
-
                     case "heightMap":
-                        if (numHeightMaps == 0 && curToken.Count == 10)
-                        {
-                            curObject = new gameObjectHeightMap(h_game,
-                                                                bool.Parse(curToken[1]),
-                                                                curToken[2],
-                                                                curToken[3],
-                                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
-                                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
-                            numHeightMaps += 1;
-                        }
-                        else
-                            throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}",levelNumber) + ".csv");
+                        curObject = SpawnHeightMapFromToken(ref curToken, levelNumber);
                         break;
                     case "enemy":
-                        if (curToken.Count == 10)
-                        {
-                            // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
-                            curObject = new gameObjectEnemy(h_game,
-                                                            curToken[1],
-                                                            GetBoundingObjTypeFromString(curToken[2]),
-                                                            float.Parse(curToken[3]),
-                                                            new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
-                                                            new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
-                            numEnemys += 1;
-                        }
-                        else
-                            throw new Exception("gameObjectManager::LoadContent(): Error reading enemy settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        curObject = SpawnEnemyFromToken(ref curToken, levelNumber);
                         break;
                     case "phantom":
-                        if (curToken.Count > 2)
-                        {
-                            if (curToken[1] == "AABB")
-                            {
-                                if (curToken.Count != 8)
-                                    throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
-                                curObject = new gameObjectPhantom(h_game, boundingObjType.AABB,
-                                                                  (Object) new BoundingBox(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
-                                                                                           new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7]))));
-                            }
-                            else if (curToken[1] == "SPHERE")
-                            {
-                                if (curToken.Count != 6)
-                                    throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
-                                curObject = new gameObjectPhantom(h_game, boundingObjType.SPHERE,
-                                                                  (Object)new BoundingSphere(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
-                                                                                             float.Parse(curToken[5])));
-                            }
-                            else
-                                throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
-                            numPhantoms += 1;
-                        }
-                        else
-                            throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        curObject = SpawnPhantomFromToken(ref curToken, levelNumber);
                         break;
                     case "cloud":
-                        if (curToken.Count == 10)
-                        {
-                            curObject = new gameObjectCloud(h_game,
-                                                            int.Parse(curToken[1]),
-                                                            int.Parse(curToken[2]),
-                                                            int.Parse(curToken[3]),
-                                                            new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
-                                                            new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
-                            numClouds += 1;
-                        }
-                        else
-                            throw new Exception("gameObjectManager::LoadContent(): Error reading cloud settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                        curObject = SpawnCloudFromToken(ref curToken, levelNumber);
+                        break;
+                    case "friend":
+                        curObject = SpawnFriendFromToken(ref curToken, levelNumber);
                         break;
                     case "//": // Comment
                         curObject = null;
@@ -267,6 +248,162 @@ namespace hungrybee
 
             }
             reader.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
+        }
+        #endregion
+
+        #region SpawnPlayerFromToken()
+        protected gameObject SpawnPlayerFromToken(ref List<string> curToken, int levelNumber)
+        {
+            gameObject retObject = null;
+            if (numPlayers == 0 && curToken.Count == 7)
+            {
+                // public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 _pos )
+                retObject = new gameObjectPlayer(h_game,
+                                                 curToken[1],
+                                                 GetBoundingObjTypeFromString(curToken[2]),
+                                                 float.Parse(curToken[3]),
+                                                 new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])));
+                numPlayers += 1;
+                player = retObject;
+            }
+            else
+                throw new Exception("gameObjectManager::LoadContent(): Error reading player settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+            return retObject;
+        }
+        #endregion
+
+        #region SpawnHeightMapFromToken()
+        protected gameObject SpawnHeightMapFromToken(ref List<string> curToken, int levelNumber)
+        {
+            gameObject retObject = null;
+            if (numHeightMaps == 0 && curToken.Count == 10)
+            {
+                retObject = new gameObjectHeightMap(h_game,
+                                                    bool.Parse(curToken[1]),
+                                                    curToken[2],
+                                                    curToken[3],
+                                                    new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                    new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                numHeightMaps += 1;
+            }
+            else
+                throw new Exception("gameObjectManager::LoadContent(): Error reading heightMap settings from Level_" + String.Format("{0}", levelNumber) + ".csv"); 
+            return retObject;
+        }
+        #endregion
+
+        #region SpawnEnemyFromToken()
+        protected gameObject SpawnEnemyFromToken(ref List<string> curToken, int levelNumber)
+        {
+            gameObject retObject = null;
+            if (curToken.Count == 10)
+            {
+                // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
+                retObject = new gameObjectEnemy(h_game,
+                                                curToken[1],
+                                                GetBoundingObjTypeFromString(curToken[2]),
+                                                float.Parse(curToken[3]),
+                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                numEnemys += 1;
+                enemyList.Add(retObject);
+            }
+            else
+                throw new Exception("gameObjectManager::LoadContent(): Error reading enemy settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+            return retObject;
+        }
+        #endregion
+
+        #region SpawnFriendFromToken()
+        protected gameObject SpawnFriendFromToken(ref List<string> curToken, int levelNumber)
+        {
+            gameObject retObject = null;
+            if (curToken.Count == 10)
+            {
+                // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
+                retObject = new gameObjectFriend(h_game,
+                                                curToken[1],
+                                                GetBoundingObjTypeFromString(curToken[2]),
+                                                float.Parse(curToken[3]),
+                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                numFriends += 1;
+                friendList.Add(retObject);
+            }
+            else
+                throw new Exception("gameObjectManager::LoadContent(): Error reading friend settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+            return retObject;
+        }
+        #endregion
+
+        #region SpawnPhantomFromToken()
+        protected gameObject SpawnPhantomFromToken(ref List<string> curToken, int levelNumber)
+        {
+            gameObject retObject = null;
+            bool error = false;
+            if (curToken.Count > 2)
+            {
+                if (curToken[1] == "AABB")
+                {
+                    if ((curToken.Count == 9 && curToken[8] == "HARD_BOUNDRY"))
+                        retObject = new gameObjectPhantom(h_game, boundingObjType.AABB,
+                                                          (Object)new BoundingBox(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
+                                                                                  new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7]))));
+                    else if ((curToken.Count == 14 && curToken[8] == "SOFT_BOUNDRY"))
+                        retObject = new gameObjectPhantom(h_game, boundingObjType.AABB,
+                                                          (Object)new BoundingBox(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
+                                                                                  new Vector3(float.Parse(curToken[5]), float.Parse(curToken[6]), float.Parse(curToken[7]))),
+                                                          new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])),
+                                                          int.Parse(curToken[12]) == 1, int.Parse(curToken[13]) == 1);
+                    else
+                        error = true;
+                }
+                else if (curToken[1] == "SPHERE")
+                {
+                    if ((curToken.Count == 7 && curToken[6] == "HARD_BOUNDRY"))
+                        retObject = new gameObjectPhantom(h_game, boundingObjType.SPHERE,
+                                                          (Object)new BoundingSphere(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
+                                                                                     float.Parse(curToken[5])));
+                    else if ((curToken.Count == 12 && curToken[6] == "SOFT_BOUNDRY"))
+                        retObject = new gameObjectPhantom(h_game, boundingObjType.AABB,
+                                                          (Object)new BoundingSphere(new Vector3(float.Parse(curToken[2]), float.Parse(curToken[3]), float.Parse(curToken[4])),
+                                                                                     float.Parse(curToken[5])),
+                                                          new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])),
+                                                          int.Parse(curToken[10]) == 1, int.Parse(curToken[11]) == 1);
+                    else
+                        error = true;
+                }
+                else
+                    throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+                numPhantoms += 1;
+            }
+            else
+                error = true;
+
+            if(error)
+                throw new Exception("gameObjectManager::LoadContent(): Error reading phantom settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+            else
+                return retObject;
+        }
+        #endregion
+
+        #region SpawnCloudFromToken()
+        protected gameObject SpawnCloudFromToken(ref List<string> curToken, int levelNumber)
+        {
+            gameObject retObject = null;
+            if (curToken.Count == 10)
+            {
+                retObject = new gameObjectCloud(h_game,
+                                                int.Parse(curToken[1]),
+                                                int.Parse(curToken[2]),
+                                                int.Parse(curToken[3]),
+                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
+                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                numClouds += 1;
+            }
+            else
+                throw new Exception("gameObjectManager::LoadContent(): Error reading cloud settings from Level_" + String.Format("{0}", levelNumber) + ".csv");
+            return retObject;
         }
         #endregion
 

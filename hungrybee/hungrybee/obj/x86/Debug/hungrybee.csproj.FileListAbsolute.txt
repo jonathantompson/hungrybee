@@ -7,7 +7,6 @@ C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hu
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\CartoonEffect.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\PostprocessEffect.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\SketchTexture.xnb
-C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Arial.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Ship.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\ShipDiffuse_0.xnb
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\CartoonEffect.xnb
@@ -33,8 +32,10 @@ C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bi
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\bee2.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\small_bee.xnb
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\bee2.xnb
-C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\Level_1.csv
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\Level_1.csv
 C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\settings.csv
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\settings.csv
 C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\hudArialFont.xnb
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\hudArialFont.xnb
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\bee-cartoon_COMBINDED_transparent.xnb
+C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\gameSettings\Level_1.csv

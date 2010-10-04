@@ -121,6 +121,31 @@ namespace hungrybee
     }
     #endregion
 
+    /// ** forcePhantom 
+    /// ** Force to apply phantom force to an object
+    /// ***********************************************************************
+    #region forcePhantom : force
+    public class forcePhantom : force
+    {
+        public Vector3 acceleration;
+
+        public forcePhantom(Vector3 _acceleration)
+        {
+            acceleration = _acceleration;
+        }
+
+        public override Vector3 GetForce(ref rboState state, float time)
+        {
+            return acceleration * state.mass;
+        }
+
+        public override Vector3 GetTorque(ref rboState state, float time)
+        {
+            return Vector3.Zero;
+        }
+    }
+    #endregion
+
     /// ** forcePlayerInput
     /// ** Force to apply a constant acceleration for as long as a button is
     /// ** pressed and set the desired orientation by applying torque
