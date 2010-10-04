@@ -48,7 +48,13 @@ namespace hungrybee
 
         // Misc
         public float    EPSILON;
+
+        // Game Play Settings
         public float    enemyCollisionAngleTollerence;
+        public float    deathSequenceDuration;
+        public float    enemyHealthImpact;
+        public float    enemyPlayerCollisionVelocity;
+        public float    deathSequenceScaleRateIncrease;
 
         // Physics
         public int      forceListCapacity;
@@ -98,7 +104,7 @@ namespace hungrybee
             startingGameObjectCapacity = 64;
             cartoonEffectFile = "CartoonEffect";
             postprocessEffectFile = "PostprocessEffect";
-            fontFile = "arial";
+            fontFile = "hudArialFont";
             sketchTextureFile = "SketchTexture";
             cameraSpeed = 0.1f;
             cameraRunningMult = 4.0f;
@@ -106,12 +112,12 @@ namespace hungrybee
             EPSILON = 0.00000001f;
             forceListCapacity = 4;
             physicsObjectsStartingCapacity = 64;
-            gravity = 2.0f;
+            gravity = 9.81f;
             renderBoundingObjects = true;
             pauseOnCollision = false;
-            renderCollisions = true;
+            renderCollisions = false;
             limitXYCollisionResponce = true;
-            coeffRestitution = 0.8f;
+            coeffRestitution = 0.2f;
             enemyTimeToOrient = 0.2f;
             playerTimeToOrient = 0.2f;
             playerTimeToAccelerate = 0.2f;
@@ -119,6 +125,10 @@ namespace hungrybee
             playerVelocity = 2.5f;
             playerJumpMomentum = 6.0f;
             enemyCollisionAngleTollerence = 0.52359877f; // 30deg
+            deathSequenceDuration = 0.8f;
+            enemyHealthImpact = 25.0f;
+            enemyPlayerCollisionVelocity = 5.0f;
+            deathSequenceScaleRateIncrease = 2.0f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -269,6 +279,18 @@ namespace hungrybee
                         case "enemyCollisionAngleTollerence":
                             this.enemyCollisionAngleTollerence = float.Parse(curToken[1]);
                             break;
+                        case "deathSequenceDuration":
+                            this.deathSequenceDuration = float.Parse(curToken[1]);
+                            break;
+                       case "enemyHealthImpact":
+                            this.enemyHealthImpact = float.Parse(curToken[1]);
+                            break;
+                       case "enemyPlayerCollisionVelocity":
+                            this.enemyPlayerCollisionVelocity = float.Parse(curToken[1]);
+                            break;
+                       case "deathSequenceScaleRateIncrease":
+                            this.deathSequenceScaleRateIncrease = float.Parse(curToken[1]);
+                            break;
 
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -325,6 +347,10 @@ namespace hungrybee
             writer.WriteNextToken("playerVelocity", this.playerVelocity);
             writer.WriteNextToken("playerJumpMomentum", this.playerJumpMomentum);
             writer.WriteNextToken("enemyCollisionAngleTollerence", this.enemyCollisionAngleTollerence);
+            writer.WriteNextToken("deathSequenceDuration", this.deathSequenceDuration);
+            writer.WriteNextToken("enemyHealthImpact", this.enemyHealthImpact);
+            writer.WriteNextToken("enemyPlayerCollisionVelocity", this.enemyPlayerCollisionVelocity);
+            writer.WriteNextToken("deathSequenceScaleRateIncrease", this.deathSequenceScaleRateIncrease);
             
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

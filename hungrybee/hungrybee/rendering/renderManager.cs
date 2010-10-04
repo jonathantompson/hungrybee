@@ -30,16 +30,15 @@ namespace hungrybee
         #region Local Variables
 
         // Local variables
-        private game    h_game;
-        Random          random;
-        SpriteBatch     spriteBatch;
-        SpriteFont      spriteFont;
-        Effect          postprocessEffect;      // Effect used to apply the edge detection and pencil sketch postprocessing.
-        Texture2D       sketchTexture;          // Overlay texture containing the pencil sketch stroke pattern.
-        Vector2         sketchJitter;           // Randomly offsets the sketch pattern to create a hand-drawn animation effect.
-        TimeSpan        timeToNextJitter;
-        RenderTarget2D  sceneRenderTarget;      // Custom rendertargets.
-        RenderTarget2D  normalDepthRenderTarget;
+        private game            h_game;
+        Random                  random;
+        public SpriteBatch      spriteBatch;
+        Effect                  postprocessEffect;      // Effect used to apply the edge detection and pencil sketch postprocessing.
+        Texture2D               sketchTexture;          // Overlay texture containing the pencil sketch stroke pattern.
+        Vector2                 sketchJitter;           // Randomly offsets the sketch pattern to create a hand-drawn animation effect.
+        TimeSpan                timeToNextJitter;
+        RenderTarget2D          sceneRenderTarget;      // Custom rendertargets.
+        RenderTarget2D          normalDepthRenderTarget;
 
         #endregion
 
@@ -69,7 +68,6 @@ namespace hungrybee
         {
 
             spriteBatch = new SpriteBatch(h_game.h_GraphicsDevice);
-            spriteFont = h_game.Content.Load<SpriteFont>(h_game.h_GameSettings.fontFile);
             postprocessEffect = h_game.Content.Load<Effect>(h_game.h_GameSettings.postprocessEffectFile);
             sketchTexture = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.sketchTextureFile);
 
@@ -190,7 +188,7 @@ namespace hungrybee
 
             // Display some text over the top. Note how we draw this after the
             // postprocessing, because we don't want the text to be affected by it.
-            // DrawOverlayText();
+            h_game.h_Hud.Draw();
 
         }
         #endregion

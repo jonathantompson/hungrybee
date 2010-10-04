@@ -125,7 +125,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region StopPlayerControls
+        #region StopPlayerControls()
         public void StopPlayerControls()
         {
             ((forcePlayerInput)forcePlayerInput).SetVelocity(Vector3.Zero);
@@ -133,6 +133,13 @@ namespace hungrybee
             state.linearVel = Vector3.Zero;
             state.angularMom = Vector3.Zero;
             state.angularVel = Vector3.Zero;
+        }
+        #endregion
+
+        #region HurtPlayer()
+        public void HurtPlayer()
+        {
+            playerHealth = playerHealth - base.h_game.h_GameSettings.enemyHealthImpact;
         }
         #endregion
     }

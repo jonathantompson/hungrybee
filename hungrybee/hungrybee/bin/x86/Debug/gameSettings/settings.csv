@@ -6,7 +6,7 @@ renderSettingsIndex,4
 startingGameObjectCapacity,64
 cartoonEffectFile,CartoonEffect
 postprocessEffectFile,PostprocessEffect
-fontFile,arial
+fontFile,hudArialFont
 sketchTextureFile,SketchTexture
 cameraSpeed,0.1
 cameraRunningMult,4
@@ -14,7 +14,7 @@ cameraRotationSpeed,0.002
 EPSILON,1E-08
 forceListCapacity,4
 physicsObjectsStartingCapacity,64
-gravity,9.18
+gravity,9.81
 renderBoundingObjects,1
 pauseOnCollision,0
 renderCollisions,0
@@ -24,5 +24,10 @@ enemyTimeToOrient,0.2
 playerTimeToOrient,0.2
 playerTimeToAccelerate,0.2
 playerMaxAcceleration,10
-playerVelocity,2.5
+playerVelocity,5
 playerJumpMomentum,6
+enemyCollisionAngleTollerence,0.5235988
+deathSequenceDuration,0.2
+enemyHealthImpact,25
+enemyPlayerCollisionVelocity,5
+deathSequenceScaleRateIncrease,10

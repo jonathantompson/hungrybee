@@ -29,6 +29,7 @@ namespace hungrybee
 
         game h_game;
         public List<gameObject> h_GameObjects;      // Handler to the list of game objects
+        public List<gameObject> h_GameObjectsRemoveList;
 
         int numPlayers, numHeightMaps, numEnemys, numPhantoms, numClouds;
         static float frustrumBoundBoxThickness = 2.0f;
@@ -45,6 +46,7 @@ namespace hungrybee
             h_game = (game)game;
             h_GameObjects = new List<gameObject>();
             numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0; numClouds = 0;
+            h_GameObjectsRemoveList = new List<gameObject>();
         }
         #endregion
 
@@ -62,6 +64,22 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
+            // Remove all objects on the remove list
+            for (int i = 0; i < h_GameObjectsRemoveList.Count; i++)
+            {
+                // Need to find the gameObjectPhysicsDebug that is tied to this gameObject if we're rendering it.
+                if(h_game.h_GameSettings.renderBoundingObjects)
+                    for (int j = 0; j < h_GameObjects.Count; j ++)
+                        if (h_GameObjects[j] is gameObjectPhysicsDebug && ((gameObjectPhysicsDebug)h_GameObjects[j]).attachedGameObject.Equals(h_GameObjectsRemoveList[i]))
+                        { h_GameObjects.Remove(h_GameObjects[j]); h_game.h_PhysicsManager.numObjects--; break; }
+                
+                // Remove the actual object
+                h_GameObjects.Remove(h_GameObjectsRemoveList[i]);
+                h_game.h_PhysicsManager.numObjects--;
+                h_game.h_PhysicsManager.numCollidableObjects--;
+            }
+            h_GameObjectsRemoveList.Clear();
+
             // enumerate through each element in the list and update them
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far

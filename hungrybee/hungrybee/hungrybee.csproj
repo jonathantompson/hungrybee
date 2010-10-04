@@ -109,6 +109,7 @@
     <Compile Include="game.cs" />
     <Compile Include="physics\rboDerivative.cs" />
     <Compile Include="physics\rboState.cs" />
+    <Compile Include="rendering\hud.cs" />
     <Compile Include="rendering\renderManager.cs" />
     <Compile Include="rendering\skyPlane.cs" />
     <Compile Include="misc\ExtensionMethods.cs" />

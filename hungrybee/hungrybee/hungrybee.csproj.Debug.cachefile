@@ -1,4 +1,3 @@
-Content\Arial.xnb
 Content\CartoonEffect.xnb
 Content\PostprocessEffect.xnb
 Content\Ship.xnb
@@ -10,5 +9,6 @@ Content\clouds.xnb
 Content\heightmap.xnb
 Content\Grass.xnb
 Content\ShipDiffuse_0.xnb
+Content\hudArialFont.xnb
 gameSettings\Level_1.csv
 gameSettings\settings.csv

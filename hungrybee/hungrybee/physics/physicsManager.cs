@@ -33,8 +33,8 @@ namespace hungrybee
 
         // Local variables
         private game h_game;
-        private int numObjects; // Not known until gameObjectManager.LoadLevel() is complete
-        private int numCollidableObjects;
+        public int numObjects; // Not known until gameObjectManager.LoadLevel() is complete
+        public int numCollidableObjects;
         rboDerivative D1, D2, D3, D4;
 
         // Coarse collision detection

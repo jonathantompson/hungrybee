@@ -38,7 +38,7 @@ namespace hungrybee
         BasicEffect effect;
         Matrix world;
 
-        gameObject attachedGameObject;
+        public gameObject attachedGameObject;
         boundingObjType objType;
         Color color;
 

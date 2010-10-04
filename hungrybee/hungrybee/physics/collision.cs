@@ -113,6 +113,39 @@ namespace hungrybee
         /// ***********************************************************************
         public bool ResolvePlayerEnemyCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State, float collisionAngleTollerence)
         {
+            if (obj1 is gameObjectPlayer)
+            {
+                obj1State.linearVel = Vector3.Normalize(obj1State.linearVel);
+                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj1State.linearVel;
+            }
+            else
+            {
+                obj2State.linearVel = Vector3.Normalize(obj2State.linearVel);
+                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj2State.linearVel;
+            }
+
+            if (CheckCollidingContact(ref obj1State, ref obj2State))
+                ResolveCollidingCollision(ref obj1State, ref obj2State);
+            else
+                throw new Exception("collision::ResolvePlayerEnemyCollision() - collision isn't colliding!");
+
+            gameObjectEnemy enemy = null;
+            gameObjectPlayer player = null;
+            if (obj1 is gameObjectEnemy && obj2 is gameObjectPlayer)
+            {
+                enemy = (gameObjectEnemy)obj1;
+                player = (gameObjectPlayer)obj2;
+            }
+            else if (obj2 is gameObjectEnemy && obj1 is gameObjectPlayer)
+            {
+                enemy = (gameObjectEnemy)obj2;
+                player = (gameObjectPlayer)obj1;
+            }
+#if DEBUG
+            else
+                throw new Exception("collision::ResolvePlayerEnemyCollision() - Input objects must be one enemy and one player");
+#endif
+
             // Two Cases:
             // A) Collision normal is too shallow --> player is hurt. Push player away and reduce health
             // B) Else, set Enemy to die sequence.
@@ -124,21 +157,12 @@ namespace hungrybee
             //       = arccos( a . b )    if both vectors are normal
             collisionAngleToHorizontal = Math.Abs((float)Math.Acos(Vector3.Dot(colNorm, Vector3.Right)));
 
-            if(collisionAngleToHorizontal < collisionAngleTollerence)
+            if(collisionAngleToHorizontal > collisionAngleTollerence)
             {
-                if(obj1 is gameObjectEnemy)
-                    obj1.KillEnemy();
-                else
-                    obj2.KillEnemy();
+                enemy.KillEnemy();
             } else {
-                if(obj1 is gameObjectPlayer)
-                    obj1.HurtPlayer();
-                else
-                    obj2.HurtPlayer();
+                player.HurtPlayer();
             }
-
-            // Now bounce the player off the enemy
-            
 
             return false;
         }

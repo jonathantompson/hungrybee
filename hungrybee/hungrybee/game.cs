@@ -40,6 +40,7 @@ namespace hungrybee
         public skyPlane h_SkyPlane;             // The background SkyPlane (like a skybox but with one side to save rendering calls)  
         public gameObjectManager h_GameObjectManager;
         public physicsManager h_PhysicsManager;
+        public hud h_Hud;
 
         #endregion
 
@@ -57,6 +58,7 @@ namespace hungrybee
             h_RenderManager = new renderManager(this);
             h_GameObjectManager = new gameObjectManager(this);
             h_PhysicsManager = new physicsManager(this);
+            h_Hud = new hud(this);
 
             // Manually specify the update order for interdependancies
             h_GameSettings.UpdateOrder      = 0;
@@ -65,6 +67,7 @@ namespace hungrybee
             h_RenderManager.UpdateOrder     = 3;
             h_SkyPlane.UpdateOrder          = 4;
             h_PhysicsManager.UpdateOrder    = 5;
+            h_Hud.UpdateOrder               = 6;
 
             // Add the new game components
             Components.Add(h_GameSettings);
@@ -73,6 +76,7 @@ namespace hungrybee
             Components.Add(h_RenderManager);
             Components.Add(h_GameObjectManager);
             Components.Add(h_PhysicsManager);
+            Components.Add(h_Hud);
         }
         #endregion
 
@@ -98,9 +102,10 @@ namespace hungrybee
             base.LoadContent(); // Call .LoadContent() for all added components.
 
             // Call LoadContent() for GameDevices that need it done manually
-            ((skyPlane)h_SkyPlane).LoadContent();
-            ((gameObjectManager)h_GameObjectManager).LoadContent(); // MUST BE CALLED BEFORE renderManager.LoadContent()!!
-            ((renderManager)h_RenderManager).LoadContent();
+            h_SkyPlane.LoadContent();
+            h_GameObjectManager.LoadContent(); // MUST BE CALLED BEFORE renderManager.LoadContent()!!
+            h_RenderManager.LoadContent();
+            h_Hud.LoadContent();
             
         }
         #endregion
@@ -112,8 +117,8 @@ namespace hungrybee
         protected override void UnloadContent()
         {
             // Call UnloadContent() for GameDevices that need it done manually
-            ((renderManager)h_RenderManager).UnloadContent();
-            ((gameObjectManager)h_GameObjectManager).UnloadContent();
+            h_RenderManager.UnloadContent();
+            h_GameObjectManager.UnloadContent();
         }
         #endregion
 
@@ -139,7 +144,7 @@ namespace hungrybee
         protected override void Draw(GameTime gameTime)
         {
             // Simply send a draw request off to the render manager...
-            ((renderManager)h_RenderManager).Draw(gameTime);
+            h_RenderManager.Draw(gameTime);
         }
         #endregion
     }
