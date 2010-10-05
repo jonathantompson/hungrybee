@@ -85,7 +85,7 @@ namespace hungrybee
                                                  new renderSettings("Pencil", false, true, 0.5f, 0.5f, true, false, 0.1f, 0.3f, 0.05f),
                                                  new renderSettings("Chunky Monochrome", true, true, 1.5f, 0.5f, true, false, 0, 0.35f, 0),
                                                  new renderSettings("Colored Hatching", false, true, 0.5f, 0.333f, true, true, 0.2f, 0.5f, 0.075f),
-                                                 new renderSettings("Cartoon and Shading", true, true, 0.5f, 0.5f, true, true, 0.1f, 0.3f, 0),
+                                                 new renderSettings("Cartoon and Shading", true, true, 0.5f, 0.5f, true, true, 0.01f, 0.3f, 0.1f),
                                                  new renderSettings("Nothing", false, false, 0, 0, false, false, 0, 0, 0)};  
 
         //// ************************************

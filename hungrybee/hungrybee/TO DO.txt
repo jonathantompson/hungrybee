@@ -1,19 +1,20 @@
 ﻿
 STUFF I SHOULD DO BEFORE ANYTHING ELSE
-- Debug Model loading --> ChangeEffectUsedByModel() maybe not copying Difuse color?
 - Debug instability --> When Player glances off the enemy, the collision isn't colliding! (press jump and left on startup)
+                    --> Try adding an impulse "kick" to objects that are causing physics system to hit max iterations
+                    --> Hitting max iterations during normal operation as well.
 
 STUFF I HAVE TO DO
 - Make Bee friends collectable (on collision AND have game complete logic)
 - Add cats and dogs class --> Which is just a sphereical projectile that dies after a set time.
-- Load the models in...  Having lots of difficulty
-- Make the audio responces
-- Improve the clouds, they look like crap.
+- Make a menu, including settings for changing the shader effects (jitter on/off, etc)
+- Make the audio responces (http://msdn.microsoft.com/en-us/library/bb203895(v=XNAGameStudio.31).aspx)
 - Make particle effects and enemy blow up effect
 - Profile performance: http://www.gamedev.net/community/forums/topic.asp?topic_id=474249
 - Don't update bounding boxes for objects that cannot be moved.
 
 STUFF I WOULD LIKE TO DO IF I HAVE TIME
+- Add Gausian blur to clouds: http://www.webdesign.org/photoshop/drawing-techniques/cartoon-clouds.12701.html
 - Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
 - Fix swept sphere collision code for AABB-sphere collisions --> Glancing collisions are failing to be detected. (where velocity is nearly perpendicular to collision normal)
 - Fix swept collision bug where collision time returns 0.0f if the objects start close but not intersecting (0.0000001f distance)
@@ -28,7 +29,3 @@ STUFF I WOULD LIKE TO DO IF I HAVE TIME
 - Coarse tune data structures are wasteful.  Some are O(n^2).  Reduce to only have (numCollidables choose 2).
 - Improve sphere-sphere collision detection routine --> use a method that avoids the sqrt call AND gets around 
     floating point accuracy for large velocities
-
-
-// Might help load the models: http://forums.xna.com/forums/p/37798/220378.aspx
-// I think textures are getting fucked up

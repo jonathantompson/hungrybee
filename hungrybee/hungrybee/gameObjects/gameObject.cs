@@ -30,6 +30,8 @@ namespace hungrybee
 
         public game h_game;
         public Model model;
+        public bool textureEnabled;
+        public bool vertexColorEnabled;
         string modelFile;
         Matrix[] modelTransforms;
         public float modelScaleToNormalizeSize;
@@ -76,13 +78,16 @@ namespace hungrybee
             forceList = new List<force>(game.h_GameSettings.forceListCapacity);
             boundingObjType = boundingObjType.UNDEFINED;
             dirtyAABB = true;
+            textureEnabled = true;
+            vertexColorEnabled = false;
         }
         #endregion
 
-        #region Constructor gameObject( game game, string modelfile, boundingObjType objType )
+        #region Constructor gameObject( game game, string modelfile, boundingObjType objType, bool _textureEnabled, bool _vertexColorEnabled )
         /// Constructor
         /// ***********************************************************************
-        public gameObject(game game, string modelfile, boundingObjType objType ) : base()
+        public gameObject(game game, string modelfile, boundingObjType objType, bool _textureEnabled, bool _vertexColorEnabled )
+            : base()
         {
             state = new rboState();
             prevState = new rboState();
@@ -96,6 +101,8 @@ namespace hungrybee
             boundingObjType = objType;
             dirtyAABB = true;
             resting = false;
+            textureEnabled = _textureEnabled;
+            vertexColorEnabled = _vertexColorEnabled;
         }
         #endregion
 
@@ -213,112 +220,59 @@ namespace hungrybee
         #region virtual ChangeEffectUsedByModel()
         /// Alters a model so it will draw using a custom effect, while preserving
         /// whatever textures were set on it as part of the original effects.
-        /// /// ***********************************************************************
+        /// If no texture data is found, it will preserve vertex colors
+        /// ***********************************************************************
         public virtual void ChangeEffectUsedByModel(Effect replacementEffect)
         {
             // Table mapping the original effects to our replacement versions.
             Dictionary<Effect, Effect> effectMapping = new Dictionary<Effect, Effect>();
-
+            bool changeEffect = false;
             foreach (ModelMesh mesh in model.Meshes)
             {
-                // Scan over all the effects currently on the mesh.
-                foreach (BasicEffect oldEffect in mesh.Effects)
+                if (mesh.Effects[0] is BasicEffect)
                 {
-                    // If we haven't already seen this effect...
-                    if (!effectMapping.ContainsKey(oldEffect))
+                    changeEffect = true;
+                    // Scan over all the effects currently on the mesh.
+                    foreach (BasicEffect oldEffect in mesh.Effects)
                     {
-                        // Make a clone of our replacement effect. We can't just use
-                        // it directly, because the same effect might need to be
-                        // applied several times to different parts of the model using
-                        // a different texture each time, so we need a fresh copy each
-                        // time we want to set a different texture into it.
-                        Effect newEffect = replacementEffect.Clone(
-                                                    replacementEffect.GraphicsDevice);
+                        // If we haven't already seen this effect...
+                        if (!effectMapping.ContainsKey(oldEffect))
+                        {
+                            // Make a clone of our replacement effect. We can't just use
+                            // it directly, because the same effect might need to be
+                            // applied several times to different parts of the model using
+                            // a different texture each time, so we need a fresh copy each
+                            // time we want to set a different texture into it.
+                            Effect newEffect = replacementEffect.Clone(
+                                                        replacementEffect.GraphicsDevice);
 
-                        // Copy across the texture from the original effect.
-                        newEffect.Parameters["Texture"].SetValue(oldEffect.Texture);
+                            // Copy across the texture from the original effect.
+                            newEffect.Parameters["Texture"].SetValue(oldEffect.Texture);
 
-                        newEffect.Parameters["TextureEnabled"].SetValue(
-                                                            oldEffect.TextureEnabled);
+                            newEffect.Parameters["TextureEnabled"].SetValue(textureEnabled);
 
-                        effectMapping.Add(oldEffect, newEffect);
+                            newEffect.Parameters["DiffuseColor"].SetValue(oldEffect.DiffuseColor);
+                            newEffect.Parameters["VertexColorEnabled"].SetValue(vertexColorEnabled);
+
+                            effectMapping.Add(oldEffect, newEffect);
+                        }
                     }
+                }
+                else
+                {
+                    // don't change anything
                 }
 
                 // Now that we've found all the effects in use on this mesh,
                 // update it to use our new replacement versions.
-                foreach (ModelMeshPart meshPart in mesh.MeshParts)
+                if (changeEffect)
                 {
-                    meshPart.Effect = effectMapping[meshPart.Effect];
+                    foreach (ModelMeshPart meshPart in mesh.MeshParts)
+                    {
+                        meshPart.Effect = effectMapping[meshPart.Effect];
+                    }
                 }
             }
-        }
-        #endregion
-
-        #region ScaleModel()
-        /// ScaleModel - Scales the actual model verticies --> NO LONGER USED!
-        /// ***********************************************************************
-        public static void ScaleModel(Model model)
-        {
-            // All meshes in the model share the same vertex buffer: Get the vertex data
-            ModelMesh mesh = model.Meshes[0];
-            ModelMeshPart part = mesh.MeshParts[0];
-            VertexElement[] vertexElements = part.VertexDeclaration.GetVertexElements();
-            int sizeInBytes = part.VertexStride;
-            VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / part.VertexStride];
-            mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
-
-            // Calculate the Center of Mass
-            Vector3 COM = Vector3.Zero;
-            for (int curVertex = 0; curVertex < vertices.Length; curVertex++)
-            {
-                COM += vertices[curVertex].Position;
-            }
-            COM = COM / vertices.Length;
-
-            // Offset each vertex position data with the -COM
-            for (int curVertex = 0; curVertex < vertices.Length; curVertex++)
-                vertices[curVertex].Position -= COM;
-
-            // Find the Max/Min in each direction
-            float MaxX = vertices[0].Position.X;
-            float MinX = vertices[0].Position.X;
-            float MaxY = vertices[0].Position.Y;
-            float MinY = vertices[0].Position.Y;
-            float MaxZ = vertices[0].Position.Z;
-            float MinZ = vertices[0].Position.Z;
-            for (int curVertex = 1; curVertex < vertices.Length; curVertex++)
-            {
-                if (vertices[curVertex].Position.X > MaxX)
-                    MaxX = vertices[curVertex].Position.X;
-                if (vertices[curVertex].Position.X < MinX)
-                    MinX = vertices[curVertex].Position.X;
-                if (vertices[curVertex].Position.Y > MaxY)
-                    MaxY = vertices[curVertex].Position.Y;
-                if (vertices[curVertex].Position.Y < MinY)
-                    MinY = vertices[curVertex].Position.Y;
-                if (vertices[curVertex].Position.Z > MaxZ)
-                    MaxZ = vertices[curVertex].Position.Z;
-                if (vertices[curVertex].Position.Z < MinZ)
-                    MinZ = vertices[curVertex].Position.Z;
-            }
-            float Multratio = 1.0f;
-            // If X span is largest, scale by this ratio
-            if ((MaxX - MinX) > (MaxY - MinY) && (MaxX - MinX) > (MaxZ - MinZ))
-                Multratio = Math.Abs((MaxX - MinX) / MinX);
-            if ((MaxY - MinY) > (MaxX - MinX) && (MaxY - MinY) > (MaxZ - MinZ))
-                Multratio = Math.Abs((MaxY - MinY) / MinY);
-            if ((MaxZ - MinZ) > (MaxX - MinX) && (MaxZ - MinZ) > (MaxY - MinY))
-                Multratio = 1.0f / Math.Abs((MaxZ - MinZ));
-
-            // Scale all the vertex Positions by this value (so that Max - Min = 1 for every model)
-            for (int curVertex = 0; curVertex < vertices.Length; curVertex++)
-            {
-                vertices[curVertex].Position *= Multratio;
-            }
-
-            // Now copy the new vertex data back
-            mesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices);
         }
         #endregion
 
@@ -499,6 +453,7 @@ namespace hungrybee
 
                         center_inBone = sphere.Center;
                         //center_inBone = Vector3.Transform(sphere.Center, boneMat_inv);
+                        //center_inBone = Vector3.Transform(sphere.Center, boneMat);
 
                         // Get the bone vertex declaration
                         ModelMeshPart part = modelMesh.MeshParts[0];  // a model can contain multiple MeshParts (just need first one to get declaration)
@@ -513,6 +468,7 @@ namespace hungrybee
                         for (int i = 0; i < vertices.Length; i++)
                         {
                             vertices[i].Position = vertices[i].Position - center_inBone;
+                            vertices[i].Normal = Vector3.Normalize(vertices[i].Normal);
                         }
 
                         // Store the verticies back in the model

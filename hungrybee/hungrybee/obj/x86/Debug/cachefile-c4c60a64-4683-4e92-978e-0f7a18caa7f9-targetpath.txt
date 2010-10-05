@@ -1,4 +1,5 @@
 Content\Ship.xnb
+Content\small_bee.xnb
 Content\SketchTexture.xnb
 Content\clouds_resize.xnb
 Content\clouds.xnb
@@ -6,7 +7,6 @@ Content\heightmap.xnb
 Content\Grass.xnb
 Content\bee-cartoon_COMBINDED_transparent.xnb
 Content\hudArialFont.xnb
-Content\ShipDiffuse_0.xnb
-Content\small_bee.xnb
 Content\PostprocessEffect.xnb
 Content\CartoonEffect.xnb
+Content\ShipDiffuse_0.xnb

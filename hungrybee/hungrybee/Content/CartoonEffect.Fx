@@ -12,11 +12,11 @@ float4x4 View;
 float4x4 Projection;
 
 // The light direction is shared between the Lambert and Toon lighting techniques.
-float3 LightDirection = normalize(float3(1, 1, 1));
+float3 LightDirection = normalize(float3(0, 1, 1));
 
 // Settings controlling the Lambert lighting technique.
-float3 DiffuseLight = 0.5;
-float3 AmbientLight = 0.5;
+float3 DiffuseLight = 0.75;
+float3 AmbientLight = 0.2;
 
 // Settings controlling the Toon lighting technique.
 float ToonThresholds[2] = { 0.8, 0.4 };
@@ -24,7 +24,9 @@ float ToonBrightnessLevels[3] = { 1.3, 0.9, 0.5 };
 
 // Is texturing enabled?
 bool TextureEnabled;
+bool VertexColorEnabled;
 
+float3 DiffuseColor;
 
 // The main texture applied to the object, and a sampler for reading it.
 texture Texture;
@@ -41,8 +43,9 @@ sampler Sampler = sampler_state
     AddressV = Wrap;
 };
 
-
+// *************************************************************************
 // Vertex shader input structure.
+// *************************************************************************
 struct VertexShaderInput
 {
     float4 Position : POSITION0;
@@ -50,25 +53,30 @@ struct VertexShaderInput
     float2 TextureCoordinate : TEXCOORD0;
 };
 
-
+// *************************************************************************
 // Output structure for the vertex shader that applies lighting.
+// *************************************************************************
 struct LightingVertexShaderOutput
 {
     float4 Position : POSITION0;
     float2 TextureCoordinate : TEXCOORD0;
     float LightAmount : TEXCOORD1;
+    float4 VertexColor : COLOR0;
 };
 
-
+// *************************************************************************
 // Input structure for the Lambert and Toon pixel shaders.
+// *************************************************************************
 struct LightingPixelShaderInput
 {
     float2 TextureCoordinate : TEXCOORD0;
     float LightAmount : TEXCOORD1;
+    float4 VertexColor : COLOR0;
 };
 
-
+// *************************************************************************
 // Vertex shader shared between the Lambert and Toon lighting techniques.
+// *************************************************************************
 LightingVertexShaderOutput LightingVertexShader(VertexShaderInput input)
 {
     LightingVertexShaderOutput output;
@@ -80,29 +88,41 @@ LightingVertexShaderOutput LightingVertexShader(VertexShaderInput input)
     output.TextureCoordinate = input.TextureCoordinate;
 
     // Compute the overall lighting brightness.
-    float3 worldNormal = mul(input.Normal, World);
+    float3 worldNormal = normalize(mul(input.Normal, World));
     
     output.LightAmount = dot(worldNormal, LightDirection);
+    
+    // Send on the vertex color
+    output.VertexColor.rgb = DiffuseColor;
+    output.VertexColor.a = 1.0f;
     
     return output;
 }
 
-
+// *************************************************************************
 // Pixel shader applies a simple Lambert shading algorithm.
+// *************************************************************************
 float4 LambertPixelShader(LightingPixelShaderInput input) : COLOR0
 {
     float4 color = TextureEnabled ? tex2D(Sampler, input.TextureCoordinate) : 0;
+    
+    // Vertex color will override texture color!
+    color = VertexColorEnabled ? input.VertexColor : color;
     
     color.rgb *= saturate(input.LightAmount) * DiffuseLight + AmbientLight;
     
     return color;
 }
 
-
+// *************************************************************************
 // Pixel shader applies a cartoon shading algorithm.
+// *************************************************************************
 float4 ToonPixelShader(LightingPixelShaderInput input) : COLOR0
 {
     float4 color = TextureEnabled ? tex2D(Sampler, input.TextureCoordinate) : 0;
+    
+    // Vertex color will override texture color!
+    color = VertexColorEnabled ? input.VertexColor : color;
     
     float light;
 
@@ -118,17 +138,19 @@ float4 ToonPixelShader(LightingPixelShaderInput input) : COLOR0
     return color;
 }
 
-
+// *************************************************************************
 // Output structure for the vertex shader that renders normal and depth information.
+// *************************************************************************
 struct NormalDepthVertexShaderOutput
 {
     float4 Position : POSITION0;
     float4 Color : COLOR0;
 };
 
-
+// *************************************************************************
 // Alternative vertex shader outputs normal and depth values, which are then
 // used as an input for the edge detection filter in PostprocessEffect.fx.
+// *************************************************************************
 NormalDepthVertexShaderOutput NormalDepthVertexShader(VertexShaderInput input)
 {
     NormalDepthVertexShaderOutput output;
@@ -147,15 +169,17 @@ NormalDepthVertexShaderOutput NormalDepthVertexShader(VertexShaderInput input)
     return output;    
 }
 
-
+// *************************************************************************
 // Simple pixel shader for rendering the normal and depth information.
+// *************************************************************************
 float4 NormalDepthPixelShader(float4 color : COLOR0) : COLOR0
 {
     return color;
 }
 
-
+// *************************************************************************
 // Technique draws the object using smooth Lambert shading.
+// *************************************************************************
 technique Lambert
 {
     pass P0
@@ -165,8 +189,9 @@ technique Lambert
     }
 }
 
-
+// *************************************************************************
 // Technique draws the object using banded cartoon shading.
+// *************************************************************************
 technique Toon
 {
     pass P0
@@ -176,9 +201,10 @@ technique Toon
     }
 }
 
-
+// *************************************************************************
 // Technique draws the object as normal and depth values.
 technique NormalDepth
+// *************************************************************************
 {
     pass P0
     {

@@ -50,7 +50,7 @@ namespace hungrybee
         /// Constructor - Basic constructor for HARD_BOUNDRY
         /// ***********************************************************************
         public gameObjectPhantom(game game, boundingObjType _objType, Object _obj)
-            : base(game, null, _objType)
+            : base(game, null, _objType, false, true) // texture DISABLED, vertexColor ENABLED
         {
             objType = _objType;
             obj = _obj;
@@ -68,8 +68,9 @@ namespace hungrybee
         #region Constructor - gameObjectPhantom() - SOFT BOUDNRY
         /// Constructor - Basic constructor for SOFT_BOUNDRY
         /// ***********************************************************************
-        public gameObjectPhantom(game game, boundingObjType _objType, Object _obj, Vector3 _softBoundaryForceVector, bool playerReact, bool NPCReact)
-            : base(game, null, _objType)
+        public gameObjectPhantom(game game, boundingObjType _objType, 
+                                 Object _obj, Vector3 _softBoundaryForceVector, bool playerReact, bool NPCReact)
+            : base(game, null, _objType, false, true) // texture DISABLED, vertexColor ENABLED
         {
             objType = _objType;
             obj = _obj;

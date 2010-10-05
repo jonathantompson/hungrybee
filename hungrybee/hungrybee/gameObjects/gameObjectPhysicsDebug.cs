@@ -49,8 +49,9 @@ namespace hungrybee
         #region Constructor - gameObjectPhysicsDebug(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
         /// Constructor - Basic constructor
         /// ***********************************************************************
-        public gameObjectPhysicsDebug(game game, boundingObjType _objType, Object _obj, gameObject _attachedGameObject, Color _color)
-            : base(game, null, _objType)
+        public gameObjectPhysicsDebug(game game, boundingObjType _objType, 
+                                      Object _obj, gameObject _attachedGameObject, Color _color)
+            : base(game, null, _objType, false, true) // texture DISABLED, vertexColor ENABLED
         {
             objType = _objType;
             obj = _obj;

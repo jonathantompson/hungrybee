@@ -45,8 +45,9 @@ namespace hungrybee
         #region Constructor - gameObjectEnemy(game game, string modelfile, float scale)
         /// Constructor - gameObjectEnemy(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectNPC(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
-            : base(game, modelfile, _objType)
+        public gameObjectNPC(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled,
+                            float _scale, Vector3 startingPos, Vector3 startingMom)
+            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
             state.pos = startingPos;

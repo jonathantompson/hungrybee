@@ -23,6 +23,7 @@ namespace hungrybee
     /// ** renderer related variables.  Effects, etc.                        **
     /// ** LOTS OF CODE HERE TAKEN FROM XNA CREATORS CLUB:                   **
     /// ** Non Photo Realistic Rendering example (I like the effects)        **
+    /// http://digierr.spaces.live.com/blog/cns!2B7007E9EC2AE37B!1792.entry
     /// ***********************************************************************
     /// </summary>
     public class renderManager : GameComponent
@@ -61,7 +62,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region LoadContent
+        #region LoadContent()
         /// LoadContent - Load in the textures and effects files
         /// ***********************************************************************
         public void LoadContent()
@@ -171,6 +172,8 @@ namespace hungrybee
                 effectTechniqueName = "Toon";
             else
                 effectTechniqueName = "Lambert";
+
+
 
             // Draw the SkyPlane
             h_game.h_SkyPlane.Draw(h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix);

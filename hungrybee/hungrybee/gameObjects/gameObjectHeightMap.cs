@@ -48,7 +48,7 @@ namespace hungrybee
 
         #region Constructor - gameObjectHeightMap(game game, string file, string textureFile, Vector3 min, Vector3 max) : base(game, null)
         public gameObjectHeightMap(game game, bool fromFile, string file, string textureFile, Vector3 min, Vector3 max)
-            : base(game, null, boundingObjType.AABB)
+            : base(game, null, boundingObjType.AABB, true, false) // textures ENABLED, vertexColor DISABLED
         {
             heightMapFromFile = fromFile;
             heightMapFile = file;

@@ -35,8 +35,8 @@ namespace hungrybee
         #region Constructor - gameObjectFriend(game game, string modelfile, float scale)
         /// Constructor - gameObjectFriend(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectFriend(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
-            : base(game, modelfile, _objType, _scale, startingPos, startingMom)
+        public gameObjectFriend(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 startingPos, Vector3 startingMom)
+            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled, _scale, startingPos, startingMom)
         {
             // Nothing to do yet
         }

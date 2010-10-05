@@ -142,23 +142,10 @@ namespace hungrybee
         /// ***********************************************************************
         public void ChangeEffectUsedByModels(Effect replacementEffect)
         {
-            // some help
-
             // enumerate through each model element in the loaded content and change its effects
             List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
             while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
-            {
-                try
-                {
                     ListEnum.Current.ChangeEffectUsedByModel(replacementEffect);
-                }
-                catch
-                {
-                    // I expect to catch an exception here if we're tyring to change the model effects twice
-                    // This happens when two game objects share the same model content
-                    // This is a shitty solution --> But only performed once on startup
-                }
-            }
         }
         #endregion
 
@@ -255,14 +242,15 @@ namespace hungrybee
         protected gameObject SpawnPlayerFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (numPlayers == 0 && curToken.Count == 7)
+            if (numPlayers == 0 && curToken.Count == 9)
             {
-                // public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 _pos )
+                // public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 _pos)
                 retObject = new gameObjectPlayer(h_game,
                                                  curToken[1],
                                                  GetBoundingObjTypeFromString(curToken[2]),
-                                                 float.Parse(curToken[3]),
-                                                 new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])));
+                                                 int.Parse(curToken[3]) == 1, int.Parse(curToken[4]) == 1,
+                                                 float.Parse(curToken[5]),
+                                                 new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])));
                 numPlayers += 1;
                 player = retObject;
             }
@@ -296,15 +284,16 @@ namespace hungrybee
         protected gameObject SpawnEnemyFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (curToken.Count == 10)
+            if (curToken.Count == 12)
             {
-                // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
+                // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 startingPos, Vector3 startingMom)
                 retObject = new gameObjectEnemy(h_game,
                                                 curToken[1],
                                                 GetBoundingObjTypeFromString(curToken[2]),
-                                                float.Parse(curToken[3]),
-                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
-                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                                                int.Parse(curToken[3]) == 1, int.Parse(curToken[4]) == 1,
+                                                float.Parse(curToken[5]),
+                                                new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])),
+                                                new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])));
                 numEnemys += 1;
                 enemyList.Add(retObject);
             }
@@ -318,15 +307,16 @@ namespace hungrybee
         protected gameObject SpawnFriendFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (curToken.Count == 10)
+            if (curToken.Count == 12)
             {
-                // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 startingPos, Vector3 startingMom)
+                // public gameObjectFriend(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 startingPos, Vector3 startingMom)
                 retObject = new gameObjectFriend(h_game,
                                                 curToken[1],
                                                 GetBoundingObjTypeFromString(curToken[2]),
-                                                float.Parse(curToken[3]),
-                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
-                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                                                int.Parse(curToken[3]) == 1, int.Parse(curToken[4]) == 1,
+                                                float.Parse(curToken[5]),
+                                                new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])),
+                                                new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])));
                 numFriends += 1;
                 friendList.Add(retObject);
             }
@@ -391,14 +381,13 @@ namespace hungrybee
         protected gameObject SpawnCloudFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (curToken.Count == 10)
+            if (curToken.Count == 9)
             {
                 retObject = new gameObjectCloud(h_game,
                                                 int.Parse(curToken[1]),
                                                 int.Parse(curToken[2]),
-                                                int.Parse(curToken[3]),
-                                                new Vector3(float.Parse(curToken[4]), float.Parse(curToken[5]), float.Parse(curToken[6])),
-                                                new Vector3(float.Parse(curToken[7]), float.Parse(curToken[8]), float.Parse(curToken[9])));
+                                                new Vector3(float.Parse(curToken[3]), float.Parse(curToken[4]), float.Parse(curToken[5])),
+                                                new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])));
                 numClouds += 1;
             }
             else

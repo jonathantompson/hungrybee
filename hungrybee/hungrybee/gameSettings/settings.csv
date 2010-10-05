@@ -2,7 +2,7 @@ xWindowSize,800
 yWindowSize,600
 skyPlaneTextureFile,clouds
 skyPlaneScale,1.75
-renderSettingsIndex,5
+renderSettingsIndex,4
 startingGameObjectCapacity,64
 cartoonEffectFile,CartoonEffect
 postprocessEffectFile,PostprocessEffect

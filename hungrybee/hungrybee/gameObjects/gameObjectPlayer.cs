@@ -39,8 +39,9 @@ namespace hungrybee
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, float _scale, Vector3 _pos )
-            : base(game, modelfile, _objType)
+        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, 
+                                float _scale, Vector3 _pos)
+            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled)
         {
             state.scale = new Vector3(_scale, _scale, _scale);
             playerHealth = 100.0f;
