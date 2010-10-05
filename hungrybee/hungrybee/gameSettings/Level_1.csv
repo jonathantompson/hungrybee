@@ -9,7 +9,7 @@ player,Ship,SPHERE,1.0,-2,-1,0
 enemy,Ship,SPHERE,1.0,-3.1,-1.5,0,0,0,0
 
 //,friend, modelfile, bType, scale, [Pos.x, Pos.y, Pos.z], [Mom.x, Mom.y, Mom.z]
-friend,Ship,SPHERE,0.5,3.5,-1.5,0,0,0,0
+friend,small_bee,SPHERE,0.5,3.5,-1.5,0,0,0,0
 
 //,phantom,  bType[AABB], [Min.x, Min.y, Min.z], [Max.x, Max.y, Max.z], pType, ([:F.x, :F.y, :F.z], :player_react, :npc_react) <-- Only for SOFT_BOUNDRY
 //,phantom,  bType[SPHERE], [Pos.x, Pos.y, Pos.z], Radius

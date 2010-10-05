@@ -1,5 +1,6 @@
 ﻿
 STUFF I SHOULD DO BEFORE ANYTHING ELSE
+- Debug Model loading --> ChangeEffectUsedByModel() maybe not copying Difuse color?
 - Debug instability --> When Player glances off the enemy, the collision isn't colliding! (press jump and left on startup)
 
 STUFF I HAVE TO DO

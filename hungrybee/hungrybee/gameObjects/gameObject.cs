@@ -496,7 +496,9 @@ namespace hungrybee
                     {
                         boneMat = GetAbsoluteTransform(modelMesh.ParentBone);
                         boneMat_inv = Matrix.Invert(boneMat);
-                        center_inBone = Vector3.Transform(sphere.Center, boneMat_inv);
+
+                        center_inBone = sphere.Center;
+                        //center_inBone = Vector3.Transform(sphere.Center, boneMat_inv);
 
                         // Get the bone vertex declaration
                         ModelMeshPart part = modelMesh.MeshParts[0];  // a model can contain multiple MeshParts (just need first one to get declaration)

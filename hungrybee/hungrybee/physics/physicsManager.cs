@@ -58,8 +58,8 @@ namespace hungrybee
         protected List<collision> phantomContacts;
 
         protected static float EPSILON = 0.00000001f;
-        public static float BISECTION_TOLLERANCE = 0.001f;
-        public static float RESTING_CONTACT_TOLLERANCE = 0.003f; // typically this is >= 2 * BISECTION_TOLLERANCE
+        public static float BISECTION_TOLLERANCE = 0.0005f;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.001f; // typically this is >= 2 * BISECTION_TOLLERANCE
         protected static int BISECTION_MAXITERATIONS = 1000;
         protected static int MAX_PHYSICS_ITERATIONS = 100;
         protected static bool pauseGame = false;
