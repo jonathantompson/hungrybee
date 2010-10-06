@@ -32,11 +32,6 @@ namespace hungrybee
         public force forceGravity;
         public force forceSetOrientation;
 
-        protected bool deathSequence;
-        protected float deathSequenceStart;
-        protected float deathSequenceEnd;
-        protected float deathSequenceScale;
-
         public static Vector3 forward = new Vector3();
         public static float velocity = 0.0f;
 
@@ -54,7 +49,6 @@ namespace hungrybee
             state.linearMom = startingMom;
             base.movable = true;
             base.collidable = true;
-            deathSequence = false;
 
             // Setup the force structures to describe movement
             forceGravity = new forceGravity(new Vector3(0.0f, -1.0f * game.h_GameSettings.gravity, 0.0f));
@@ -84,27 +78,10 @@ namespace hungrybee
                 ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(Vector3.Right);
             else if (prevState.linearVel.X < 0.0f)
                 ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(Vector3.Left);
-
-            if (deathSequence)
-                if ((float)gameTime.TotalGameTime.TotalSeconds > (deathSequenceEnd))
-                    base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
-                else
-                {
-                    base.modelScaleToNormalizeSize = 1.0f / (1.0f + base.h_game.h_GameSettings.deathSequenceScaleRateIncrease * ((float)gameTime.TotalGameTime.TotalSeconds - deathSequenceStart)) * deathSequenceScale;
-                }
         }
         #endregion
 
-        #region KillNPC()
-        public void KillNPC()
-        {
-            base.collidable = false;
-            deathSequence = true;
-            deathSequenceStart = state.time;
-            deathSequenceEnd = deathSequenceStart + base.h_game.h_GameSettings.deathSequenceDuration;
-            deathSequenceScale = base.modelScaleToNormalizeSize;
-        }
-        #endregion
+
 
     }
 }

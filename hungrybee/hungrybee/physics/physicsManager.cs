@@ -137,7 +137,6 @@ namespace hungrybee
                 // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
                 intersection = SweptCollisionDetection(ref estColTime, true);
 
-
                 // TEMP CODE
                 if(intersection)
                     SweptCollisionDetection(ref estColTime, true);
@@ -200,17 +199,6 @@ namespace hungrybee
                         time += Tstep_to_collision;
                         curIteration++;
                     }
-
-#if DEBUG
-                    /// If we're being really paranoid, check for collision after
-                    float d1 = 0.0f;
-                    bool I1 = StaticCollisionDetection(ref d1, false, true);
-                    if (I1 == true)
-                    {
-                        StaticCollisionDetection(ref d1, false, false);
-                        throw new Exception("Something went wrong...  Objects interpenetrate after step");
-                    }
-#endif
                 }
                 else
                 {
@@ -398,6 +386,10 @@ namespace hungrybee
                 // PLAYER - ENEMY
                 if((obj1 is gameObjectPlayer && obj2 is gameObjectEnemy) || (obj1 is gameObjectEnemy && obj2 is gameObjectPlayer))
                     contactType = collisions[i].ResolvePlayerEnemyCollision(gameObjects, ref obj1.prevState, ref obj2.prevState, h_game.h_GameSettings.enemyCollisionAngleTollerence);
+
+                // PLAYER - FRIEND
+                if ((obj1 is gameObjectPlayer && obj2 is gameObjectFriend) || (obj1 is gameObjectFriend && obj2 is gameObjectPlayer))
+                    contactType = collisions[i].ResolvePlayerFriendCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
                 
                 // GENERIC COLLISION --> RESOLVE WITH IMPULSE RESPONCE OR RESTING CONTACT
                 else // Resolve Generic Collsion

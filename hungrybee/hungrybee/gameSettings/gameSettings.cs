@@ -54,10 +54,13 @@ namespace hungrybee
 
         // Game Play Settings
         public float    enemyCollisionAngleTollerence;
-        public float    deathSequenceDuration;
+        public float    enemySequenceDuration;
         public float    enemyHealthImpact;
         public float    enemyPlayerCollisionVelocity;
-        public float    deathSequenceScaleRateIncrease;
+        public float    enemySequenceScaleRateIncrease;
+        public float    friendSequenceScaleRateIncrease;
+        public float    friendSequenceDuration;
+        public float    friendSequenceAngularVelocity;
 
         // Physics
         public int      forceListCapacity;
@@ -97,10 +100,11 @@ namespace hungrybee
         /// ***********************************************************************
         public gameSettings(game game) : base(game)  
         {
-            xWindowSize = 800; yWindowSize = 600;
+            xWindowSize = 800; 
+            yWindowSize = 600;
             skyPlaneTextureFile = "clouds"; //skyPlaneTextureFile = "clouds_resize";
             skyPlaneScale = 1.75f;
-            renderSettingsIndex = 4;
+            renderSettingsIndex = 0;
             startingGameObjectCapacity = 64;
             cartoonEffectFile = "CartoonEffect";
             postprocessEffectFile = "PostprocessEffect";
@@ -122,16 +126,19 @@ namespace hungrybee
             playerTimeToOrient = 0.2f;
             playerTimeToAccelerate = 0.2f;
             playerMaxAcceleration = 10.0f;
-            playerVelocity = 2.5f;
+            playerVelocity = 5.0f;
             playerJumpMomentum = 6.0f;
             enemyCollisionAngleTollerence = 0.52359877f; // 30deg
-            deathSequenceDuration = 0.8f;
+            enemySequenceDuration = 0.2f;
             enemyHealthImpact = 25.0f;
-            enemyPlayerCollisionVelocity = 5.0f;
-            deathSequenceScaleRateIncrease = 2.0f;
+            enemyPlayerCollisionVelocity = 2.0f;
+            enemySequenceScaleRateIncrease = 10.0f;
             beeFaceTextureFile = "bee-cartoon_COMBINDED_transparent";
             beeFaceTextureWidth = 564;
             beeFaceTextureHeight = 180;
+            friendSequenceScaleRateIncrease = 10.0f;
+            friendSequenceDuration = 0.2f;
+            friendSequenceAngularVelocity = 6.2831853071f; // 2*pi rad / sec
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -282,8 +289,8 @@ namespace hungrybee
                         case "enemyCollisionAngleTollerence":
                             this.enemyCollisionAngleTollerence = float.Parse(curToken[1]);
                             break;
-                        case "deathSequenceDuration":
-                            this.deathSequenceDuration = float.Parse(curToken[1]);
+                        case "enemySequenceDuration":
+                            this.enemySequenceDuration = float.Parse(curToken[1]);
                             break;
                        case "enemyHealthImpact":
                             this.enemyHealthImpact = float.Parse(curToken[1]);
@@ -291,8 +298,8 @@ namespace hungrybee
                        case "enemyPlayerCollisionVelocity":
                             this.enemyPlayerCollisionVelocity = float.Parse(curToken[1]);
                             break;
-                       case "deathSequenceScaleRateIncrease":
-                            this.deathSequenceScaleRateIncrease = float.Parse(curToken[1]);
+                       case "enemySequenceScaleRateIncrease":
+                            this.enemySequenceScaleRateIncrease = float.Parse(curToken[1]);
                             break;
                        case "beeFaceTextureFile":
                             this.beeFaceTextureFile = curToken[1];
@@ -302,6 +309,15 @@ namespace hungrybee
                             break;
                        case "beeFaceTextureHeight":
                             this.beeFaceTextureHeight = Convert.ToInt32(curToken[1]);
+                            break;
+                       case "friendSequenceScaleRateIncrease":
+                            this.friendSequenceScaleRateIncrease = float.Parse(curToken[1]);
+                            break;
+                       case "friendSequenceDuration":
+                            this.friendSequenceDuration = float.Parse(curToken[1]);
+                            break;
+                       case "friendSequenceAngularVelocity":
+                            this.friendSequenceAngularVelocity = float.Parse(curToken[1]);
                             break;
                            
                         //// ************************************
@@ -359,13 +375,16 @@ namespace hungrybee
             writer.WriteNextToken("playerVelocity", this.playerVelocity);
             writer.WriteNextToken("playerJumpMomentum", this.playerJumpMomentum);
             writer.WriteNextToken("enemyCollisionAngleTollerence", this.enemyCollisionAngleTollerence);
-            writer.WriteNextToken("deathSequenceDuration", this.deathSequenceDuration);
+            writer.WriteNextToken("enemySequenceDuration", this.enemySequenceDuration);
             writer.WriteNextToken("enemyHealthImpact", this.enemyHealthImpact);
             writer.WriteNextToken("enemyPlayerCollisionVelocity", this.enemyPlayerCollisionVelocity);
-            writer.WriteNextToken("deathSequenceScaleRateIncrease", this.deathSequenceScaleRateIncrease);
+            writer.WriteNextToken("enemySequenceScaleRateIncrease", this.enemySequenceScaleRateIncrease);
             writer.WriteNextToken("beeFaceTextureFile", this.beeFaceTextureFile);
             writer.WriteNextToken("beeFaceTextureWidth", this.beeFaceTextureWidth);
             writer.WriteNextToken("beeFaceTextureHeight", this.beeFaceTextureHeight);
+            writer.WriteNextToken("friendSequenceScaleRateIncrease", this.friendSequenceScaleRateIncrease);
+            writer.WriteNextToken("friendSequenceDuration", this.friendSequenceDuration);
+            writer.WriteNextToken("friendSequenceAngularVelocity", this.friendSequenceAngularVelocity);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

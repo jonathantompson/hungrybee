@@ -27,10 +27,13 @@ playerMaxAcceleration,10
 playerVelocity,5
 playerJumpMomentum,6
 enemyCollisionAngleTollerence,0.5235988
-deathSequenceDuration,0.2
+enemySequenceDuration,0.2
 enemyHealthImpact,25
 enemyPlayerCollisionVelocity,2
-deathSequenceScaleRateIncrease,10
+enemySequenceScaleRateIncrease,10
 beeFaceTextureFile,bee-cartoon_COMBINDED_transparent
 beeFaceTextureWidth,564
 beeFaceTextureHeight,180
+friendSequenceScaleRateIncrease,15
+friendSequenceDuration,1.5
+friendSequenceAngularVelocity,9.4247780

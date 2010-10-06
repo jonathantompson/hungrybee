@@ -29,6 +29,12 @@ namespace hungrybee
     {
         #region Local Variables
 
+        bool friendCaptured;
+        protected float friendCapturedSequenceStart;
+        protected float friendCapturedSequenceEnd;
+        protected float friendCapturedSequenceScale;
+        protected gameObject capturingPlayer;
+        Vector3 dispToPlayer;
 
         #endregion
 
@@ -39,16 +45,50 @@ namespace hungrybee
             : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled, _scale, startingPos, startingMom)
         {
             // Nothing to do yet
+            friendCaptured = false;
+            dispToPlayer = new Vector3();
+            capturingPlayer = null;
         }
         #endregion
 
         #region Update()
-        /// Update() - TO DO: update enemy movements
+        /// Update() - TO DO: update friend movements
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
             // Update the base
             base.Update(gameTime);
+
+            if (friendCaptured)
+            {
+                if ((float)gameTime.TotalGameTime.TotalSeconds > (friendCapturedSequenceEnd))
+                    base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
+                else
+                {
+                    // Shrink the model over time
+                    base.modelScaleToNormalizeSize = friendCapturedSequenceScale / (1.0f + base.h_game.h_GameSettings.friendSequenceScaleRateIncrease * ((float)gameTime.TotalGameTime.TotalSeconds - friendCapturedSequenceStart));
+                    
+                    // Also spin the model about the y-axis around the player
+                    float angle = (base.h_game.h_GameSettings.friendSequenceAngularVelocity * ((float)gameTime.TotalGameTime.TotalSeconds - friendCapturedSequenceStart)) % (2.0f * (float)Math.PI);
+                    prevState.pos = capturingPlayer.prevState.pos + Vector3.Transform(dispToPlayer, Matrix.CreateRotationY(angle));
+                    state.pos = prevState.pos;
+                 }
+            } // if (deathSequence)
+        }
+        #endregion
+         
+        #region CaptureFriend()
+        /// Update() - TO DO: update friend movements
+        /// ***********************************************************************
+        public void CaptureFriend(gameObject player)
+        {
+            friendCaptured = true;
+            capturingPlayer = player;
+            friendCapturedSequenceStart = state.time;
+            friendCapturedSequenceEnd = friendCapturedSequenceStart + base.h_game.h_GameSettings.friendSequenceDuration;
+            friendCapturedSequenceScale = base.modelScaleToNormalizeSize;
+            dispToPlayer = state.pos - capturingPlayer.state.pos;
+
         }
         #endregion
 

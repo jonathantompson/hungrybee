@@ -29,6 +29,10 @@ namespace hungrybee
     {
         #region Local Variables
 
+        protected bool deathSequence;
+        protected float deathSequenceStart;
+        protected float deathSequenceEnd;
+        protected float deathSequenceScale;
 
         #endregion
 
@@ -40,6 +44,7 @@ namespace hungrybee
             : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled, _scale, startingPos, startingMom)
         {
             // Nothing to do yet
+            deathSequence = false;
         }
         #endregion
 
@@ -50,6 +55,27 @@ namespace hungrybee
         {
             // Update the base
             base.Update(gameTime);
+
+            if (deathSequence)
+            {
+                if ((float)gameTime.TotalGameTime.TotalSeconds > (deathSequenceEnd))
+                    base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
+                else
+                {
+                    base.modelScaleToNormalizeSize = deathSequenceScale / (1.0f + base.h_game.h_GameSettings.enemySequenceScaleRateIncrease * ((float)gameTime.TotalGameTime.TotalSeconds - deathSequenceStart));
+                }
+            }// if (deathSequence)
+        }
+        #endregion
+
+        #region KillEnemy()
+        public void KillEnemy()
+        {
+            base.collidable = false;
+            deathSequence = true;
+            deathSequenceStart = state.time;
+            deathSequenceEnd = deathSequenceStart + base.h_game.h_GameSettings.enemySequenceDuration;
+            deathSequenceScale = base.modelScaleToNormalizeSize;
         }
         #endregion
 

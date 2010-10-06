@@ -174,9 +174,31 @@ namespace hungrybee
 
             if(collisionAngleToHorizontal > collisionAngleTollerence)
             {
-                enemy.KillNPC();
+                enemy.KillEnemy();
             } else {
                 player.HurtPlayer();
+            }
+
+            return 0;
+        }
+        #endregion
+
+        #region ResolvePlayerFriendCollision()
+        /// ResolveCollision() - Start friend animation 
+        /// ***********************************************************************
+        public int ResolvePlayerFriendCollision(List<gameObject> gameObjects, ref rboState obj1State, ref rboState obj2State)
+        {
+            if (obj1 is gameObjectPlayer)
+            {
+                ((gameObjectFriend)obj2).CaptureFriend((gameObject)obj1);
+                ((gameObject)obj2).movable = false;
+                ((gameObject)obj2).collidable = false;
+            }
+            else
+            {
+                ((gameObjectFriend)obj1).CaptureFriend((gameObject)obj2);
+                ((gameObject)obj1).movable = false;
+                ((gameObject)obj1).collidable = false;
             }
 
             return 0;
@@ -315,15 +337,6 @@ namespace hungrybee
             pbdot = GetPointVelocity(ref obj2State, colPoint);
             vrel = Vector3.Dot(colNorm,(padot - pbdot));
             return vrel;
-        }
-        #endregion
-
-        #region GetRelativeVelocity()
-        public Vector3 GetRelativeVelocityVec(ref rboState obj1State, ref rboState obj2State)
-        {
-            padot = GetPointVelocity(ref obj1State, colPoint);
-            pbdot = GetPointVelocity(ref obj2State, colPoint);
-            return padot - pbdot;
         }
         #endregion
     }
