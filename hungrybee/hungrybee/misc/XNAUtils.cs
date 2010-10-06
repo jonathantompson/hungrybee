@@ -136,10 +136,9 @@ namespace hungrybee
 
             foreach (ModelMesh mesh in model.Meshes)
             {
-                VertexPositionNormalTexture[] vertices=
-                    new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / mesh.MeshParts[0].VertexStride];
-
-                mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+                // Get the verticies
+                VertexPositionNormalTexture[] vertices = null;
+                GetModelMeshVertices(ref vertices, mesh);          
 
                 // Find min, max xyz for this mesh - assumes will be centred on 0,0,0 as BB is initialised to 0,0,0
                 Vector3 min = vertices[0].Position;
@@ -161,6 +160,87 @@ namespace hungrybee
             }
 
             return retVal;
+        }
+
+        public static Vector3 GetModelCenter(Model model)
+        {
+            Matrix[] modelTransforms = new Matrix[model.Bones.Count];
+            model.CopyAbsoluteBoneTransformsTo(modelTransforms);
+
+            Matrix boneMat = Matrix.Identity;
+            Vector3 center = new Vector3();
+            Vector3 center_inBone = new Vector3();
+            foreach (ModelMesh modelMesh in model.Meshes)
+            {
+                // Load the verticies from the model
+                VertexPositionNormalTexture[] vertices = null;
+                XNAUtils.GetModelMeshVertices(ref vertices, modelMesh);
+
+                for (int i = 0; i < vertices.Length; i++)
+                    center_inBone += vertices[i].Position;
+                center_inBone = center_inBone / vertices.Length;  // This is the average
+
+                boneMat = modelTransforms[modelMesh.ParentBone.Index];
+                center += Vector3.Transform(center_inBone, boneMat);
+            }
+            center = center / model.Meshes.Count;
+            return center;
+        }
+
+        public static void GetModelMeshVertices(ref VertexPositionNormalTexture[] vertices, ModelMesh mesh)
+        {
+            // Get the bone vertex declaration
+            ModelMeshPart part = mesh.MeshParts[0];  // a model can contain multiple MeshParts (just need first one to get declaration)
+            VertexElement[] vertexElements = part.VertexDeclaration.GetVertexElements();
+            int sizeInBytes = part.VertexStride;
+
+            // HACK CODE --> Some models have VertexPositionNormalTexture and some have VertexPositionNormal
+            // --> Check sizeInBytes and hope that we get the correct vertex declaration...  Works on the limited models for this project
+            // but might not work in future for other models
+            if (sizeInBytes == 24)
+            {
+                VertexPositionNormal[] verticesPosNormal = new VertexPositionNormal[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                mesh.VertexBuffer.GetData<VertexPositionNormal>(verticesPosNormal);
+                vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                for (int i = 0; i < mesh.VertexBuffer.SizeInBytes / sizeInBytes; i++)
+                {
+                    vertices[i].Position = verticesPosNormal[i].Position;
+                    vertices[i].Normal = verticesPosNormal[i].Normal;
+                    vertices[i].TextureCoordinate = Vector2.Zero;
+                }
+            }
+            else
+            {
+                vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+            }
+        }
+
+        public static void SetModelMeshVertices(ref VertexPositionNormalTexture[] vertices, ModelMesh mesh)
+        {
+            // Get the bone vertex declaration
+            ModelMeshPart part = mesh.MeshParts[0];  // a model can contain multiple MeshParts (just need first one to get declaration)
+            VertexElement[] vertexElements = part.VertexDeclaration.GetVertexElements();
+            int sizeInBytes = part.VertexStride;
+
+            // HACK CODE --> Some models have VertexPositionNormalTexture and some have VertexPositionNormal
+            // --> Check sizeInBytes and hope that we get the correct vertex declaration...  Works on the limited models for this project
+            // but might not work in future for other models
+            if (sizeInBytes == 24)
+            {
+                VertexPositionNormal[] verticesPosNormal = new VertexPositionNormal[vertices.Length];
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    verticesPosNormal[i].Position = vertices[i].Position;
+                    verticesPosNormal[i].Normal = vertices[i].Normal;
+                }
+                mesh.VertexBuffer.SetData<VertexPositionNormal>(verticesPosNormal);
+            }
+            else
+            {
+                mesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices);
+            }
         }
 
         public static BoundingBox TransformBoundingBox(BoundingBox origBox, Matrix matrix)
@@ -213,18 +293,103 @@ namespace hungrybee
             modelTransforms = new Matrix[newModel.Bones.Count];
             newModel.CopyAbsoluteBoneTransformsTo(modelTransforms);
 
-            BoundingSphere completeBoundingSphere = new BoundingSphere();
-            foreach (ModelMesh mesh in newModel.Meshes)
-            {
-                BoundingSphere origMeshSphere = mesh.BoundingSphere;
-                BoundingSphere transMeshSphere = XNAUtils.TransformBoundingSphere(origMeshSphere, modelTransforms[mesh.ParentBone.Index]);
-                completeBoundingSphere = BoundingSphere.CreateMerged(completeBoundingSphere, transMeshSphere);
-            }
+            BoundingSphere completeBoundingSphere = GetBoundingSphereFromModel(ref newModel);
 
             ModelTag tag = new ModelTag(completeBoundingSphere);
             newModel.Tag = tag;
 
             return newModel;
+        }
+
+        public static BoundingSphere GetBoundingSphereFromModel(ref Model model)
+        {
+            BoundingSphere completeBoundingSphere = new BoundingSphere();
+
+            Vector3 ModelCenter = XNAUtils.GetModelCenter(model);
+            float ModelRadius = GetRadiusFromModelAndCenter(ref model, ref ModelCenter);
+
+            Vector3 curCenterPos = new Vector3();
+            float curRadiusPos = 0.0f;
+            Vector3 curCenterNeg = new Vector3();
+            float curRadiusNeg = 0.0f;
+
+            // NOW BRUTE FORCE ITERATE THE CENTER POSITION, TRYING TO IMPROVE THIS
+            float StepSize = 0.01f; // Scaled by the curRadius
+            float conversionNorm = 1.0f;
+            float Norm = float.PositiveInfinity;
+            float PreviousBestRadius = ModelRadius;
+            Vector3[] directions = {Vector3.Right,Vector3.Up,Vector3.Down};
+
+            while (Norm > conversionNorm)
+            {
+                for (int curDirection = 0; curDirection < directions.Length; curDirection++)
+                {
+                    // Optimize in each direction
+                    bool iterate = true;
+                    while (iterate)
+                    {
+                        // try a step in the positive direction
+                        curCenterPos = ModelCenter + directions[curDirection] * StepSize * ModelRadius;
+                        curRadiusPos = GetRadiusFromModelAndCenter(ref model, ref curCenterPos);
+
+                        // try a step in the negative direction
+                        curCenterNeg = ModelCenter - directions[curDirection] * StepSize * ModelRadius;
+                        curRadiusNeg = GetRadiusFromModelAndCenter(ref model, ref curCenterPos);
+
+                        if (curRadiusPos > curRadiusNeg)
+                        { curCenterPos = curCenterNeg; curRadiusPos = curRadiusNeg; }
+
+                        // If the best radius we've found is less than the model radius --> We've found a new optimization point
+                        if (ModelRadius > curRadiusPos)
+                        { ModelCenter = curCenterPos; ModelRadius = curRadiusPos; }
+                        // Otherwise we've gone as far as we can
+                        else
+                        { iterate = false; }
+                    }
+                }
+                if (PreviousBestRadius == ModelRadius)
+                    break; // Gone as far as we can
+                Norm = Math.Abs(ModelRadius - PreviousBestRadius);
+                PreviousBestRadius = ModelRadius;
+            }
+
+            completeBoundingSphere.Center = ModelCenter;
+            completeBoundingSphere.Radius = ModelRadius;
+            return completeBoundingSphere;
+        }
+
+        public static float GetRadiusFromModelAndCenter(ref Model model, ref Vector3 ModelCenter)
+        {
+            // With this model center (geometric mean) --> Find the model bounds
+            Matrix[] modelTransforms = new Matrix[model.Bones.Count];
+            model.CopyAbsoluteBoneTransformsTo(modelTransforms);
+            float radius = 0.0f;
+
+            Vector3 curPos = new Vector3();
+            Vector3 disp = new Vector3();
+            float curRadius = 0.0f;
+            Matrix boneMat;
+            Matrix boneMatInv;
+            foreach (ModelMesh modelMesh in model.Meshes)
+            {
+                // Load the verticies from the model
+                VertexPositionNormalTexture[] vertices = null;
+                XNAUtils.GetModelMeshVertices(ref vertices, modelMesh);
+
+                boneMat = modelTransforms[modelMesh.ParentBone.Index];
+                boneMatInv = Matrix.Invert(boneMat);
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    curPos = Vector3.Transform(vertices[i].Position, boneMat);
+                    disp = curPos - ModelCenter;
+                    curRadius = (float)Math.Sqrt(disp.X * disp.X + disp.Y * disp.Y + disp.Z * disp.Z);
+                    if (radius < curRadius)
+                        radius = curRadius;
+                }
+
+            }
+            return radius;
         }
 
         public static void DrawBoundingBox(BoundingBox bBox, GraphicsDevice device, BasicEffect basicEffect, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix)
@@ -321,9 +486,6 @@ namespace hungrybee
             BoundingSphere bSphere = ((ModelTag)model.Tag).bSphere;
             float originalSize = bSphere.Radius * 2;
             scalingFactor = requestedSize / originalSize - EPSILON; // Add a small value so they can sit next to each other
-
-            // EDIT: TOMPSON - Done later
-            // model.Root.Transform = model.Root.Transform * Matrix.CreateScale(scalingFactor);
 
             Matrix[] modelTransforms = new Matrix[model.Bones.Count];
             model.CopyAbsoluteBoneTransformsTo(modelTransforms);

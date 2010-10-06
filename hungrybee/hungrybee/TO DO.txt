@@ -1,8 +1,10 @@
 ﻿
 STUFF I SHOULD DO BEFORE ANYTHING ELSE
+- FINISH XNAUtils.GetBoundingSphereFromModel()
 - Debug instability --> When Player glances off the enemy, the collision isn't colliding! (press jump and left on startup)
                     --> Try adding an impulse "kick" to objects that are causing physics system to hit max iterations
                     --> Hitting max iterations during normal operation as well.
+                    --> Check this function!! CreateAABBFromModel()
 
 STUFF I HAVE TO DO
 - Make Bee friends collectable (on collision AND have game complete logic)

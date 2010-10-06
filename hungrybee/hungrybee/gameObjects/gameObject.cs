@@ -439,43 +439,12 @@ namespace hungrybee
             {
                 BoundingSphere sphere = (BoundingSphere)boundingObj;
                 XNAUtils.ModelTag tag = (XNAUtils.ModelTag)model.Tag;
+                Vector3 center_inBone = new Vector3();
 
                 // Offset all the verticies by the BoundingSphere.Center if we haven't already
                 if (!tag.modelRecentered)
                 {
-                    Matrix boneMat = Matrix.Identity;
-                    Vector3 center_inBone = new Vector3();
-                    Matrix boneMat_inv = new Matrix();
-                    foreach (ModelMesh modelMesh in model.Meshes)
-                    {
-                        boneMat = GetAbsoluteTransform(modelMesh.ParentBone);
-                        boneMat_inv = Matrix.Invert(boneMat);
-
-                        center_inBone = sphere.Center;
-                        //center_inBone = Vector3.Transform(sphere.Center, boneMat_inv);
-                        //center_inBone = Vector3.Transform(sphere.Center, boneMat);
-
-                        // Get the bone vertex declaration
-                        ModelMeshPart part = modelMesh.MeshParts[0];  // a model can contain multiple MeshParts (just need first one to get declaration)
-                        VertexElement[] vertexElements = part.VertexDeclaration.GetVertexElements();
-                        int sizeInBytes = part.VertexStride;
-
-                        // Load the verticies from the model
-                        VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[modelMesh.VertexBuffer.SizeInBytes / part.VertexStride];
-                        modelMesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
-
-                        // Offset the verticies
-                        for (int i = 0; i < vertices.Length; i++)
-                        {
-                            vertices[i].Position = vertices[i].Position - center_inBone;
-                            vertices[i].Normal = Vector3.Normalize(vertices[i].Normal);
-                        }
-
-                        // Store the verticies back in the model
-                        modelMesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices);
-
-                        modelMesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
-                    }
+                    Vector3 ModelCenter = XNAUtils.GetModelCenter(model);
 
                 }
 

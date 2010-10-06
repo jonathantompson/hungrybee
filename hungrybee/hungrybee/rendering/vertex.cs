@@ -40,4 +40,32 @@ namespace hungrybee
         #endregion
 
     }
+
+    /// <summary>
+    /// ***********************************************************************
+    /// **                      VertexPositionNormal                         **
+    /// ** Vertex class with Position and Normal info                        **
+    /// ***********************************************************************
+    public struct VertexPositionNormal
+    {
+        #region Local and Static Variables
+        public Vector3 Position;
+        public Vector3 Normal;
+        public static readonly int SizeInBytes = sizeof(float) * 6;
+        public static readonly VertexElement[] VertexElements = 
+            {
+                 new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Position, 0 ),
+                 new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Normal, 0 )
+            };
+        #endregion
+
+        #region Constructor - VertexPosition(Vector3 position)
+        public VertexPositionNormal(Vector3 position, Vector3 normal)
+        {
+            this.Position = position;
+            this.Normal = normal;
+        }
+        #endregion
+
+    }
 }

@@ -61,7 +61,7 @@ namespace hungrybee
         public static float BISECTION_TOLLERANCE = 0.0005f;
         public static float RESTING_CONTACT_TOLLERANCE = 0.001f; // typically this is >= 2 * BISECTION_TOLLERANCE
         protected static int BISECTION_MAXITERATIONS = 1000;
-        protected static int MAX_PHYSICS_ITERATIONS = 10;
+        protected static int MAX_PHYSICS_ITERATIONS = 200;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
 
