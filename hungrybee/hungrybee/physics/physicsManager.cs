@@ -58,10 +58,10 @@ namespace hungrybee
         protected List<collision> phantomContacts;
 
         protected static float EPSILON = 0.00000001f;
-        public static float BISECTION_TOLLERANCE = 0.0005f;
-        public static float RESTING_CONTACT_TOLLERANCE = 0.001f; // typically this is >= 2 * BISECTION_TOLLERANCE
+        public static float BISECTION_TOLLERANCE = 0.01f;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.00001f; // typically this is >= 2 * BISECTION_TOLLERANCE
         protected static int BISECTION_MAXITERATIONS = 1000;
-        protected static int MAX_PHYSICS_ITERATIONS = 200;
+        protected static int MAX_PHYSICS_ITERATIONS = 10000;
         protected static bool pauseGame = false;
         protected static bool pauseGameDebounce = false;
 
@@ -136,6 +136,11 @@ namespace hungrybee
 
                 // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
                 intersection = SweptCollisionDetection(ref estColTime, true);
+
+
+                // TEMP CODE
+                if(intersection)
+                    SweptCollisionDetection(ref estColTime, true);
 
                 /// ************************************
                 /// ************* HACK CODE ************
@@ -382,7 +387,7 @@ namespace hungrybee
         /// ***********************************************************************
         protected void ResolveCollisions(List<gameObject> gameObjects)
         {
-            int restingContact = 0;
+            int contactType = 0;
             // Step through each collision and resolve them
             for (int i = 0; i < collisions.Count; i++)
             {
@@ -392,15 +397,15 @@ namespace hungrybee
                 // Resolve collisions
                 // PLAYER - ENEMY
                 if((obj1 is gameObjectPlayer && obj2 is gameObjectEnemy) || (obj1 is gameObjectEnemy && obj2 is gameObjectPlayer))
-                    restingContact = collisions[i].ResolvePlayerEnemyCollision(gameObjects, ref obj1.prevState, ref obj2.prevState, h_game.h_GameSettings.enemyCollisionAngleTollerence);
+                    contactType = collisions[i].ResolvePlayerEnemyCollision(gameObjects, ref obj1.prevState, ref obj2.prevState, h_game.h_GameSettings.enemyCollisionAngleTollerence);
                 
                 // GENERIC COLLISION --> RESOLVE WITH IMPULSE RESPONCE OR RESTING CONTACT
                 else // Resolve Generic Collsion
-                    restingContact = collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
+                    contactType = collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
                 
                 // Add a resting contact, if the collision normal is vertical (ie a collision against the ground)
                 // --> This adds an antigravity force to the two objects to counteract downward motion AND Y velocity and momentum set to zero
-                switch (restingContact)
+                switch (contactType)
                 {
                     case 0:                         // COLLIDING CONTACT
                         break;
@@ -432,37 +437,39 @@ namespace hungrybee
             }
             else
             {
-                // Otherwise add a small impulse to push objects APART so that we are out of resting contact threshold
-                lImpulse = collisions[index].GetMomForCollidingContact(ref obj1.prevState, ref obj2.prevState);
-                lImpulse.X *= gameSettings.collisionMask.X; lImpulse.Y *= gameSettings.collisionMask.Y; lImpulse.Z *= gameSettings.collisionMask.Z;
+                // Are they moving away from each other in all directions?
+                float relVel = collisions[index].GetRelativeVelocity(ref obj1.state, ref obj2.state);
 
-                if (obj1.movable && obj2.movable)
+                if (relVel > EPSILON)
                 {
-                    obj1.prevState.linearMom += lImpulse * 0.5f;
-                    obj2.prevState.linearMom -= lImpulse * 0.5f;
-                    obj1.prevState.RecalculateDerivedQuantities();
-                    obj2.prevState.RecalculateDerivedQuantities();
-                }
-                else if (obj1.movable && !obj2.movable)
-                {
-                    obj1.prevState.linearMom += lImpulse * 1.0f;
-                    obj1.prevState.RecalculateDerivedQuantities();
-                }
-                else if (!obj1.movable && obj2.movable)
-                {
-                    obj2.prevState.linearMom -= lImpulse * 1.0f;
-                    obj2.prevState.RecalculateDerivedQuantities();
+                    // Do nothing since they'll come apart of their own accord
                 }
                 else
-                    throw new Exception("physicsManager::ResolveCollisions() - Could not prevent resting contact, objects are not movable");
+                {
+                    // Otherwise add a small impulse to push objects APART so that we are out of resting contact threshold
+                    lImpulse = collisions[index].GetMomForCollidingContact(ref obj1.prevState, ref obj2.prevState);
+                    lImpulse.X *= gameSettings.collisionMask.X; lImpulse.Y *= gameSettings.collisionMask.Y; lImpulse.Z *= gameSettings.collisionMask.Z;
 
-                /*
-                // Then recover the collision as we normally would.
-                if(collisions[i].CheckCollidingContact(ref obj1.prevState, ref obj2.prevState))
-                    collisions[i].ResolveCollidingCollision(ref obj1.prevState, ref obj2.prevState);
-                else
-                    throw new Exception("physicsManager::ResolveCollisions() - Could not prevent resting contact, check GetVelAForCollidingContact() results");
-                */
+                    if (obj1.movable && obj2.movable)
+                    {
+                        obj1.state.linearMom += lImpulse * 0.5f;
+                        obj2.state.linearMom -= lImpulse * 0.5f;
+                        obj1.state.RecalculateDerivedQuantities();
+                        obj2.state.RecalculateDerivedQuantities();
+                    }
+                    else if (obj1.movable && !obj2.movable)
+                    {
+                        obj1.state.linearMom += lImpulse * 1.0f;
+                        obj1.state.RecalculateDerivedQuantities();
+                    }
+                    else if (!obj1.movable && obj2.movable)
+                    {
+                        obj2.state.linearMom -= lImpulse * 1.0f;
+                        obj2.state.RecalculateDerivedQuantities();
+                    }
+                    else
+                        throw new Exception("physicsManager::ResolveCollisions() - Could not prevent resting contact, objects are not movable");
+                }
             }
         }
         #endregion
@@ -916,18 +923,20 @@ namespace hungrybee
                 {
                     ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.h_GameSettings.gravity);
                     ((gameObject)restingContacts[i].obj1).resting = true;
-                    ((gameObject)restingContacts[i].obj1).prevState.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).state.linearVel.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).state.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj1).prevState.linearVel.Y = 0.0f;
-                    ((gameObject)restingContacts[i].obj1).prevState.pos.Y += BISECTION_TOLLERANCE; // Push the object up slightly
+                    ((gameObject)restingContacts[i].obj1).prevState.linearMom.Y = 0.0f;
                 }
                 if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj2).movable)
                 {
                     ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.h_GameSettings.gravity);
                     ((gameObject)restingContacts[i].obj2).resting = true;
-                    ((gameObject)restingContacts[i].obj2).prevState.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).state.linearVel.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).state.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj2).prevState.linearVel.Y = 0.0f;
-                    ((gameObject)restingContacts[i].obj2).prevState.pos.Y += BISECTION_TOLLERANCE; // Push the object up slightly
+                    ((gameObject)restingContacts[i].obj2).prevState.linearMom.Y = 0.0f;
                 }
             }
         }
@@ -980,9 +989,9 @@ namespace hungrybee
                                                    ref separationDistance,
                                                    ref ((gameObject)restingContacts[i].obj1).prevState, ref ((gameObject)restingContacts[i].obj2).prevState);
                 // If the objects are no longer within close proximity (objects have been knocked apart or objs have slid away from each other)
-                if (separationDistance > RESTING_CONTACT_TOLLERANCE)
+                if (separationDistance > (1.0f+EPSILON) * BISECTION_TOLLERANCE )
                 {
-                    if (((gameObject)restingContacts[i].obj1).collidable)
+                       if (((gameObject)restingContacts[i].obj1).collidable)
                     {
                         // Iterate through the rest of the restingContacts list and see if we can find another resing contact with the object
                         anotherContactExists = false;

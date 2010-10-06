@@ -1,16 +1,13 @@
 ﻿
 STUFF I SHOULD DO BEFORE ANYTHING ELSE
-- FINISH XNAUtils.GetBoundingSphereFromModel()
-- Debug instability --> When Player glances off the enemy, the collision isn't colliding! (press jump and left on startup)
-                    --> Try adding an impulse "kick" to objects that are causing physics system to hit max iterations
-                    --> Hitting max iterations during normal operation as well.
-                    --> Check this function!! CreateAABBFromModel()
+- Debug why bird is still offset!
 
 STUFF I HAVE TO DO
 - Make Bee friends collectable (on collision AND have game complete logic)
-- Add cats and dogs class --> Which is just a sphereical projectile that dies after a set time.
 - Make a menu, including settings for changing the shader effects (jitter on/off, etc)
 - Make the audio responces (http://msdn.microsoft.com/en-us/library/bb203895(v=XNAGameStudio.31).aspx)
+- Fix instability --> Stop player movement when they hit a wall.
+                  --> Find out why max iterations gets hit for no apparent reason
 - Make particle effects and enemy blow up effect
 - Profile performance: http://www.gamedev.net/community/forums/topic.asp?topic_id=474249
 - Don't update bounding boxes for objects that cannot be moved.

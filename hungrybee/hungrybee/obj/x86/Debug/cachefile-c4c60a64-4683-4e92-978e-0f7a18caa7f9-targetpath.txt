@@ -11,3 +11,4 @@ Content\hudArialFont.xnb
 Content\PostprocessEffect.xnb
 Content\CartoonEffect.xnb
 Content\ShipDiffuse_0.xnb
+Content\ShipDiffuse.xnb

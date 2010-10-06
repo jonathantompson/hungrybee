@@ -46,7 +46,7 @@ namespace hungrybee
         protected static float term1 = 1.0f, term2 = 1.0f, term3 = 1.0f, term4 = 1.0f;
         protected static float j;
         protected static float V_COLLIDING_THRESHOLD = 0.001f;
-        protected static float IMPULSE_TO_PREVENT_RESTING = 0.0001f;
+        protected static float IMPULSE_TO_PREVENT_RESTING = 1.0f;
         protected static Matrix zeroMat = new Matrix(0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
@@ -140,9 +140,9 @@ namespace hungrybee
                 throw new Exception("collision::ResolvePlayerEnemyCollision() - collision isn't colliding!");
 
             if (obj1 is gameObjectPlayer)
-                ((gameObject)obj2).movable = true;
+                ((gameObject)obj2).movable = true; // Set enemy to non-movable
             else
-                ((gameObject)obj1).movable = true;
+                ((gameObject)obj1).movable = true; // Set enemy to non-movable
 
             gameObjectEnemy enemy = null;
             gameObjectPlayer player = null;
@@ -315,6 +315,15 @@ namespace hungrybee
             pbdot = GetPointVelocity(ref obj2State, colPoint);
             vrel = Vector3.Dot(colNorm,(padot - pbdot));
             return vrel;
+        }
+        #endregion
+
+        #region GetRelativeVelocity()
+        public Vector3 GetRelativeVelocityVec(ref rboState obj1State, ref rboState obj2State)
+        {
+            padot = GetPointVelocity(ref obj1State, colPoint);
+            pbdot = GetPointVelocity(ref obj2State, colPoint);
+            return padot - pbdot;
         }
         #endregion
     }

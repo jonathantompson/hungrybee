@@ -35,6 +35,7 @@ namespace hungrybee
         string modelFile;
         Matrix[] modelTransforms;
         public float modelScaleToNormalizeSize;
+        public Vector3 modelOffsetToCenterOnSphere;
 
         public boundingObjType boundingObjType;
         public Object boundingObj;
@@ -190,7 +191,8 @@ namespace hungrybee
             drawState.scale = Interp(prevState.scale, state.scale, percentInterp);
             drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
             drawState.pos = Interp(prevState.pos, state.pos, percentInterp);
-            model.Root.Transform = CreateScale(drawState.scale) *
+            model.Root.Transform = Matrix.CreateTranslation(modelOffsetToCenterOnSphere) * 
+                                   CreateScale(drawState.scale) *
                                    Matrix.CreateFromQuaternion(drawState.orient) *
                                    Matrix.CreateTranslation(drawState.pos);
 
@@ -200,10 +202,29 @@ namespace hungrybee
             // Draw the model.
             foreach (ModelMesh mesh in model.Meshes)
             {
+                string curEffectTechniqueName = null;
+                if (mesh.MeshParts[0].VertexStride == 24) // If model doesn't have texture data
+                    switch (effectTechniqueName)
+                    {
+                        case "NormalDepth":
+                            curEffectTechniqueName = "NormalDepth";
+                            break;
+                        case "Toon":
+                            curEffectTechniqueName = "Toon_noTexture";
+                            break;
+                        case "Lambert":
+                            curEffectTechniqueName = "Lambert_noTexture";
+                            break;
+                        default:
+                            throw new Exception("gameObject::DrawUsingCurrentEffect() - Unrecognised effect Technique name");
+                    }
+                else
+                    curEffectTechniqueName = effectTechniqueName;
+
                 foreach (Effect effect in mesh.Effects)
                 {
                     // Specify which effect technique to use.
-                    effect.CurrentTechnique = effect.Techniques[effectTechniqueName];
+                    effect.CurrentTechnique = effect.Techniques[curEffectTechniqueName];
 
                     Matrix localWorld = modelTransforms[mesh.ParentBone.Index];
 
@@ -439,14 +460,15 @@ namespace hungrybee
             {
                 BoundingSphere sphere = (BoundingSphere)boundingObj;
                 XNAUtils.ModelTag tag = (XNAUtils.ModelTag)model.Tag;
-                Vector3 center_inBone = new Vector3();
 
-                // Offset all the verticies by the BoundingSphere.Center if we haven't already
-                if (!tag.modelRecentered)
-                {
-                    Vector3 ModelCenter = XNAUtils.GetModelCenter(model);
+                //// Offset all the verticies by the BoundingSphere.Center if we haven't already
+                //if (!tag.modelRecentered)
+                //{
+                //    //XNAUtils.OffsetVertices(ref model, -sphere.Center); // <- DOESN'T WORK!!
+                //    model.Root.Transform *= Matrix.CreateTranslation(-sphere.Center);
+                //}
 
-                }
+                modelOffsetToCenterOnSphere = -sphere.Center;
 
                 // Now offset the BoundingSphere
                 sphere.Center = Vector3.Zero;
@@ -454,10 +476,9 @@ namespace hungrybee
                 tag.bSphere = sphere;
                 model.Tag = tag;
                 boundingObj = (Object)sphere;
-
             }
             else
-                throw new Exception("gameObject::CenterObjectOnZaxis() - Something went wrong.  CenterObjectOnZaxis should only be used on SPHERE bounding objects");
+                throw new Exception("gameObject::CenterObjectAboutBoundingSphere() - Function was incorrectly called on a bounding object other than SPHERE");
         }
         #endregion
 

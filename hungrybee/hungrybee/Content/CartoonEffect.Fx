@@ -54,6 +54,15 @@ struct VertexShaderInput
 };
 
 // *************************************************************************
+// Vertex shader input structure.
+// *************************************************************************
+struct VertexShaderInput_noTexture
+{
+    float4 Position : POSITION0;
+    float3 Normal : NORMAL0;
+};
+
+// *************************************************************************
 // Output structure for the vertex shader that applies lighting.
 // *************************************************************************
 struct LightingVertexShaderOutput
@@ -65,11 +74,30 @@ struct LightingVertexShaderOutput
 };
 
 // *************************************************************************
+// Output structure for the vertex shader that applies lighting.
+// *************************************************************************
+struct LightingVertexShaderOutput_noTexture
+{
+    float4 Position : POSITION0;
+    float LightAmount : TEXCOORD1;
+    float4 VertexColor : COLOR0;
+};
+
+// *************************************************************************
 // Input structure for the Lambert and Toon pixel shaders.
 // *************************************************************************
 struct LightingPixelShaderInput
 {
     float2 TextureCoordinate : TEXCOORD0;
+    float LightAmount : TEXCOORD1;
+    float4 VertexColor : COLOR0;
+};
+
+// *************************************************************************
+// Input structure for the Lambert and Toon pixel shaders.
+// *************************************************************************
+struct LightingPixelShaderInput_noTexture
+{
     float LightAmount : TEXCOORD1;
     float4 VertexColor : COLOR0;
 };
@@ -100,6 +128,28 @@ LightingVertexShaderOutput LightingVertexShader(VertexShaderInput input)
 }
 
 // *************************************************************************
+// Vertex shader shared between the Lambert and Toon lighting techniques.
+// *************************************************************************
+LightingVertexShaderOutput_noTexture LightingVertexShader_noTexture(VertexShaderInput_noTexture input)
+{
+    LightingVertexShaderOutput_noTexture output;
+
+    // Apply camera matrices to the input position.
+    output.Position = mul(mul(mul(input.Position, World), View), Projection);
+
+    // Compute the overall lighting brightness.
+    float3 worldNormal = normalize(mul(input.Normal, World));
+    
+    output.LightAmount = dot(worldNormal, LightDirection);
+    
+    // Send on the vertex color
+    output.VertexColor.rgb = DiffuseColor;
+    output.VertexColor.a = 1.0f;
+    
+    return output;
+}
+
+// *************************************************************************
 // Pixel shader applies a simple Lambert shading algorithm.
 // *************************************************************************
 float4 LambertPixelShader(LightingPixelShaderInput input) : COLOR0
@@ -115,6 +165,18 @@ float4 LambertPixelShader(LightingPixelShaderInput input) : COLOR0
 }
 
 // *************************************************************************
+// Pixel shader applies a simple Lambert shading algorithm.
+// *************************************************************************
+float4 LambertPixelShader_noTexture(LightingPixelShaderInput_noTexture input) : COLOR0
+{
+    float4 color = VertexColorEnabled ? input.VertexColor : 0;
+    
+    color.rgb *= saturate(input.LightAmount) * DiffuseLight + AmbientLight;
+    
+    return color;
+}
+
+// *************************************************************************
 // Pixel shader applies a cartoon shading algorithm.
 // *************************************************************************
 float4 ToonPixelShader(LightingPixelShaderInput input) : COLOR0
@@ -123,6 +185,27 @@ float4 ToonPixelShader(LightingPixelShaderInput input) : COLOR0
     
     // Vertex color will override texture color!
     color = VertexColorEnabled ? input.VertexColor : color;
+    
+    float light;
+
+    if (input.LightAmount > ToonThresholds[0])
+        light = ToonBrightnessLevels[0];
+    else if (input.LightAmount > ToonThresholds[1])
+        light = ToonBrightnessLevels[1];
+    else
+        light = ToonBrightnessLevels[2];
+                
+    color.rgb *= light;
+    
+    return color;
+}
+
+// *************************************************************************
+// Pixel shader applies a cartoon shading algorithm.
+// *************************************************************************
+float4 ToonPixelShader_noTexture(LightingPixelShaderInput_noTexture input) : COLOR0
+{
+    float4 color = VertexColorEnabled ? input.VertexColor : 0;
     
     float light;
 
@@ -190,6 +273,18 @@ technique Lambert
 }
 
 // *************************************************************************
+// Technique draws the object using smooth Lambert shading.
+// *************************************************************************
+technique Lambert_noTexture
+{
+    pass P0
+    {
+        VertexShader = compile vs_1_1 LightingVertexShader_noTexture();
+        PixelShader = compile ps_2_0 LambertPixelShader_noTexture();
+    }
+}
+
+// *************************************************************************
 // Technique draws the object using banded cartoon shading.
 // *************************************************************************
 technique Toon
@@ -198,6 +293,18 @@ technique Toon
     {
         VertexShader = compile vs_1_1 LightingVertexShader();
         PixelShader = compile ps_2_0 ToonPixelShader();
+    }
+}
+
+// *************************************************************************
+// Technique draws the object using banded cartoon shading.
+// *************************************************************************
+technique Toon_noTexture
+{
+    pass P0
+    {
+        VertexShader = compile vs_1_1 LightingVertexShader_noTexture();
+        PixelShader = compile ps_2_0 ToonPixelShader_noTexture();
     }
 }
 

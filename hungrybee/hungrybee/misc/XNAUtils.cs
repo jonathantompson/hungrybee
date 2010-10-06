@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Storage;
+using ExtensionMethods;
 
 namespace hungrybee
 {
@@ -15,25 +16,28 @@ namespace hungrybee
     /// **                             XNAUtils                              **
     /// ** Some helper functions taken from the book:                        **
     /// ** XNA 3.0 - Game Programming Recipies: A Problem-Solution Approach  **
+    /// ** Actually, there's more of my code in here than from the book      **
     /// ***********************************************************************
     /// </summary>
     public static class XNAUtils
     {
         static float EPSILON = 0.0000000001f;
 
-        // Jonno Tompson Code
+        #region GetAABBVolume(BoundingBox bBox)
         public static float GetAABBVolume(BoundingBox bBox)
         {
             return (bBox.Max.X - bBox.Min.X) * (bBox.Max.Y - bBox.Min.Y) * (bBox.Max.Z - bBox.Min.Z);
         }
+        #endregion
 
-        // Jonno Tompson Code
+        #region GetSphereVolume(BoundingSphere bSphere)
         public static float GetSphereVolume(BoundingSphere bSphere)
         {
             return 2.0f * (float)Math.PI * bSphere.Radius * bSphere.Radius;
         }
+        #endregion
 
-        // Jonno Tompson Code
+        #region CalculateItensorFromBoundingSphere(BoundingSphere bSphere, float mass)
         // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
         public static Matrix CalculateItensorFromBoundingSphere(BoundingSphere bSphere, float mass)
         {
@@ -43,8 +47,9 @@ namespace hungrybee
 
             return Itensor;
         }
+        #endregion
 
-        // Jonno Tompson Code
+        #region CalculateItensorFromBoundingBox(BoundingBox bBox, float mass)
         // Calculate from http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
         public static Matrix CalculateItensorFromBoundingBox(BoundingBox bBox, float mass)
         {
@@ -58,8 +63,9 @@ namespace hungrybee
 
             return Itensor;
         }
+        #endregion
 
-        // Jonno Tompson Code
+        #region CreateAABBFromVerticies(VertexPositionNormalTexture[] verticies)
         // Calculate Min and Max verticies and return a BoundingBox
         public static BoundingBox CreateAABBFromVerticies(VertexPositionNormalTexture[] verticies)
         {
@@ -91,8 +97,9 @@ namespace hungrybee
             BoundingBox retVal = new BoundingBox(min, max);
             return retVal;
         }
+        #endregion
 
-        // Jonno Tompson Code
+        #region CreateAABBFromVerticies(VertexPosition[] verticies)
         // Calculate Min and Max verticies and return a BoundingBox
         public static BoundingBox CreateAABBFromVerticies(VertexPosition[] verticies)
         {
@@ -124,8 +131,9 @@ namespace hungrybee
             BoundingBox retVal = new BoundingBox(min, max);
             return retVal;
         }
+        #endregion
 
-        // Jonno Tompson Code
+        #region CreateAABBFromModel(Model model)
         // Calculate Min and Max verticies and return a BoundingBox
         public static BoundingBox CreateAABBFromModel(Model model)
         {
@@ -133,7 +141,7 @@ namespace hungrybee
 
             Matrix []m_transforms = new Matrix[model.Bones.Count];
             model.CopyAbsoluteBoneTransformsTo(m_transforms);
-
+            bool firstIteration = true;
             foreach (ModelMesh mesh in model.Meshes)
             {
                 // Get the verticies
@@ -141,27 +149,59 @@ namespace hungrybee
                 GetModelMeshVertices(ref vertices, mesh);          
 
                 // Find min, max xyz for this mesh - assumes will be centred on 0,0,0 as BB is initialised to 0,0,0
-                Vector3 min = vertices[0].Position;
-                Vector3 max = vertices[0].Position;
+                Vector3 curVert = new Vector3();
+
+                Vector3 min = Vector3.Transform(vertices[0].Position, m_transforms[mesh.ParentBone.Index]);
+                Vector3 max = Vector3.Transform(vertices[0].Position, m_transforms[mesh.ParentBone.Index]);
 
                 for (int i = 1; i < vertices.Length; i++)
                 {
-                    min = Vector3.Min(min, vertices[i].Position);
-                    max = Vector3.Max(max, vertices[i].Position);
+                    curVert = Vector3.Transform(vertices[i].Position, m_transforms[mesh.ParentBone.Index]);
+                    if (min.X > curVert.X)
+                        min.X = curVert.X;
+                    if (min.Y > curVert.Y)
+                        min.Y = curVert.Y;
+                    if (min.Z > curVert.Z)
+                        min.Z = curVert.Z;
+
+                    if (max.X < curVert.X)
+                        max.X = curVert.X;
+                    if (max.Y < curVert.Y)
+                        max.Y = curVert.Y;
+                    if (max.Z < curVert.Z)
+                        max.Z = curVert.Z;
                 }                
 
-                // We need to take into account the fact that the mesh may have a bone transform
-                min = Vector3.Transform(min, m_transforms[mesh.ParentBone.Index]);
-                max = Vector3.Transform(max, m_transforms[mesh.ParentBone.Index]);
+                if (firstIteration)
+                {
+                    retVal.Min = min;
+                    retVal.Max = max;
+                    firstIteration = false;
+                }
+                else
+                {
+                    // Now expand main bb by this mesh's box
+                    if (retVal.Min.X > min.X)
+                        retVal.Min.X = min.X;
+                    if (retVal.Min.Y > min.Y)
+                        retVal.Min.Y = min.Y;
+                    if (retVal.Min.Z > min.Z)
+                        retVal.Min.Z = min.Z;
 
-                // Now expand main bb by this mesh's box
-               retVal.Min = Vector3.Min(retVal.Min, min);
-               retVal.Max = Vector3.Max(retVal.Max, max);
+                    if (retVal.Max.X < max.X)
+                        retVal.Max.X = max.X;
+                    if (retVal.Max.Y < max.Y)
+                        retVal.Max.Y = max.Y;
+                    if (retVal.Max.Z < max.Z)
+                        retVal.Max.Z = max.Z;
+                }
             }
 
             return retVal;
         }
+        #endregion
 
+        #region GetModelCenter(Model model)
         public static Vector3 GetModelCenter(Model model)
         {
             Matrix[] modelTransforms = new Matrix[model.Bones.Count];
@@ -186,7 +226,9 @@ namespace hungrybee
             center = center / model.Meshes.Count;
             return center;
         }
+        #endregion
 
+        #region GetModelMeshVertices(ref VertexPositionNormalTexture[] vertices, ModelMesh mesh)
         public static void GetModelMeshVertices(ref VertexPositionNormalTexture[] vertices, ModelMesh mesh)
         {
             // Get the bone vertex declaration
@@ -215,7 +257,9 @@ namespace hungrybee
                 mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
             }
         }
+        #endregion
 
+        #region SetModelMeshVertices(ref VertexPositionNormalTexture[] vertices, ModelMesh mesh)
         public static void SetModelMeshVertices(ref VertexPositionNormalTexture[] vertices, ModelMesh mesh)
         {
             // Get the bone vertex declaration
@@ -242,7 +286,38 @@ namespace hungrybee
                 mesh.VertexBuffer.SetData<VertexPositionNormalTexture>(vertices);
             }
         }
+        #endregion
 
+        #region OffsetVertices(ref Model model, Vector3 offset)
+        public static void OffsetVertices(ref Model model, Vector3 offset)
+        {
+            Matrix[] modelTransforms = new Matrix[model.Bones.Count];
+            model.CopyAbsoluteBoneTransformsTo(modelTransforms);
+
+            Matrix boneMat;
+            Matrix boneMatInv;
+            Vector3 offset_in_mesh = Vector3.Zero;
+            foreach (ModelMesh modelMesh in model.Meshes)
+            {
+                // Load the verticies from the model
+                VertexPositionNormalTexture[] vertices = null;
+                XNAUtils.GetModelMeshVertices(ref vertices, modelMesh);
+
+                boneMat = modelTransforms[modelMesh.ParentBone.Index];
+                boneMatInv = Matrix.Invert(boneMat);
+                offset_in_mesh = Vector3.Transform(offset, boneMatInv);
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i].Position += offset_in_mesh;
+                }
+
+                XNAUtils.SetModelMeshVertices(ref vertices, modelMesh);
+            }
+        }
+        #endregion
+
+        #region TransformBoundingBox(BoundingBox origBox, Matrix matrix)
         public static BoundingBox TransformBoundingBox(BoundingBox origBox, Matrix matrix)
         {
             Vector3 origCorner1 = origBox.Min;
@@ -253,7 +328,9 @@ namespace hungrybee
 
             return new BoundingBox(transCorner1, transCorner2);
         }
+        #endregion
 
+        #region TransformBoundingSphere(BoundingSphere originalBoundingSphere, Matrix transformationMatrix)
         public static BoundingSphere TransformBoundingSphere(BoundingSphere originalBoundingSphere, Matrix transformationMatrix)
         {
             Vector3 trans;
@@ -274,7 +351,9 @@ namespace hungrybee
 
             return transformedBoundingSphere;
         }
+        #endregion
 
+        #region class ModelTag
         public class ModelTag
         {
             public BoundingSphere bSphere;
@@ -285,7 +364,9 @@ namespace hungrybee
                 bSphere = _bSphere;
             }
         }
+        #endregion
 
+        #region LoadModelWithBoundingSphere(ref Matrix[] modelTransforms, string asset, ContentManager content)
         public static Model LoadModelWithBoundingSphere(ref Matrix[] modelTransforms, string asset, ContentManager content)
         {
             Model newModel = content.Load<Model>(asset);
@@ -300,64 +381,25 @@ namespace hungrybee
 
             return newModel;
         }
+        #endregion
 
+        #region GetBoundingSphereFromModel(ref Model model)
         public static BoundingSphere GetBoundingSphereFromModel(ref Model model)
         {
             BoundingSphere completeBoundingSphere = new BoundingSphere();
 
-            Vector3 ModelCenter = XNAUtils.GetModelCenter(model);
-            float ModelRadius = GetRadiusFromModelAndCenter(ref model, ref ModelCenter);
+            // Form the AABB bounding box and create a sphere at it's midpoint
+            // --> Not an optimal solution but it is better than brute force fitting (which I tried and had issues with)
+            // Maybe consider porting covariance Matrix code from OBB code and use axis of maximal spread and convex hull.
+            BoundingBox bBox = CreateAABBFromModel(model);
 
-            Vector3 curCenterPos = new Vector3();
-            float curRadiusPos = 0.0f;
-            Vector3 curCenterNeg = new Vector3();
-            float curRadiusNeg = 0.0f;
-
-            // NOW BRUTE FORCE ITERATE THE CENTER POSITION, TRYING TO IMPROVE THIS
-            float StepSize = 0.01f; // Scaled by the curRadius
-            float conversionNorm = 1.0f;
-            float Norm = float.PositiveInfinity;
-            float PreviousBestRadius = ModelRadius;
-            Vector3[] directions = {Vector3.Right,Vector3.Up,Vector3.Down};
-
-            while (Norm > conversionNorm)
-            {
-                for (int curDirection = 0; curDirection < directions.Length; curDirection++)
-                {
-                    // Optimize in each direction
-                    bool iterate = true;
-                    while (iterate)
-                    {
-                        // try a step in the positive direction
-                        curCenterPos = ModelCenter + directions[curDirection] * StepSize * ModelRadius;
-                        curRadiusPos = GetRadiusFromModelAndCenter(ref model, ref curCenterPos);
-
-                        // try a step in the negative direction
-                        curCenterNeg = ModelCenter - directions[curDirection] * StepSize * ModelRadius;
-                        curRadiusNeg = GetRadiusFromModelAndCenter(ref model, ref curCenterPos);
-
-                        if (curRadiusPos > curRadiusNeg)
-                        { curCenterPos = curCenterNeg; curRadiusPos = curRadiusNeg; }
-
-                        // If the best radius we've found is less than the model radius --> We've found a new optimization point
-                        if (ModelRadius > curRadiusPos)
-                        { ModelCenter = curCenterPos; ModelRadius = curRadiusPos; }
-                        // Otherwise we've gone as far as we can
-                        else
-                        { iterate = false; }
-                    }
-                }
-                if (PreviousBestRadius == ModelRadius)
-                    break; // Gone as far as we can
-                Norm = Math.Abs(ModelRadius - PreviousBestRadius);
-                PreviousBestRadius = ModelRadius;
-            }
-
-            completeBoundingSphere.Center = ModelCenter;
-            completeBoundingSphere.Radius = ModelRadius;
+            completeBoundingSphere.Center = (bBox.Max + bBox.Min)/2;
+            completeBoundingSphere.Radius = 0.5f * Math.Max(Math.Max(bBox.Max.X - bBox.Min.X, bBox.Max.Y - bBox.Min.Y), bBox.Max.Z - bBox.Min.Z);
             return completeBoundingSphere;
         }
+        #endregion
 
+        #region GetRadiusFromModelAndCenter(ref Model model, ref Vector3 ModelCenter)
         public static float GetRadiusFromModelAndCenter(ref Model model, ref Vector3 ModelCenter)
         {
             // With this model center (geometric mean) --> Find the model bounds
@@ -391,7 +433,9 @@ namespace hungrybee
             }
             return radius;
         }
+        #endregion
 
+        #region DrawBoundingBox(BoundingBox bBox, GraphicsDevice device, BasicEffect basicEffect, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix)
         public static void DrawBoundingBox(BoundingBox bBox, GraphicsDevice device, BasicEffect basicEffect, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix)
         {
             Vector3 v1 = bBox.Min;
@@ -425,7 +469,9 @@ namespace hungrybee
             }
             basicEffect.End();
         }
+        #endregion
 
+        #region DrawSphereSpikes(BoundingSphere sphere, GraphicsDevice device, BasicEffect basicEffect, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix)
         public static void DrawSphereSpikes(BoundingSphere sphere, GraphicsDevice device, BasicEffect basicEffect, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix)
         {
             Vector3 up = sphere.Center + sphere.Radius * Vector3.Up;
@@ -456,9 +502,11 @@ namespace hungrybee
                 pass.End();
             }
             basicEffect.End();
-            
-        }
 
+        }
+        #endregion
+
+        #region VerticesFromVector3List(List<Vector3> pointList, Color color)
         public static VertexPositionColor[] VerticesFromVector3List(List<Vector3> pointList, Color color)
         {
             VertexPositionColor[] vertices = new VertexPositionColor[pointList.Count];
@@ -469,7 +517,9 @@ namespace hungrybee
 
             return vertices;
         }
+        #endregion
 
+        #region CreateBoxFromSphere(BoundingSphere sphere)
         public static BoundingBox CreateBoxFromSphere(BoundingSphere sphere)
         {
             float radius = sphere.Radius;
@@ -480,7 +530,9 @@ namespace hungrybee
 
             return new BoundingBox(p1, p2);
         }
+        #endregion
 
+        #region AutoScaleModelTransform(ref Model model, float requestedSize, ref float scalingFactor)
         public static Matrix[] AutoScaleModelTransform(ref Model model, float requestedSize, ref float scalingFactor)
         {
             BoundingSphere bSphere = ((ModelTag)model.Tag).bSphere;
@@ -492,7 +544,7 @@ namespace hungrybee
 
             return modelTransforms;
         }
-
+        #endregion
 
     }
 }
