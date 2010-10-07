@@ -764,6 +764,9 @@ namespace hungrybee
             if (separationDistance <= 0.0f)
                 throw new Exception("collisionUtils::AddCollisionSphereSphereStatic() - Objects are overlapping.  Binomial search must have failed");
 
+            if (separationDistance > physicsManager.BISECTION_TOLLERANCE)
+                return; // Nothing to add since objects are not colliding.  If they were, stepping would have put them closer together.
+
             // Get the two centers at collision time
             Vector3 normal = Vector3.Normalize(AB);
             Vector3 point = objACenter_t1 + normal * objARadius_t1; // Center is along the vector between the two centers, at a distance of the radius

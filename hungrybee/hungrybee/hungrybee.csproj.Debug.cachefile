@@ -12,5 +12,9 @@ Content\PostprocessEffect.xnb
 Content\CartoonEffect.xnb
 Content\ShipDiffuse_0.xnb
 Content\ShipDiffuse.xnb
+Content\menuBG.xnb
+Content\menuBG2.xnb
+Content\menuPostProcessing.xnb
+Content\Graffiti.xnb
 gameSettings\Level_1.csv
 gameSettings\settings.csv

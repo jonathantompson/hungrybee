@@ -34,7 +34,8 @@ namespace hungrybee
         protected float friendCapturedSequenceEnd;
         protected float friendCapturedSequenceScale;
         protected gameObject capturingPlayer;
-        Vector3 dispToPlayer;
+        Vector3 displacementToPlayer;
+        Vector3 rotAxis;
 
         #endregion
 
@@ -46,7 +47,8 @@ namespace hungrybee
         {
             // Nothing to do yet
             friendCaptured = false;
-            dispToPlayer = new Vector3();
+            displacementToPlayer = new Vector3();
+            rotAxis = new Vector3();
             capturingPlayer = null;
         }
         #endregion
@@ -70,7 +72,7 @@ namespace hungrybee
                     
                     // Also spin the model about the y-axis around the player
                     float angle = (base.h_game.h_GameSettings.friendSequenceAngularVelocity * ((float)gameTime.TotalGameTime.TotalSeconds - friendCapturedSequenceStart)) % (2.0f * (float)Math.PI);
-                    prevState.pos = capturingPlayer.prevState.pos + Vector3.Transform(dispToPlayer, Matrix.CreateRotationY(angle));
+                    prevState.pos = capturingPlayer.prevState.pos + Vector3.Transform(displacementToPlayer, Matrix.CreateFromAxisAngle(rotAxis,angle));
                     state.pos = prevState.pos;
                  }
             } // if (deathSequence)
@@ -87,8 +89,8 @@ namespace hungrybee
             friendCapturedSequenceStart = state.time;
             friendCapturedSequenceEnd = friendCapturedSequenceStart + base.h_game.h_GameSettings.friendSequenceDuration;
             friendCapturedSequenceScale = base.modelScaleToNormalizeSize;
-            dispToPlayer = state.pos - capturingPlayer.state.pos;
-
+            displacementToPlayer = state.pos - capturingPlayer.state.pos;
+            rotAxis = Vector3.Cross(displacementToPlayer, Vector3.Backward);
         }
         #endregion
 

@@ -167,6 +167,42 @@
       <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\ShipDiffuse.xnb</Output>
       <Time>2007-11-26T11:33:16-05:00</Time>
     </Item>
+    <Item>
+      <Source>menuBG.jpg</Source>
+      <Name>menuBG</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\menuBG.xnb</Output>
+      <Time>2008-01-02T12:31:34-05:00</Time>
+    </Item>
+    <Item>
+      <Source>menuBG2.jpg</Source>
+      <Name>menuBG2</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\menuBG2.xnb</Output>
+      <Time>2008-01-02T12:31:34-05:00</Time>
+    </Item>
+    <Item>
+      <Source>menuPostProcessing.fx</Source>
+      <Name>menuPostProcessing</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\menuPostProcessing.xnb</Output>
+      <Time>2008-01-02T12:44:24-05:00</Time>
+    </Item>
+    <Item>
+      <Source>Graffiti.bmp</Source>
+      <Name>Graffiti</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>FontTextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\Graffiti.xnb</Output>
+      <Time>2010-10-07T13:41:54.1568016-04:00</Time>
+    </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
       <TargetPlatform>Windows</TargetPlatform>

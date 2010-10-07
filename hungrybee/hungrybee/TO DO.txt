@@ -1,18 +1,22 @@
 ﻿
 STUFF I SHOULD DO BEFORE ANYTHING ELSE
-- Debug why bird is still offset!
+- Change menu background
+- Fix "collision isn't colliding" errors (happens when comming down on enemy from top left)
 
 STUFF I HAVE TO DO
 - Make Bee friends collectable (on collision AND have game complete logic)
-- Make a menu, including settings for changing the shader effects (jitter on/off, etc)
+- Finish options section of menu (maybe option to change diplay size and renderer type)
 - Make the audio responces (http://msdn.microsoft.com/en-us/library/bb203895(v=XNAGameStudio.31).aspx)
 - Fix instability --> Stop player movement when they hit a wall.
                   --> Find out why max iterations gets hit for no apparent reason
 - Make particle effects and enemy blow up effect
 - Profile performance: http://www.gamedev.net/community/forums/topic.asp?topic_id=474249
-- Don't update bounding boxes for objects that cannot be moved.
+- Don't update bounding boxes for objects that cannot be moved (but do it once on startup)
+- Fix writing settings to file overwriting the nice formatting I have
 
 STUFF I WOULD LIKE TO DO IF I HAVE TIME
+- Add intro when gameObjectManager.StartNewGame() is called
+- Add outro when gameObjectManager.EndGame() is called
 - Add Gausian blur to clouds: http://www.webdesign.org/photoshop/drawing-techniques/cartoon-clouds.12701.html
 - Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
 - Fix swept sphere collision code for AABB-sphere collisions --> Glancing collisions are failing to be detected. (where velocity is nearly perpendicular to collision normal)

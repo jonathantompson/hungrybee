@@ -91,6 +91,8 @@
     <Compile Include="gameObjects\gameObjectNPC.cs" />
     <Compile Include="gameObjects\gameObjectPhantom.cs" />
     <Compile Include="gameObjects\phantomType.cs" />
+    <Compile Include="menu\menuManager.cs" />
+    <Compile Include="menu\menuWindow.cs" />
     <Compile Include="physics\AABBOverlap.cs" />
     <Compile Include="physics\collision.cs" />
     <Compile Include="physics\collisionUtils.cs" />

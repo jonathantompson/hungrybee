@@ -40,6 +40,9 @@ namespace hungrybee
         TimeSpan                timeToNextJitter;
         RenderTarget2D          sceneRenderTarget;      // Custom rendertargets.
         RenderTarget2D          normalDepthRenderTarget;
+        Effect                  cartoonEffect;
+
+        public bool             changeModelsEffects;    // Before the next render, change the effects in the models (happens on each level load)
 
         #endregion
 
@@ -50,6 +53,15 @@ namespace hungrybee
         {
             h_game = (game)game;
             random = new Random();
+        }
+        #endregion
+
+        #region ClearLevel()
+        /// ClearLevel()
+        /// ***********************************************************************
+        public void ClearLevel()
+        {
+            changeModelsEffects = true; // Since the models are new we'll need to change the effects again
         }
         #endregion
 
@@ -73,9 +85,10 @@ namespace hungrybee
             sketchTexture = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.sketchTextureFile);
 
             // Change the model to use our custom cartoon shading effect.
-            Effect cartoonEffect = h_game.Content.Load<Effect>(h_game.h_GameSettings.cartoonEffectFile);
+            cartoonEffect = h_game.Content.Load<Effect>(h_game.h_GameSettings.cartoonEffectFile);
 
-            h_game.h_GameObjectManager.ChangeEffectUsedByModels(cartoonEffect);
+            // Since we've just loaded the models we'll need to call for a effects change
+            changeModelsEffects = true;
 
             // Create two custom rendertargets.
             PresentationParameters pp = h_game.h_GraphicsDevice.PresentationParameters;
@@ -135,63 +148,77 @@ namespace hungrybee
         /// ***********************************************************************
         public void Draw(GameTime gameTime)
         {
-
-            // Get a pointer to the camera interface
-            cameraInterface camera = (cameraInterface)h_game.Services.GetService(typeof(cameraInterface));
-
-            h_game.h_GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
-
-            // Calculate the camera matrices.
-            float time = (float)gameTime.TotalGameTime.TotalSeconds;
-
-            // If we are doing edge detection, first off we need to render the
-            // normals and depth of our model into a special rendertarget.
-            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect)
+            if (h_game.h_Menu.menusRunning)
             {
-                h_game.h_GraphicsDevice.SetRenderTarget(0, normalDepthRenderTarget);
-                h_game.h_GraphicsDevice.Clear(Color.Black);
+                h_game.h_GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1, 0);
+
+                h_game.h_Menu.Draw(gameTime);
+            }
+            else
+            {
+                if (changeModelsEffects)
+                {
+                    h_game.h_GameObjectManager.ChangeEffectUsedByModels(cartoonEffect);
+                    changeModelsEffects = false;
+                }
+
+                // Get a pointer to the camera interface
+                cameraInterface camera = (cameraInterface)h_game.Services.GetService(typeof(cameraInterface));
+
+                h_game.h_GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1, 0);
+
+                // Calculate the camera matrices.
+                float time = (float)gameTime.TotalGameTime.TotalSeconds;
+
+                // If we are doing edge detection, first off we need to render the
+                // normals and depth of our model into a special rendertarget.
+                if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect)
+                {
+                    h_game.h_GraphicsDevice.SetRenderTarget(0, normalDepthRenderTarget);
+                    h_game.h_GraphicsDevice.Clear(Color.Black);
+
+                    // Draw the models
+                    h_game.h_GameObjectManager.DrawModels(gameTime, h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
+                }
+
+                // If we are doing edge detection and/or pencil sketch processing, we
+                // need to draw the model into a special rendertarget which can then be
+                // fed into the postprocessing shader. Otherwise can just draw it
+                // directly onto the backbuffer.
+                if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect || h_game.h_GameSettings.RenderSettings.EnableSketch)
+                    h_game.h_GraphicsDevice.SetRenderTarget(0, sceneRenderTarget);
+                else
+                    h_game.h_GraphicsDevice.SetRenderTarget(0, null);
+
+                h_game.h_GraphicsDevice.Clear(Color.CornflowerBlue);
+                // Draw the model, using either the cartoon or lambert shading technique.
+                string effectTechniqueName;
+
+                if (h_game.h_GameSettings.RenderSettings.EnableToonShading)
+                    effectTechniqueName = "Toon";
+                else
+                    effectTechniqueName = "Lambert";
+
+
+
+                // Draw the SkyPlane
+                h_game.h_SkyPlane.Draw(h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix);
 
                 // Draw the models
-                h_game.h_GameObjectManager.DrawModels(gameTime, h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix, "NormalDepth");
+                h_game.h_GameObjectManager.DrawModels(gameTime, h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);
+
+                // Run the postprocessing filter over the scene that we just rendered.
+                if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect || h_game.h_GameSettings.RenderSettings.EnableSketch)
+                {
+                    h_game.h_GraphicsDevice.SetRenderTarget(0, null);
+
+                    ApplyPostprocess();
+                }
+
+                // Display some text over the top. Note how we draw this after the
+                // postprocessing, because we don't want the text to be affected by it.
+                h_game.h_Hud.Draw();
             }
-
-            // If we are doing edge detection and/or pencil sketch processing, we
-            // need to draw the model into a special rendertarget which can then be
-            // fed into the postprocessing shader. Otherwise can just draw it
-            // directly onto the backbuffer.
-            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect || h_game.h_GameSettings.RenderSettings.EnableSketch)
-                h_game.h_GraphicsDevice.SetRenderTarget(0, sceneRenderTarget);
-            else
-                h_game.h_GraphicsDevice.SetRenderTarget(0, null);
-
-            h_game.h_GraphicsDevice.Clear(Color.CornflowerBlue);
-            // Draw the model, using either the cartoon or lambert shading technique.
-            string effectTechniqueName;
-
-            if (h_game.h_GameSettings.RenderSettings.EnableToonShading)
-                effectTechniqueName = "Toon";
-            else
-                effectTechniqueName = "Lambert";
-
-
-
-            // Draw the SkyPlane
-            h_game.h_SkyPlane.Draw(h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix);
-
-            // Draw the models
-            h_game.h_GameObjectManager.DrawModels(gameTime, h_game.h_GraphicsDevice, camera.ViewMatrix, camera.ProjectionMatrix, effectTechniqueName);
-
-            // Run the postprocessing filter over the scene that we just rendered.
-            if (h_game.h_GameSettings.RenderSettings.EnableEdgeDetect || h_game.h_GameSettings.RenderSettings.EnableSketch)
-            {
-                h_game.h_GraphicsDevice.SetRenderTarget(0, null);
-
-                ApplyPostprocess();
-            }
-
-            // Display some text over the top. Note how we draw this after the
-            // postprocessing, because we don't want the text to be affected by it.
-            h_game.h_Hud.Draw();
 
         }
         #endregion

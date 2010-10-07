@@ -67,25 +67,28 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
-            elapsedTime += gameTime.ElapsedGameTime;
-
-            if (elapsedTime > TimeSpan.FromSeconds(1))
+            if(!h_game.h_Menu.menusRunning)
             {
-                elapsedTime -= TimeSpan.FromSeconds(1);
-                frameRate = frameCounter;
-                frameCounter = 0;
+                elapsedTime += gameTime.ElapsedGameTime;
+
+                if (elapsedTime > TimeSpan.FromSeconds(1))
+                {
+                    elapsedTime -= TimeSpan.FromSeconds(1);
+                    frameRate = frameCounter;
+                    frameCounter = 0;
+                }
+
+                stringBuilder.Length = 0;
+                stringBuilder.Append(string.Format("fps: {0}", frameRate));
+
+                // Pick the correct texture to rend
+                if (((gameObjectPlayer)h_game.h_GameObjectManager.player).playerHealth > 75.0f)
+                    currentSourceRectangle = happyFace;
+                else if (((gameObjectPlayer)h_game.h_GameObjectManager.player).playerHealth > 50.0f)
+                    currentSourceRectangle = okFace;
+                else
+                    currentSourceRectangle = crazyFace;
             }
-
-            stringBuilder.Length = 0;
-            stringBuilder.Append(string.Format("fps: {0}", frameRate));
-
-            // Pick the correct texture to rend
-            if (((gameObjectPlayer)h_game.h_GameObjectManager.player).playerHealth > 75.0f)
-                currentSourceRectangle = happyFace;
-            else if (((gameObjectPlayer)h_game.h_GameObjectManager.player).playerHealth > 50.0f)
-                currentSourceRectangle = okFace;
-            else
-                currentSourceRectangle = crazyFace;
         }
         #endregion
 

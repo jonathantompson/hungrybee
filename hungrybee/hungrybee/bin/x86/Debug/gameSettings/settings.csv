@@ -15,12 +15,12 @@ EPSILON,1E-08
 forceListCapacity,4
 physicsObjectsStartingCapacity,64
 gravity,9.81
-renderBoundingObjects,1
+renderBoundingObjects,0
 pauseOnCollision,0
 renderCollisions,0
 limitXYCollisionResponce,1
 coeffRestitution,0.2
-enemyTimeToOrient,0.2
+NPCTimeToOrient,0.2
 playerTimeToOrient,0.2
 playerTimeToAccelerate,0.2
 playerMaxAcceleration,10
@@ -34,6 +34,9 @@ enemySequenceScaleRateIncrease,10
 beeFaceTextureFile,bee-cartoon_COMBINDED_transparent
 beeFaceTextureWidth,564
 beeFaceTextureHeight,180
-friendSequenceScaleRateIncrease,15
-friendSequenceDuration,1.5
+friendSequenceScaleRateIncrease,30
+friendSequenceDuration,0.75
 friendSequenceAngularVelocity,9.424778
+menuFont,Graffiti
+menuBG,Graffiti
+menuBG2,menuBG2

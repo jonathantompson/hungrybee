@@ -52,6 +52,7 @@ namespace hungrybee
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f);
         protected static Vector3 temp = new Vector3();
+        protected static Vector3 oldVelocity = new Vector3();
         protected static float collisionAngleToHorizontal = 0.0f;
 
         #endregion
@@ -121,17 +122,21 @@ namespace hungrybee
         {
             if (obj1 is gameObjectPlayer)
             {
-                temp = GetMomForCollidingContact(ref obj1State, ref obj2State);
+                temp = GetVelForCollidingContact(ref obj1State, ref obj2State);
                 obj1State.linearVel = Vector3.Normalize(obj1State.linearVel);
-                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj1State.linearVel + (temp / obj1State.mass);
-                ((gameObject)obj2).movable = false;
+                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj1State.linearVel + temp;
+                oldVelocity = obj2State.linearVel;
+                obj2State.linearVel = Vector3.Zero; // Zero out the enemy velocity
+                ((gameObject)obj2).movable = false; // Set enemy to non-movable
             }
             else
             {
-                temp = GetMomForCollidingContact(ref obj1State, ref obj2State);
+                temp = GetVelForCollidingContact(ref obj1State, ref obj2State);
                 obj2State.linearVel = Vector3.Normalize(obj2State.linearVel);
-                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj2State.linearVel + (temp / obj2State.mass);
-                ((gameObject)obj1).movable = false;
+                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj2State.linearVel + temp;
+                oldVelocity = obj1State.linearVel;
+                obj1State.linearVel = Vector3.Zero; // Zero out the enemy velocity
+                ((gameObject)obj1).movable = false; // Set enemy to non-movable
             }
 
             if (CheckCollidingContact(ref obj1State, ref obj2State))
@@ -140,9 +145,15 @@ namespace hungrybee
                 throw new Exception("collision::ResolvePlayerEnemyCollision() - collision isn't colliding!");
 
             if (obj1 is gameObjectPlayer)
-                ((gameObject)obj2).movable = true; // Set enemy to non-movable
+            {
+                ((gameObject)obj2).movable = true; // Set enemy to movable
+                obj2State.linearVel = oldVelocity; // Restore the enemy velocity
+            }
             else
-                ((gameObject)obj1).movable = true; // Set enemy to non-movable
+            {
+                ((gameObject)obj1).movable = true; // Set enemy to movable
+                obj1State.linearVel = oldVelocity; // Restore the enemy velocity
+            }
 
             gameObjectEnemy enemy = null;
             gameObjectPlayer player = null;
@@ -175,6 +186,11 @@ namespace hungrybee
             if(collisionAngleToHorizontal > collisionAngleTollerence)
             {
                 enemy.KillEnemy();
+                // Remove any remaining collisions involving the enemy
+                if (obj1 is gameObjectEnemy)
+                    enemy.h_game.h_PhysicsManager.RemoveCollisionsInvolvingObject(ref obj1);
+                else
+                    enemy.h_game.h_PhysicsManager.RemoveCollisionsInvolvingObject(ref obj2);
             } else {
                 player.HurtPlayer();
             }
@@ -193,12 +209,14 @@ namespace hungrybee
                 ((gameObjectFriend)obj2).CaptureFriend((gameObject)obj1);
                 ((gameObject)obj2).movable = false;
                 ((gameObject)obj2).collidable = false;
+                ((gameObject)obj2).h_game.h_PhysicsManager.RemoveCollisionsInvolvingObject(ref obj2);
             }
             else
             {
                 ((gameObjectFriend)obj1).CaptureFriend((gameObject)obj2);
                 ((gameObject)obj1).movable = false;
                 ((gameObject)obj1).collidable = false;
+                ((gameObject)obj1).h_game.h_PhysicsManager.RemoveCollisionsInvolvingObject(ref obj1);
             }
 
             return 0;
@@ -293,10 +311,10 @@ namespace hungrybee
         }
         #endregion
 
-        #region GetMomForCollidingContact()
-        /// GetMomForCollidingContact() - Find the Momentum impulse if we want to satisfy vref < -V_COLLIDING_THRESHOLD
+        #region GetVelForCollidingContact()
+        /// GetVelForCollidingContact() - Find the Velocity impulse if we want to satisfy vref < -V_COLLIDING_THRESHOLD
         /// ***********************************************************************
-        public Vector3 GetMomForCollidingContact(ref rboState obj1State, ref rboState obj2State)
+        public Vector3 GetVelForCollidingContact(ref rboState obj1State, ref rboState obj2State)
         {
             #region OLD CODE
             /*

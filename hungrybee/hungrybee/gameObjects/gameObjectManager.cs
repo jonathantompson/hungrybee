@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -28,6 +29,7 @@ namespace hungrybee
         #region Local Variables
 
         game h_game;
+        public int loadedLevel;
         public List<gameObject> h_GameObjects;      // Handler to the list of game objects
         public List<gameObject> h_GameObjectsRemoveList;
 
@@ -53,6 +55,7 @@ namespace hungrybee
             h_GameObjectsRemoveList = new List<gameObject>();
             enemyList = new List<gameObject>();
             friendList = new List<gameObject>();
+            loadedLevel = -1; // No level loaded
         }
         #endregion
 
@@ -70,14 +73,22 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
-            // Remove all objects on the remove list
-            ProcessRemovals();
-
-            // enumerate through each element in the list and update them
-            List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
-            while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+            if (!h_game.h_Menu.menusRunning && !h_game.h_PhysicsManager.gamePaused)
             {
-                ListEnum.Current.Update(gameTime);
+                // Remove all objects on the remove list
+                ProcessRemovals();
+
+                if (numFriends <= 0)
+                    FinishLevel();
+                else
+                {
+                    // enumerate through each element in the list and update them
+                    List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+                    while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+                    {
+                        ListEnum.Current.Update(gameTime);
+                    }
+                }
             }
             base.Update(gameTime);
         }
@@ -109,16 +120,18 @@ namespace hungrybee
 
                 // If the object is an enemy, remove it from the enemy list
                 if (h_GameObjectsRemoveList[i] is gameObjectEnemy)
+                {
                     for (j = 0; j < enemyList.Count; j++)
                         if (enemyList[j].Equals(h_GameObjectsRemoveList[i]))
                         { enemyList.RemoveAt(j); numEnemys--; break; }
-
+                }
                 // If the object is a friend, remove it from the friend list
                 else if (h_GameObjectsRemoveList[i] is gameObjectFriend)
+                {
                     for (j = 0; j < friendList.Count; j++)
                         if (friendList[j].Equals(h_GameObjectsRemoveList[i]))
                         { friendList.RemoveAt(j); numFriends--; break; }
-                    
+                }
                 else if (h_GameObjectsRemoveList[i] is gameObjectCloud)
                     numClouds--;
                 else if (h_GameObjectsRemoveList[i] is gameObjectHeightMap)
@@ -149,40 +162,85 @@ namespace hungrybee
         }
         #endregion
 
+        #region StartLevel(int level)
+        /// StartLevel - Just start the new game
+        /// ***********************************************************************
+        public void StartLevel(int level)
+        {
+            // Load in the object descriptions from the csv file for the first level
+            loadedLevel = LoadLevel(1);
+            h_game.h_PhysicsManager.UnpauseGame();
+        }  
+        #endregion
+
+        #region FinishLevel(int level)
+        /// StartLevel - Just start the new game
+        /// ***********************************************************************
+        public void FinishLevel()
+        {
+            // See if another level exists and it does then load it...
+            if (File.Exists(GetLevelFilename(loadedLevel + 1)))
+            {
+                // Load in the object descriptions from the csv file for the next level
+                loadedLevel = LoadLevel(loadedLevel + 1);
+                h_game.h_PhysicsManager.UnpauseGame();
+            }
+            else
+            {
+                ClearLevel();
+                h_game.h_PhysicsManager.PauseGame();
+                h_game.h_Menu.EnterMainMenu();
+            }
+        }
+        #endregion
+
+        #region GetLevelFilename(int levelNumber)
+        protected string GetLevelFilename(int levelNumber)
+        {
+            return ".\\gameSettings\\Level_" + String.Format("{0}", levelNumber) + ".csv";
+        }
+        #endregion
+
         #region LoadContent()
         /// LoadContent - Reserve List capacity and load in the first level
         /// ***********************************************************************
         public void LoadContent()
         {
             h_GameObjects.Capacity = h_game.h_GameSettings.startingGameObjectCapacity;
-            
-            // Load in the object descriptions from the csv file for the first level
-            LoadLevel(1);
+        }
+        #endregion
 
-            // If we're limiting XY collision Responces, then sphere's must be placed so that the sphere origin has Z=0
-            if (h_game.h_GameSettings.limitXYCollisionResponce)
-                for (int i = 0; i < h_GameObjects.Count; i++)
-                    if (h_GameObjects[i].boundingObjType == boundingObjType.SPHERE)
-                        h_GameObjects[i].CenterObjectAboutBoundingSphere();
+        #region ClearLevel()
+        /// ClearLevel - Empty all game objects and free up space
+        /// ***********************************************************************
+        protected void ClearLevel()
+        {
+            h_GameObjects.Clear();
+            h_GameObjectsRemoveList.Clear();
+            friendList.Clear();
+            enemyList.Clear();
+            player = null;
+            numPlayers = 0; numHeightMaps = 0; numEnemys = 0; numPhantoms = 0; numClouds = 0; numFriends = 0;
 
+            // Give the physics system a chance to clear itself
+            h_game.h_PhysicsManager.ClearLevel();
 
-            // Build the bounding boxes at the frustrum bounds.
-            BuildFrustrumBounds();
+            // Give the render system a chance to clear itself
+            h_game.h_RenderManager.ClearLevel();
 
-            if (h_game.h_GameSettings.renderBoundingObjects) // Add bounding objects to be rendered if we want
-                SpawnCollidables();
-
-            // Now initialize the physics manager content
-            h_game.h_PhysicsManager.LoadContent();
+            loadedLevel = -1;
         }
         #endregion
 
         #region LoadLevel()
         /// LoadContent - Load in the data-driver objects for the specified level
         /// ***********************************************************************
-        void LoadLevel(int levelNumber)
+        int LoadLevel(int levelNumber)
         {
-            csvHandleRead reader = new csvHandleRead(".\\gameSettings\\Level_" + String.Format("{0}", levelNumber) + ".csv");
+            if (loadedLevel != -1)
+                ClearLevel(); // If a level is already loaded, then clear it!
+
+            csvHandleRead reader = new csvHandleRead(GetLevelFilename(levelNumber));
             if (!reader.IsOpen())
                 throw new Exception("gameObjectManager::LoadContent(): Cannot find file Level_" + String.Format("{0}", levelNumber) + ".csv");
 
@@ -235,6 +293,24 @@ namespace hungrybee
 
             }
             reader.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
+
+            // If we're limiting XY collision Responces, then sphere's must be placed so that the sphere origin has Z=0
+            if (h_game.h_GameSettings.limitXYCollisionResponce)
+                for (int i = 0; i < h_GameObjects.Count; i++)
+                    if (h_GameObjects[i].boundingObjType == boundingObjType.SPHERE)
+                        h_GameObjects[i].CenterObjectAboutBoundingSphere();
+
+
+            // Build the bounding boxes at the frustrum bounds.
+            BuildFrustrumBounds();
+
+            if (h_game.h_GameSettings.renderBoundingObjects) // Add bounding objects to be rendered if we want
+                SpawnCollidables();
+
+            // Now initialize the physicsManager
+            h_game.h_PhysicsManager.LoadContent();
+
+            return levelNumber;
         }
         #endregion
 

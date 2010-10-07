@@ -473,7 +473,7 @@ namespace hungrybee
                 // Now offset the BoundingSphere
                 sphere.Center = Vector3.Zero;
                 tag.modelRecentered = true;
-                tag.bSphere = sphere;
+                // tag.bSphere = sphere;  // DON'T DO THIS, LEAVE THE MODEL SPHERE WHERE IT IS
                 model.Tag = tag;
                 boundingObj = (Object)sphere;
             }

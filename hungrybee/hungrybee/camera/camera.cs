@@ -127,12 +127,14 @@ namespace hungrybee
         /// ***********************************************************************
         public void ResizeProjectionMatrix()
         {
+            // Regular Projection Matrix
             h_viewAngle = MathHelper.PiOver4;
             h_viewPort = h_game.GraphicsDevice.Viewport;
             h_nearPlane = 0.5f;
             h_farPlane = 10000.0f;
             h_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(h_viewAngle, h_viewPort.AspectRatio, h_nearPlane, h_farPlane);
 
+            // Orthogonal Projection Matrix
             //float width = 10.0f;
             //float height = 10.0f;
             //h_projectionMatrix = Matrix.CreateOrthographic(width, height, h_nearPlane, h_farPlane);
@@ -144,11 +146,14 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
-            Rotate();
-            Move();
+            if (!h_game.h_Menu.menusRunning)
+            {
+                Rotate();
+                Move();
 
-            h_viewMatrix = Matrix.CreateLookAt(h_cameraPosition, h_cameraPosition + h_cameraForward, h_cameraUp);
-            base.Update(gameTime);
+                h_viewMatrix = Matrix.CreateLookAt(h_cameraPosition, h_cameraPosition + h_cameraForward, h_cameraUp);
+                base.Update(gameTime);
+            }
         }
         #endregion
 

@@ -26,10 +26,10 @@ namespace hungrybee
     public class gameSettings : GameComponent
     {
         #region Local Variables
-        // VARIABLES SAVED TO DISK
-        public int      xWindowSize, yWindowSize;
 
         // Rendering
+        public int      xWindowSize;
+        public int      yWindowSize;
         public string   skyPlaneTextureFile;
         public float    skyPlaneScale;
         private int     renderSettingsIndex;
@@ -73,12 +73,17 @@ namespace hungrybee
         public float    coeffRestitution;
 
         // Movement
-        public float    enemyTimeToOrient;
+        public float    NPCTimeToOrient;
         public float    playerTimeToOrient;
         public float    playerTimeToAccelerate;
         public float    playerMaxAcceleration;
         public float    playerVelocity;
         public float    playerJumpMomentum;
+
+        // Menu
+        public string   menuFont;
+        public string   menuBG;
+        public string   menuBG2;
 
         public static Vector3 collisionMask = new Vector3();
 
@@ -122,7 +127,7 @@ namespace hungrybee
             renderCollisions = false;
             limitXYCollisionResponce = true;
             coeffRestitution = 0.2f;
-            enemyTimeToOrient = 0.2f;
+            NPCTimeToOrient = 0.2f;
             playerTimeToOrient = 0.2f;
             playerTimeToAccelerate = 0.2f;
             playerMaxAcceleration = 10.0f;
@@ -139,6 +144,9 @@ namespace hungrybee
             friendSequenceScaleRateIncrease = 10.0f;
             friendSequenceDuration = 0.2f;
             friendSequenceAngularVelocity = 6.2831853071f; // 2*pi rad / sec
+            menuFont = "Graffiti";
+            menuBG = "menuBG";
+            menuBG2 = "menuBG2";
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -198,7 +206,7 @@ namespace hungrybee
                 while (reader.ReadNextToken(ref curToken)) // ReadNextToken returns false when nothing to read
                 {
                     // Expecting token to contain 2 strings
-                    if (curToken.Count != 2)
+                    if (curToken.Count != 2 && curToken.Count != 1)
                         throw new Exception("gameSettings::ReadSettings(): Corrupt settings.csv, expecting 2 to elements per token");
                     switch (curToken[0])
                     {
@@ -268,8 +276,8 @@ namespace hungrybee
                         case "coeffRestitution":
                             this.coeffRestitution = float.Parse(curToken[1]);
                             break;
-                        case "enemyTimeToOrient":
-                            this.enemyTimeToOrient = float.Parse(curToken[1]);
+                        case "NPCTimeToOrient":
+                            this.NPCTimeToOrient = float.Parse(curToken[1]);
                             break;
                         case "playerTimeToOrient":
                             this.playerTimeToOrient = float.Parse(curToken[1]);
@@ -319,6 +327,19 @@ namespace hungrybee
                        case "friendSequenceAngularVelocity":
                             this.friendSequenceAngularVelocity = float.Parse(curToken[1]);
                             break;
+                       case "menuFont":
+                            this.menuFont = curToken[1];
+                            break;
+                       case "menuBG":
+                            this.menuBG = curToken[1];
+                            break;
+                       case "menuBG2":
+                            this.menuBG2 = curToken[1];
+                            break;
+                       case "//": // Comment
+                            break;
+                       case "": // Empty line
+                            break;
                            
                         //// ************************************
                         //// *** 3. INSERT MORE SETTINGS HERE ***
@@ -345,7 +366,7 @@ namespace hungrybee
         private void WriteSettings()
         {
             csvHandleWrite writer = new csvHandleWrite(".\\gameSettings\\settings.csv");
-
+            
             writer.WriteNextToken("xWindowSize", this.xWindowSize);
             writer.WriteNextToken("yWindowSize", this.yWindowSize);
             writer.WriteNextToken("skyPlaneTextureFile", this.skyPlaneTextureFile);
@@ -368,7 +389,7 @@ namespace hungrybee
             writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
             writer.WriteNextToken("limitXYCollisionResponce", this.limitXYCollisionResponce ? (int)1 : (int)0);
             writer.WriteNextToken("coeffRestitution", this.coeffRestitution);
-            writer.WriteNextToken("enemyTimeToOrient", this.enemyTimeToOrient);
+            writer.WriteNextToken("NPCTimeToOrient", this.NPCTimeToOrient);
             writer.WriteNextToken("playerTimeToOrient", this.playerTimeToOrient);
             writer.WriteNextToken("playerTimeToAccelerate", this.playerTimeToAccelerate);
             writer.WriteNextToken("playerMaxAcceleration", this.playerMaxAcceleration);
@@ -385,6 +406,9 @@ namespace hungrybee
             writer.WriteNextToken("friendSequenceScaleRateIncrease", this.friendSequenceScaleRateIncrease);
             writer.WriteNextToken("friendSequenceDuration", this.friendSequenceDuration);
             writer.WriteNextToken("friendSequenceAngularVelocity", this.friendSequenceAngularVelocity);
+            writer.WriteNextToken("menuFont", this.menuFont);
+            writer.WriteNextToken("menuBG", this.menuFont);
+            writer.WriteNextToken("menuBG2", this.menuBG2);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

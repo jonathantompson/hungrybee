@@ -138,7 +138,7 @@ namespace hungrybee
         public static BoundingBox CreateAABBFromModel(Model model)
         {
             BoundingBox retVal = new BoundingBox();
-
+            model.Root.Transform = Matrix.Identity;
             Matrix []m_transforms = new Matrix[model.Bones.Count];
             model.CopyAbsoluteBoneTransformsTo(m_transforms);
             bool firstIteration = true;

@@ -41,6 +41,9 @@ namespace hungrybee
         public gameObjectManager h_GameObjectManager;
         public physicsManager h_PhysicsManager;
         public hud h_Hud;
+        public menuManager h_Menu;
+
+        KeyboardState lastKeyboardState;
 
         #endregion
 
@@ -59,15 +62,17 @@ namespace hungrybee
             h_GameObjectManager = new gameObjectManager(this);
             h_PhysicsManager = new physicsManager(this);
             h_Hud = new hud(this);
+            h_Menu = new menuManager(this);
 
             // Manually specify the update order for interdependancies
             h_GameSettings.UpdateOrder      = 0;
-            h_GameObjectManager.UpdateOrder = 1;
-            h_Camera.UpdateOrder            = 2;
-            h_RenderManager.UpdateOrder     = 3;
-            h_SkyPlane.UpdateOrder          = 4;
-            h_PhysicsManager.UpdateOrder    = 5;
-            h_Hud.UpdateOrder               = 6;
+            h_Menu.UpdateOrder              = 1;
+            h_GameObjectManager.UpdateOrder = 2;
+            h_Camera.UpdateOrder            = 3;
+            h_RenderManager.UpdateOrder     = 4;
+            h_SkyPlane.UpdateOrder          = 5;
+            h_PhysicsManager.UpdateOrder    = 6;
+            h_Hud.UpdateOrder               = 7;
 
             // Add the new game components
             Components.Add(h_GameSettings);
@@ -77,6 +82,7 @@ namespace hungrybee
             Components.Add(h_GameObjectManager);
             Components.Add(h_PhysicsManager);
             Components.Add(h_Hud);
+            Components.Add(h_Menu);
         }
         #endregion
 
@@ -90,6 +96,7 @@ namespace hungrybee
         {
             h_GraphicsDevice = h_GraphicsDeviceManager.GraphicsDevice;
             base.Initialize(); // Call .Initialize() for all added components.
+            lastKeyboardState = Keyboard.GetState();
         }
         #endregion
 
@@ -103,10 +110,10 @@ namespace hungrybee
 
             // Call LoadContent() for GameDevices that need it done manually
             h_SkyPlane.LoadContent();
-            h_GameObjectManager.LoadContent(); // MUST BE CALLED BEFORE renderManager.LoadContent()!!
+            h_Menu.LoadContent();
+            h_GameObjectManager.LoadContent(); // Will call physicsManager.LoadContent() itself internally
             h_RenderManager.LoadContent();
             h_Hud.LoadContent();
-            
         }
         #endregion
 
@@ -128,10 +135,22 @@ namespace hungrybee
         /// ***********************************************************************
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit --> Later move to keyboard class
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
-                Keyboard.GetState().IsKeyDown(Keys.Escape))
-                this.Exit();
+            if (!h_Menu.menusRunning)
+            {
+                KeyboardState curKeyboardState = Keyboard.GetState();
+
+                if (lastKeyboardState.IsKeyUp(Keys.P) && curKeyboardState.IsKeyDown(Keys.P))
+                    h_PhysicsManager.PauseUnpauseGame(); // Toggle the physics engine to change pause state
+
+                // Allows the game to enter the main menu --> Later move to keyboard class
+                if (lastKeyboardState.IsKeyUp(Keys.Escape) && curKeyboardState.IsKeyDown(Keys.Escape))
+                {
+                    h_PhysicsManager.PauseGame();
+                    h_Menu.EnterMainMenu();
+                }
+
+                lastKeyboardState = curKeyboardState;
+            }
 
             base.Update(gameTime); // Call .Update() for all added components.
         }

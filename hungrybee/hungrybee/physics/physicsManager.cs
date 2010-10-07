@@ -36,6 +36,7 @@ namespace hungrybee
         public int numObjects; // Not known until gameObjectManager.LoadLevel() is complete
         public int numCollidableObjects;
         rboDerivative D1, D2, D3, D4;
+        public bool gamePaused;
 
         // Coarse collision detection
         private List<AABBOverlap> AABBOverlapStatus;
@@ -58,12 +59,10 @@ namespace hungrybee
         protected List<collision> phantomContacts;
 
         protected static float EPSILON = 0.00000001f;
-        public static float BISECTION_TOLLERANCE = 0.01f;
-        public static float RESTING_CONTACT_TOLLERANCE = 0.00001f; // typically this is >= 2 * BISECTION_TOLLERANCE
+        public static float BISECTION_TOLLERANCE = 0.004f;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.00001f;
         protected static int BISECTION_MAXITERATIONS = 1000;
         protected static int MAX_PHYSICS_ITERATIONS = 10000;
-        protected static bool pauseGame = false;
-        protected static bool pauseGameDebounce = false;
 
         #endregion
 
@@ -78,6 +77,53 @@ namespace hungrybee
             D2 = new rboDerivative();
             D3 = new rboDerivative();
             D4 = new rboDerivative();
+            numCollidableObjects = 0;
+            numObjects = 0;
+            intersection = false;
+            gamePaused = false;
+        }
+        #endregion
+
+        #region PauseUnpauseGame()
+        /// PauseUnpauseGame() - Pause the physics system
+        /// ***********************************************************************
+        public void PauseUnpauseGame()
+        {
+            gamePaused = !gamePaused;
+        }
+        #endregion
+
+        #region PauseGame()
+        /// PauseGame() - Pause the physics system
+        /// ***********************************************************************
+        public void PauseGame()
+        {
+            gamePaused = true;
+        }
+        #endregion
+
+        #region UnpauseGame()
+        /// UnpauseGame() - Pause the physics system
+        /// ***********************************************************************
+        public void UnpauseGame()
+        {
+            gamePaused = false;
+        }
+        #endregion
+
+        #region ClearLevel()
+        /// ClearLevel() - Remove all physics data structures to be ready for the next level
+        /// ***********************************************************************
+        public void ClearLevel()
+        {
+            AABBOverlapStatus.Clear();
+            AABBActiveList.Clear();
+            AABBXaxis.Clear();
+            AABBYaxis.Clear();
+            AABBZaxis.Clear();
+            collisions.Clear();
+            restingContacts.Clear();
+            phantomContacts.Clear();
             numCollidableObjects = 0;
             numObjects = 0;
             intersection = false;
@@ -110,107 +156,100 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
-            // Pause the game if the user presses p
-            if (Keyboard.GetState().IsKeyDown(Keys.P) && pauseGameDebounce == false)
-            { pauseGame = !pauseGame; pauseGameDebounce = true; }
-            if (Keyboard.GetState().IsKeyUp(Keys.P))
-            { pauseGameDebounce = false; }
-
-            time = (float)gameTime.TotalGameTime.TotalSeconds;
-            Tstep_remaining = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            float estColTime = float.PositiveInfinity;
-            float Tstep_to_collision = 0.0f;
-
-            int curIteration = 0;
-            while (Tstep_remaining > 0.0f && !pauseGame) // While there is still time to process
+            if (!h_game.h_Menu.menusRunning)
             {
-                if (curIteration >= MAX_PHYSICS_ITERATIONS)
-                    throw new Exception("physicsManager::Update() - Hit max number of iterations.  Physics system cannot make any progress.");
+                time = (float)gameTime.TotalGameTime.TotalSeconds;
+                Tstep_remaining = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float estColTime = float.PositiveInfinity;
+                float Tstep_to_collision = 0.0f;
 
-                CheckRestingContacts();
-
-                CheckPhantomContacts();
-
-                // Try taking a RK4 Step for each object in h_game.gameObjectManager
-                TakeRK4Step(time, Tstep_remaining, h_game.h_GameObjectManager.h_GameObjects);
-
-                // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
-                intersection = SweptCollisionDetection(ref estColTime, true);
-
-                // TEMP CODE
-                if(intersection)
-                    SweptCollisionDetection(ref estColTime, true);
-
-                /// ************************************
-                /// ************* HACK CODE ************
-                /// *** *********************************
-                /// Swept collision detection sometimes triggers intersection at 
-                /// 0.0f if objects started very close together
-                if (intersection && estColTime <= 0.0f)
+                int curIteration = 0;
+                while (Tstep_remaining > 0.0f && !gamePaused) // While there is still time to process
                 {
-                    float seperationDist = 0.0f;
-                    intersection = StaticCollisionDetection(ref seperationDist, false, true);
-                    if(intersection || seperationDist <= 0.0f)
-                        throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
-                }
+                    if (curIteration >= MAX_PHYSICS_ITERATIONS)
+                        throw new Exception("physicsManager::Update() - Hit max number of iterations.  Physics system cannot make any progress.");
 
-                /// Swept collision detection fails for glancing sphere AABB collisions 
-                /// (where velocity is close to perpendicular to face normal).
-                /// Do a static check on the final step. To remove obvious omissions.
-                if (!intersection)
-                {
-                    float seperationDist = 0.0f;
-                    if (StaticCollisionDetection(ref seperationDist, false, true))
-                        throw new Exception("physicsManager::Update() - STATIC TEST Objects were interpenetrating before first physics step!  Something went wrong");
-                    if (StaticCollisionDetection(ref seperationDist, true, true))
+                    CheckRestingContacts();
+
+                    CheckPhantomContacts();
+
+                    // Try taking a RK4 Step for each object in h_game.gameObjectManager
+                    TakeRK4Step(time, Tstep_remaining, h_game.h_GameObjectManager.h_GameObjects);
+
+                    // Run the coarse and fine collision detections --> Full detection routines with swept shape tests (to catch tunnelling)
+                    intersection = SweptCollisionDetection(ref estColTime, true);
+
+                    /// ************************************
+                    /// ************* HACK CODE ************
+                    /// *** *********************************
+                    /// Swept collision detection sometimes triggers intersection at 
+                    /// 0.0f if objects started very close together
+                    if (intersection && estColTime <= 0.0f)
                     {
-                        intersection = true; // The objects will end up intersecting
-                        estColTime = Tstep_remaining * 0.5f; // Arbitrarily estimate collision at half the time step
+                        float seperationDist = 0.0f;
+                        intersection = StaticCollisionDetection(ref seperationDist, false, true);
+                        if (intersection || seperationDist <= 0.0f)
+                            throw new Exception("physicsManager::Update() - Objects were interpenetrating before first physics step!  Something went wrong");
                     }
-                }
-                /// ************************************
-                /// *********** END HACK CODE **********
-                /// ************************************
 
-                // Resolve Collisions
-                if (intersection)
-                {
-                    // Find time to collision using the firstCollision value as an estimate --> Also rebuilds the collision list with more accurate collision data
-                    Tstep_to_collision = StepToCollisionTimeByBisection(Tstep_remaining, estColTime);
-
-                    // Refresh collision list (previous collision estimate may have included more collisions than is realistic)
-                    RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
-
-                    // Resolve Collision
-                    ResolveCollisions(h_game.h_GameObjectManager.h_GameObjects);
-
-                    if(h_game.h_GameSettings.renderCollisions)
-                        h_game.h_GameObjectManager.SpawnCollisions(ref collisions);
-
-                    if (h_game.h_GameSettings.pauseOnCollision && (pauseGame == false))
+                    /// Swept collision detection fails for glancing sphere AABB collisions 
+                    /// (where velocity is close to perpendicular to face normal).
+                    /// Do a static check on the final step. To remove obvious omissions.
+                    if (!intersection)
                     {
-                        // Pause the game
-                        pauseGame = true;
-                        break;
+                        float seperationDist = 0.0f;
+                        if (StaticCollisionDetection(ref seperationDist, false, true))
+                            throw new Exception("physicsManager::Update() - STATIC TEST Objects were interpenetrating before first physics step!  Something went wrong");
+                        if (StaticCollisionDetection(ref seperationDist, true, true))
+                        {
+                            intersection = true; // The objects will end up intersecting
+                            estColTime = Tstep_remaining * 0.5f; // Arbitrarily estimate collision at half the time step
+                        }
+                    }
+                    /// ************************************
+                    /// *********** END HACK CODE **********
+                    /// ************************************
+
+                    // Resolve Collisions
+                    if (intersection)
+                    {
+                        // Find time to collision using the firstCollision value as an estimate --> Also rebuilds the collision list with more accurate collision data
+                        Tstep_to_collision = StepToCollisionTimeByBisection(Tstep_remaining, estColTime);
+
+                        // Refresh collision list (previous collision estimate may have included more collisions than is realistic)
+                        RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
+
+                        // Resolve Collision
+                        ResolveCollisions(h_game.h_GameObjectManager.h_GameObjects);
+
+                        if (h_game.h_GameSettings.renderCollisions)
+                            h_game.h_GameObjectManager.SpawnCollisions(ref collisions);
+
+                        if (h_game.h_GameSettings.pauseOnCollision && (gamePaused == false))
+                        {
+                            // Pause the game
+                            gamePaused = true;
+                            break;
+                        }
+                        else
+                        {
+                            Tstep_remaining -= Tstep_to_collision; // Remove the piecewise step from the time remaining
+                            time += Tstep_to_collision;
+                            curIteration++;
+                        }
                     }
                     else
                     {
-                        Tstep_remaining -= Tstep_to_collision; // Remove the piecewise step from the time remaining
-                        time += Tstep_to_collision;
-                        curIteration++;
+                        // No colliding collision detected, just check for phantom collisions and step the remaining amount
+                        // Refresh collision list (previous collision estimate may have included more collisions than is realistic)
+                        RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
+
+                        // Resolve Collision
+                        ResolveCollisions(h_game.h_GameObjectManager.h_GameObjects);
+
+                        Tstep_remaining -= Tstep_remaining;
+                        CopyStateToPrevState(time, h_game.h_GameObjectManager.h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
                     }
-                }
-                else
-                {
-                    // No colliding collision detected, just check for phantom collisions and step the remaining amount
-                    // Refresh collision list (previous collision estimate may have included more collisions than is realistic)
-                    RefreshCollisionList(Tstep_remaining, Tstep_to_collision);
-
-                    // Resolve Collision
-                    ResolveCollisions(h_game.h_GameObjectManager.h_GameObjects);
-
-                    Tstep_remaining -= Tstep_remaining;
-                    CopyStateToPrevState(time, h_game.h_GameObjectManager.h_GameObjects); // Update the "new state" from last frame to the "old state" for this frame
                 }
             }
 
@@ -222,7 +261,7 @@ namespace hungrybee
         /// SweptCollisionDetection() - Top level collision detection routine
         /// Uses swept shape tests to detect collision
         /// ***********************************************************************
-        protected bool SweptCollisionDetection(ref float estColTime, bool ingoreSoftBoundry)
+        public bool SweptCollisionDetection(ref float estColTime, bool ingoreSoftBoundry)
         {
             // Coarse Collision detection
             CoarseCollisionDetection();
@@ -293,17 +332,20 @@ namespace hungrybee
             // Loop through object pairs and check if they potentially overlap from the sweep and prune test
             for (int i = 0; i < (numObjects - 1); i++)
             {
-                for (int j = i + 1; j < (numObjects); j++)
+                if (h_game.h_GameObjectManager.h_GameObjects[i].collidable)
                 {
-                    if (h_game.h_GameObjectManager.h_GameObjects[i].collidable && h_game.h_GameObjectManager.h_GameObjects[j].collidable)
+                    for (int j = i + 1; j < (numObjects); j++)
                     {
-                        AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
-                        if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
+                        if (h_game.h_GameObjectManager.h_GameObjects[j].collidable)
                         {
-                            objA = h_game.h_GameObjectManager.h_GameObjects[i];
-                            objB = h_game.h_GameObjectManager.h_GameObjects[j];
-                            // Objects potentially overlap --> Check the low level collision routines
-                            collisionUtils.AddCollisionStatic(objA, objB, ref collisions, ref objA.state, ref objB.state);
+                            AABBOverlap curOverlap = AABBOverlap.GetOverlapStatus(ref AABBOverlapStatus, i, j, numObjects);
+                            if (curOverlap.xAxisOverlap && curOverlap.yAxisOverlap && curOverlap.zAxisOverlap)
+                            {
+                                objA = h_game.h_GameObjectManager.h_GameObjects[i];
+                                objB = h_game.h_GameObjectManager.h_GameObjects[j];
+                                // Objects potentially overlap --> Check the low level collision routines
+                                collisionUtils.AddCollisionStatic(objA, objB, ref collisions, ref objA.state, ref objB.state);
+                            }
                         }
                     }
                 }
@@ -377,23 +419,24 @@ namespace hungrybee
         {
             int contactType = 0;
             // Step through each collision and resolve them
-            for (int i = 0; i < collisions.Count; i++)
+            while (collisions.Count != 0)
             {
-                gameObject obj1 = (gameObject)collisions[i].obj1;
-                gameObject obj2 = (gameObject)collisions[i].obj2;
+                collision curCol = collisions[0];
+                gameObject obj1 = (gameObject)curCol.obj1;
+                gameObject obj2 = (gameObject)curCol.obj2;
 
                 // Resolve collisions
                 // PLAYER - ENEMY
                 if((obj1 is gameObjectPlayer && obj2 is gameObjectEnemy) || (obj1 is gameObjectEnemy && obj2 is gameObjectPlayer))
-                    contactType = collisions[i].ResolvePlayerEnemyCollision(gameObjects, ref obj1.prevState, ref obj2.prevState, h_game.h_GameSettings.enemyCollisionAngleTollerence);
+                    contactType = curCol.ResolvePlayerEnemyCollision(gameObjects, ref obj1.prevState, ref obj2.prevState, h_game.h_GameSettings.enemyCollisionAngleTollerence);
 
                 // PLAYER - FRIEND
-                if ((obj1 is gameObjectPlayer && obj2 is gameObjectFriend) || (obj1 is gameObjectFriend && obj2 is gameObjectPlayer))
-                    contactType = collisions[i].ResolvePlayerFriendCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
+                else if ((obj1 is gameObjectPlayer && obj2 is gameObjectFriend) || (obj1 is gameObjectFriend && obj2 is gameObjectPlayer))
+                    contactType = curCol.ResolvePlayerFriendCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
                 
                 // GENERIC COLLISION --> RESOLVE WITH IMPULSE RESPONCE OR RESTING CONTACT
                 else // Resolve Generic Collsion
-                    contactType = collisions[i].ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
+                    contactType = curCol.ResolveCollision(gameObjects, ref obj1.prevState, ref obj2.prevState);
                 
                 // Add a resting contact, if the collision normal is vertical (ie a collision against the ground)
                 // --> This adds an antigravity force to the two objects to counteract downward motion AND Y velocity and momentum set to zero
@@ -402,14 +445,17 @@ namespace hungrybee
                     case 0:                         // COLLIDING CONTACT
                         break;
                     case 1:                         // RESTING CONTACT
-                        ProcessRestingContact(i, ref obj1, ref obj2);
+                        ProcessRestingContact(ref curCol, ref obj1, ref obj2);
                         break;
                     case 2:                         // PHANTOM CONTACT
-                        ProcessPhantomContact(i, ref obj1, ref obj2);    
+                        ProcessPhantomContact(ref curCol, ref obj1, ref obj2);    
                         break;
                     default:
                         throw new Exception("physicsManager::ResolveCollisions() - Unrecognised contact type");
                 }
+
+                // Remove the collision we just processed
+                collisions.RemoveAt(0);
             }
 
             // This is a hack --> Just turns off gravity for those objects that have collided with the floor
@@ -420,17 +466,17 @@ namespace hungrybee
         #endregion
 
         #region ProcessRestingContact()
-        protected void ProcessRestingContact(int index, ref gameObject obj1, ref gameObject obj2)
+        protected void ProcessRestingContact(ref collision curCol, ref gameObject obj1, ref gameObject obj2)
         {
-            if ((Math.Abs(collisions[index].colNorm.X) < RESTING_CONTACT_TOLLERANCE) && (Math.Abs(collisions[index].colNorm.Z) < RESTING_CONTACT_TOLLERANCE))
+            if ((Math.Abs(curCol.colNorm.X) < RESTING_CONTACT_TOLLERANCE) && (Math.Abs(curCol.colNorm.Z) < RESTING_CONTACT_TOLLERANCE))
             {
                 if (!FindRestingContact(ref obj1, ref obj2))
-                    restingContacts.Add(collisions[index]); // If a resting contact between the two doesn't exist, then add one
+                    restingContacts.Add(curCol); // If a resting contact between the two doesn't exist, then add one
             }
             else
             {
                 // Are they moving away from each other in all directions?
-                float relVel = collisions[index].GetRelativeVelocity(ref obj1.state, ref obj2.state);
+                float relVel = curCol.GetRelativeVelocity(ref obj1.state, ref obj2.state);
 
                 if (relVel > EPSILON)
                 {
@@ -439,7 +485,7 @@ namespace hungrybee
                 else
                 {
                     // Otherwise add a small impulse to push objects APART so that we are out of resting contact threshold
-                    lImpulse = collisions[index].GetMomForCollidingContact(ref obj1.prevState, ref obj2.prevState);
+                    lImpulse = curCol.GetVelForCollidingContact(ref obj1.prevState, ref obj2.prevState);
                     lImpulse.X *= gameSettings.collisionMask.X; lImpulse.Y *= gameSettings.collisionMask.Y; lImpulse.Z *= gameSettings.collisionMask.Z;
 
                     if (obj1.movable && obj2.movable)
@@ -481,10 +527,10 @@ namespace hungrybee
         #endregion
 
         #region ProcessPhantomContact()
-        protected void ProcessPhantomContact(int index, ref gameObject obj1, ref gameObject obj2)
+        protected void ProcessPhantomContact(ref collision curCol, ref gameObject obj1, ref gameObject obj2)
         {
             if (!FindPhantomContact(ref obj1, ref obj2))
-                phantomContacts.Add(collisions[index]); // If a phantom contact between the two doesn't exist, then add one
+                phantomContacts.Add(curCol); // If a phantom contact between the two doesn't exist, then add one
         }
         #endregion
 
@@ -1051,7 +1097,32 @@ namespace hungrybee
         }
         #endregion
 
+        #region RemoveCollisionsInvolvingObject(gameObject object)
+        /// RemoveCollisionsInvolvingObject() -> Remove collisions and resting contacts EXCEPT the first collision in collisions list
+        /// ***********************************************************************
+        public void RemoveCollisionsInvolvingObject(ref Object obj)
+        {
+            // See if there are any collisions involving this object and if there are, remove them
+            // IGNORE THE FIRST CONTACT ON THE LIST
+            for (int j = 1; j < collisions.Count; j++)
+                if (collisions[j].obj1.Equals(obj) || collisions[j].obj2.Equals(obj))
+                { collisions.RemoveAt(j); j--; }  
+
+            // See if there are any restingContacts involving this object and if there are, remove them
+            for (int j = 0; j < restingContacts.Count; j++)
+                if (restingContacts[j].obj1.Equals(obj) || restingContacts[j].obj2.Equals(obj))
+                { restingContacts.RemoveAt(j); j--; }
+
+            // See if there are any phantomContacts involving this object and if there are, remove them
+            for (int j = 0; j < phantomContacts.Count; j++)
+                if (phantomContacts[j].obj1.Equals(obj) || phantomContacts[j].obj2.Equals(obj))
+                { phantomContacts.RemoveAt(j); j--; }
+        }
+        #endregion
+
         #region ProcessRemoval(int index)
+        /// ProcessRemoval() -> Do stuff necessary to remove an object, then remove it     
+        /// ***********************************************************************
         public void ProcessRemoval(int index)
         {
             // Swap the input index with the last object

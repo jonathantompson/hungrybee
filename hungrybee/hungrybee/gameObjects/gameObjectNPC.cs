@@ -57,7 +57,7 @@ namespace hungrybee
             base.forceList.Add(forceGravity);
 
             // Setup the force structures to describe movement
-            forceSetOrientation = new forceSetOrientation(Quaternion.Identity, game.h_GameSettings.enemyTimeToOrient);
+            forceSetOrientation = new forceSetOrientation(Quaternion.Identity, game.h_GameSettings.NPCTimeToOrient);
             ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(new Vector3(1, 0, 0)); // Player starts facing right
 
             // Add the force structures to the forceList for enumeration at runtime
@@ -80,8 +80,6 @@ namespace hungrybee
                 ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(Vector3.Left);
         }
         #endregion
-
-
 
     }
 }
