@@ -1,12 +1,6 @@
-<<<<<<< .mine
 xWindowSize,1280
 yWindowSize,1024
 skyPlaneTextureFile,.\images\clouds
-=======
-xWindowSize,1280
-yWindowSize,1024
-skyPlaneTextureFile,clouds
->>>>>>> .r45
 skyPlaneScale,1.75
 renderSettingsIndex,0
 startingGameObjectCapacity,64
@@ -33,24 +27,13 @@ playerMaxAcceleration,10
 playerVelocity,5
 playerJumpMomentum,6
 enemyCollisionAngleTollerence,0.5235988
-<<<<<<< .mine
 enemySequenceDuration,0.2
 enemyHealthImpact,33.34
-=======
-enemySequenceDuration,0.2
-enemyHealthImpact,25
->>>>>>> .r45
 enemyPlayerCollisionVelocity,2
-<<<<<<< .mine
 enemySequenceScaleRateIncrease,10
 beeFaceTextureFile,.\images\bee-cartoon_COMBINDED_transparent
-=======
-enemySequenceScaleRateIncrease,10
-beeFaceTextureFile,bee-cartoon_COMBINDED_transparent
->>>>>>> .r45
 beeFaceTextureWidth,564
 beeFaceTextureHeight,180
-<<<<<<< .mine
 friendSequenceScaleRateIncrease,30
 friendSequenceDuration,0.75
 friendSequenceAngularVelocity,9.424778
@@ -65,12 +48,3 @@ playerDeathSequenceDuration,2
 playerDeathZVelocity,5
 playerDeathYAmplitude,3
 playerDeathSequenceAngularVelocity,9.424778
-=======
-friendSequenceScaleRateIncrease,30
-friendSequenceDuration,0.75
-friendSequenceAngularVelocity,9.424778
-menuFont,Graffiti
-menuBG,menuBG
-menuBG2,menuBG2
-menuTransitionTime,0.3
->>>>>>> .r45
