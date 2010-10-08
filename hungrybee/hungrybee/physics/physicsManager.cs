@@ -59,7 +59,12 @@ namespace hungrybee
         protected List<collision> phantomContacts;
 
         protected static float EPSILON = 0.00000001f;
-        public static float BISECTION_TOLLERANCE = 0.004f;
+        
+        // Distance values
+        public static float BISECTION_TOLLERANCE = 0.004f; // On collisions, physics system will step to seperation of  0 < x < BISECTION_TOLLERANCE
+        public static float RELEASE_RESTING_CONTACT_TOLLERANCE = 0.008f; // Distance with which to add back gravity
+        public static float PUSH_UP_ON_REST = 0.005f; // Distance with which to lift object up when resting contact with floor is detected
+
         public static float RESTING_CONTACT_TOLLERANCE = 0.00001f;
         protected static int BISECTION_MAXITERATIONS = 1000;
         protected static int MAX_PHYSICS_ITERATIONS = 10000;
@@ -961,20 +966,25 @@ namespace hungrybee
                 {
                     ((gameObject)restingContacts[i].obj1).AddAntiGravityForce(h_game.h_GameSettings.gravity);
                     ((gameObject)restingContacts[i].obj1).resting = true;
-                    ((gameObject)restingContacts[i].obj1).state.linearVel.Y = 0.0f;
-                    ((gameObject)restingContacts[i].obj1).state.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj1).prevState.linearVel.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj1).prevState.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).prevState.pos.Y += PUSH_UP_ON_REST;
+                    ((gameObject)restingContacts[i].obj1).state.linearVel.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).state.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj1).state.pos.Y += PUSH_UP_ON_REST;
+
                 }
                 if (!((gameObject)restingContacts[i].obj2).CheckAntiGravityForce() &&
                     ((gameObject)restingContacts[i].obj2).movable)
                 {
                     ((gameObject)restingContacts[i].obj2).AddAntiGravityForce(h_game.h_GameSettings.gravity);
                     ((gameObject)restingContacts[i].obj2).resting = true;
-                    ((gameObject)restingContacts[i].obj2).state.linearVel.Y = 0.0f;
-                    ((gameObject)restingContacts[i].obj2).state.linearMom.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj2).prevState.linearVel.Y = 0.0f;
                     ((gameObject)restingContacts[i].obj2).prevState.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).prevState.pos.Y += PUSH_UP_ON_REST;
+                    ((gameObject)restingContacts[i].obj2).state.linearVel.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).state.linearMom.Y = 0.0f;
+                    ((gameObject)restingContacts[i].obj2).state.pos.Y += PUSH_UP_ON_REST;
                 }
             }
         }
@@ -1027,7 +1037,7 @@ namespace hungrybee
                                                    ref separationDistance,
                                                    ref ((gameObject)restingContacts[i].obj1).prevState, ref ((gameObject)restingContacts[i].obj2).prevState);
                 // If the objects are no longer within close proximity (objects have been knocked apart or objs have slid away from each other)
-                if (separationDistance > (1.0f+EPSILON) * BISECTION_TOLLERANCE )
+                if (separationDistance > RELEASE_RESTING_CONTACT_TOLLERANCE )
                 {
                        if (((gameObject)restingContacts[i].obj1).collidable)
                     {

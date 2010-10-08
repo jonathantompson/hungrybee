@@ -170,6 +170,8 @@ namespace hungrybee
             // Load in the object descriptions from the csv file for the first level
             loadedLevel = LoadLevel(1);
             h_game.h_PhysicsManager.UnpauseGame();
+            h_game.h_AudioManager.CueSound(soundType.GAME_START);
+            h_game.h_AudioManager.PlayGameMusic();
         }  
         #endregion
 
@@ -178,6 +180,7 @@ namespace hungrybee
         /// ***********************************************************************
         public void FinishLevel()
         {
+            h_game.h_AudioManager.CueSound(soundType.GAME_END);
             // See if another level exists and it does then load it...
             if (File.Exists(GetLevelFilename(loadedLevel + 1)))
             {

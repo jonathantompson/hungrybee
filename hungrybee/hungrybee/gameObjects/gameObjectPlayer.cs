@@ -118,6 +118,7 @@ namespace hungrybee
                 prevState.linearMom += new Vector3(0.0f, base.h_game.h_GameSettings.playerJumpMomentum, 0.0f);
                 prevState.RecalculateDerivedQuantities();
                 jumping = true;
+                h_game.h_AudioManager.CueSound(soundType.JUMP);
             }
             if (keyState.IsKeyUp(Keys.Space))
             {
@@ -141,6 +142,7 @@ namespace hungrybee
         public void HurtPlayer()
         {
             playerHealth = playerHealth - base.h_game.h_GameSettings.enemyHealthImpact;
+            h_game.h_AudioManager.CueSound(soundType.PLAYER_HURT);
         }
         #endregion
     }

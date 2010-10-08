@@ -91,6 +91,7 @@ namespace hungrybee
             friendCapturedSequenceScale = base.modelScaleToNormalizeSize;
             displacementToPlayer = state.pos - capturingPlayer.state.pos;
             rotAxis = Vector3.Cross(displacementToPlayer, Vector3.Backward);
+            h_game.h_AudioManager.CueSound(soundType.FRIEND_COLLECTED);
         }
         #endregion
 

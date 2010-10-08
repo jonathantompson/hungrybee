@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline" xmlns:Graphics="Microsoft.Xna.Framework.Graphics" xmlns:Processors="Microsoft.Xna.Framework.Content.Pipeline.Processors">
+  <Asset Type="Pipeline:BuildItemCollection">
+    <Item>
+      <Source>fonts\Graffiti.bmp</Source>
+      <Name>fonts\Graffiti</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>FontTextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\Graffiti.xnb</Output>
+      <Time>2010-10-07T22:28:38.1294307-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\ShipDiffuse.tga</Source>
+      <Name>models\ShipDiffuse</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse.xnb</Output>
+      <Time>2010-09-07T19:20:29.6971351-04:00</Time>
+    </Item>
+    <Item>
+      <Source>fonts\hudArialFont.spritefont</Source>
+      <Name>fonts\hudArialFont</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\hudArialFont.xnb</Output>
+      <Time>2008-01-02T12:59:18-05:00</Time>
+    </Item>
+    <Item>
+      <Source>models\bird.fbx</Source>
+      <Name>models\bird</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\bird.xnb</Output>
+      <Time>2010-10-07T18:59:05.3473087-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\bird_0.xml</Key>
+        <Value>2010-10-07T23:39:11.5405679-04:00</Value>
+      </Dependency>
+    </Item>
+    <Item>
+      <Source>models\Ship.fbx</Source>
+      <Name>models\Ship</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\Ship.xnb</Output>
+      <Time>2010-09-07T19:20:29.6931349-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\Ship_0.xml</Key>
+        <Value>2010-10-07T23:39:13.6096863-04:00</Value>
+      </Dependency>
+      <Request>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Request>
+    </Item>
+    <Item>
+      <Source>models\small_bee.FBX</Source>
+      <Name>models\small_bee</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\small_bee.xnb</Output>
+      <Time>2010-10-07T18:59:05.3693099-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\small_bee_0.xml</Key>
+        <Value>2010-10-07T23:39:18.2839536-04:00</Value>
+      </Dependency>
+    </Item>
+    <Item>
+      <Source>models\bird.fbx</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\bird_0.xml</Output>
+      <Time>2010-10-07T18:59:05.3473087-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\Ship.fbx</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\Ship_0.xml</Output>
+      <Time>2010-09-07T19:20:29.6931349-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\ShipDiffuse.tga</Source>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Parameters>
+        <Data Key="ColorKeyColor" Type="Graphics:Color">FFFF00FF</Data>
+        <Data Key="ColorKeyEnabled" Type="bool">true</Data>
+        <Data Key="TextureFormat" Type="Processors:TextureProcessorOutputFormat">DxtCompressed</Data>
+        <Data Key="GenerateMipmaps" Type="bool">true</Data>
+        <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
+      </Parameters>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Output>
+      <Time>2010-09-07T19:20:29.6971351-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\small_bee.FBX</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\small_bee_0.xml</Output>
+      <Time>2010-10-07T18:59:05.3693099-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\clouds.jpg</Source>
+      <Name>images\clouds</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\clouds.xnb</Output>
+      <Time>2010-09-07T19:20:29.7061356-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\heightmap.bmp</Source>
+      <Name>images\heightmap</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\heightmap.xnb</Output>
+      <Time>2010-09-07T19:20:29.6991352-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\Grass.dds</Source>
+      <Name>images\Grass</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\Grass.xnb</Output>
+      <Time>2010-09-07T19:20:29.7031355-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\bee-cartoon_COMBINDED_transparent.png</Source>
+      <Name>images\bee-cartoon_COMBINDED_transparent</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\bee-cartoon_COMBINDED_transparent.xnb</Output>
+      <Time>2010-10-04T19:31:01.7248671-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\menuBG.jpg</Source>
+      <Name>images\menuBG</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\menuBG.xnb</Output>
+      <Time>2010-10-07T20:41:18.3310953-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\menuBG2.jpg</Source>
+      <Name>images\menuBG2</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\menuBG2.xnb</Output>
+      <Time>2010-10-07T20:47:07.1550469-04:00</Time>
+    </Item>
+    <Item>
+      <Source>images\SketchTexture.bmp</Source>
+      <Name>images\SketchTexture</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\SketchTexture.xnb</Output>
+      <Time>2010-09-07T19:20:29.6861345-04:00</Time>
+    </Item>
+    <Item>
+      <Source>effects\PostprocessEffect.Fx</Source>
+      <Name>effects\PostprocessEffect</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\effects\PostprocessEffect.xnb</Output>
+      <Time>2010-10-04T22:10:32.621291-04:00</Time>
+    </Item>
+    <Item>
+      <Source>effects\CartoonEffect.Fx</Source>
+      <Name>effects\CartoonEffect</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\effects\CartoonEffect.xnb</Output>
+      <Time>2010-10-07T18:59:05.3553091-04:00</Time>
+    </Item>
+    <Item>
+      <Source>effects\menuPostProcessing.fx</Source>
+      <Name>effects\menuPostProcessing</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\effects\menuPostProcessing.xnb</Output>
+      <Time>2010-10-07T18:59:05.3513089-04:00</Time>
+    </Item>
+    <Item>
+      <Source>audio\menuMusic.mp3</Source>
+      <Name>audio\menuMusic</Name>
+      <Importer>Mp3Importer</Importer>
+      <Processor>SongProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\audio\menuMusic.xnb</Output>
+      <Extra>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\audio\menuMusic.wma</Extra>
+      <Time>2010-10-08T00:45:21.7186491-04:00</Time>
+    </Item>
+    <BuildSuccessful>true</BuildSuccessful>
+    <Settings>
+      <TargetPlatform>Windows</TargetPlatform>
+      <BuildConfiguration>Release</BuildConfiguration>
+      <CompressContent>true</CompressContent>
+      <RootDirectory>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\</RootDirectory>
+      <LoggerRootDirectory>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\obj\x86\Release\</IntermediateDirectory>
+      <OutputDirectory>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\</OutputDirectory>
+    </Settings>
+    <Assemblies>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
+        <Value>2009-05-28T00:16:14-04:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.VideoImporters.dll</Key>
+        <Value>2009-05-28T00:16:06-04:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.TextureImporter.dll</Key>
+        <Value>2009-05-28T00:16:16-04:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.FBXImporter.dll</Key>
+        <Value>2009-05-28T00:16:26-04:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll</Key>
+        <Value>2009-05-28T00:16:12-04:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.AudioImporters.dll</Key>
+        <Value>2009-05-28T00:16:06-04:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Windows\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\3.1.0.0__6d5c3888ef60e27d\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
+        <Value>2010-09-02T07:29:51.3098753-04:00</Value>
+      </Assembly>
+    </Assemblies>
+  </Asset>
+</XnaContent>

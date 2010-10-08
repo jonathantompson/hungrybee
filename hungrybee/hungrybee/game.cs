@@ -42,6 +42,7 @@ namespace hungrybee
         public physicsManager h_PhysicsManager;
         public hud h_Hud;
         public menuManager h_Menu;
+        public audioManager h_AudioManager;
 
         KeyboardState lastKeyboardState;
 
@@ -63,6 +64,7 @@ namespace hungrybee
             h_PhysicsManager = new physicsManager(this);
             h_Hud = new hud(this);
             h_Menu = new menuManager(this);
+            h_AudioManager = new audioManager(this);
 
             // Manually specify the update order for interdependancies
             h_GameSettings.UpdateOrder      = 0;
@@ -73,6 +75,7 @@ namespace hungrybee
             h_SkyPlane.UpdateOrder          = 5;
             h_PhysicsManager.UpdateOrder    = 6;
             h_Hud.UpdateOrder               = 7;
+            h_AudioManager.UpdateOrder      = 8;
 
             // Add the new game components
             Components.Add(h_GameSettings);
@@ -83,6 +86,7 @@ namespace hungrybee
             Components.Add(h_PhysicsManager);
             Components.Add(h_Hud);
             Components.Add(h_Menu);
+            Components.Add(h_AudioManager);
         }
         #endregion
 
@@ -114,6 +118,7 @@ namespace hungrybee
             h_GameObjectManager.LoadContent(); // Will call physicsManager.LoadContent() itself internally
             h_RenderManager.LoadContent();
             h_Hud.LoadContent();
+            h_AudioManager.LoadContent();
         }
         #endregion
 

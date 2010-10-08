@@ -65,7 +65,7 @@ namespace hungrybee
         }
         #endregion
 
-        #region LoadContent
+        #region LoadContent()
         /// LoadContent - Load in the textures and effects file
         /// ***********************************************************************
         public void LoadContent()

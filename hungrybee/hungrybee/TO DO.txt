@@ -1,18 +1,19 @@
 ﻿
 STUFF I SHOULD DO BEFORE ANYTHING ELSE
-- Change menu background
+- Fix the default game settings to match the settings.csv --> Lots of Changes
+- Fix writing settings to file overwriting the nice formatting I have
+- Add player death
+- Find sounds for all the sound events
 - Fix "collision isn't colliding" errors (happens when comming down on enemy from top left)
 
 STUFF I HAVE TO DO
-- Make Bee friends collectable (on collision AND have game complete logic)
 - Finish options section of menu (maybe option to change diplay size and renderer type)
-- Make the audio responces (http://msdn.microsoft.com/en-us/library/bb203895(v=XNAGameStudio.31).aspx)
 - Fix instability --> Stop player movement when they hit a wall.
                   --> Find out why max iterations gets hit for no apparent reason
 - Make particle effects and enemy blow up effect
 - Profile performance: http://www.gamedev.net/community/forums/topic.asp?topic_id=474249
 - Don't update bounding boxes for objects that cannot be moved (but do it once on startup)
-- Fix writing settings to file overwriting the nice formatting I have
+- Sometimes the framerate is good, and sometimes it's slow.  Debug why.
 
 STUFF I WOULD LIKE TO DO IF I HAVE TIME
 - Add intro when gameObjectManager.StartNewGame() is called

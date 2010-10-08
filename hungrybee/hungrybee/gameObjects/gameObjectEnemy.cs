@@ -76,6 +76,7 @@ namespace hungrybee
             deathSequenceStart = state.time;
             deathSequenceEnd = deathSequenceStart + base.h_game.h_GameSettings.enemySequenceDuration;
             deathSequenceScale = base.modelScaleToNormalizeSize;
+            h_game.h_AudioManager.CueSound(soundType.ENEMY_KILLED);
         }
         #endregion
 

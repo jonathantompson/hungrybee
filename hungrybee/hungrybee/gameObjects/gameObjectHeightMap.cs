@@ -88,7 +88,7 @@ namespace hungrybee
             terrainVertices = GenerateNormalsForTriangleStrip(terrainVertices, terrainIndices);
                         
             // Load the texture file
-            heightMapTexture = base.h_game.Content.Load<Texture2D>("grass");
+            heightMapTexture = base.h_game.Content.Load<Texture2D>(h_game.h_GameSettings.heightMapTextureFile);
 
             // Initialize the vertex and index buffers
             CreateBuffers(terrainVertices, terrainIndices);
@@ -197,9 +197,6 @@ namespace hungrybee
         /// ***********************************************************************
         private float[,] LoadHeightDataFromFunction()
         {
-
-            Texture2D heightMap = base.h_game.Content.Load<Texture2D>(heightMapFile);
-
             int width = 128;
             int height = 128;
 

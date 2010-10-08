@@ -1,0 +1,3 @@
+Content\audio\hungrybeeAudio.xgs
+Content\audio\hungrybeeWaveBank.xwb
+Content\audio\hungrybeeSoundBank.xsb

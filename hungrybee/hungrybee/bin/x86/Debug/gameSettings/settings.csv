@@ -1,5 +1,5 @@
-xWindowSize,800
-yWindowSize,600
+xWindowSize,1280
+yWindowSize,1024
 skyPlaneTextureFile,clouds
 skyPlaneScale,1.75
 renderSettingsIndex,0
@@ -38,5 +38,6 @@ friendSequenceScaleRateIncrease,30
 friendSequenceDuration,0.75
 friendSequenceAngularVelocity,9.424778
 menuFont,Graffiti
-menuBG,Graffiti
+menuBG,menuBG
 menuBG2,menuBG2
+menuTransitionTime,0.3

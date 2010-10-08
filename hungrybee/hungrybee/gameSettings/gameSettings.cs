@@ -40,6 +40,7 @@ namespace hungrybee
         public string   beeFaceTextureFile;
         public int      beeFaceTextureWidth;
         public int      beeFaceTextureHeight;
+        public string   heightMapTextureFile;
 
         // Game Objects
         public int      startingGameObjectCapacity;
@@ -84,6 +85,10 @@ namespace hungrybee
         public string   menuFont;
         public string   menuBG;
         public string   menuBG2;
+        public float    menuTransitionTime;
+
+        // Audio
+        public float    musicVolume;
 
         public static Vector3 collisionMask = new Vector3();
 
@@ -107,7 +112,7 @@ namespace hungrybee
         {
             xWindowSize = 800; 
             yWindowSize = 600;
-            skyPlaneTextureFile = "clouds"; //skyPlaneTextureFile = "clouds_resize";
+            skyPlaneTextureFile = "clouds";
             skyPlaneScale = 1.75f;
             renderSettingsIndex = 0;
             startingGameObjectCapacity = 64;
@@ -144,9 +149,12 @@ namespace hungrybee
             friendSequenceScaleRateIncrease = 10.0f;
             friendSequenceDuration = 0.2f;
             friendSequenceAngularVelocity = 6.2831853071f; // 2*pi rad / sec
-            menuFont = "Graffiti";
+            menuFont = ".\\fonts\\Graffiti";
             menuBG = "menuBG";
             menuBG2 = "menuBG2";
+            menuTransitionTime = 0.3f;
+            heightMapTextureFile = ".\\images\\Grass";
+            musicVolume = 0.5f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -336,6 +344,15 @@ namespace hungrybee
                        case "menuBG2":
                             this.menuBG2 = curToken[1];
                             break;
+                       case "menuTransitionTime":
+                            this.menuTransitionTime = float.Parse(curToken[1]);
+                            break;
+                       case "heightMapTextureFile":
+                            this.heightMapTextureFile = curToken[1];
+                            break;
+                       case "musicVolume":
+                            this.musicVolume = float.Parse(curToken[1]);
+                            break;
                        case "//": // Comment
                             break;
                        case "": // Empty line
@@ -407,8 +424,11 @@ namespace hungrybee
             writer.WriteNextToken("friendSequenceDuration", this.friendSequenceDuration);
             writer.WriteNextToken("friendSequenceAngularVelocity", this.friendSequenceAngularVelocity);
             writer.WriteNextToken("menuFont", this.menuFont);
-            writer.WriteNextToken("menuBG", this.menuFont);
+            writer.WriteNextToken("menuBG", this.menuBG);
             writer.WriteNextToken("menuBG2", this.menuBG2);
+            writer.WriteNextToken("menuTransitionTime", this.menuTransitionTime);
+            writer.WriteNextToken("heightMapTextureFile", this.heightMapTextureFile);
+            writer.WriteNextToken("musicVolume", this.musicVolume);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

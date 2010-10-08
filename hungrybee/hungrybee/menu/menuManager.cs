@@ -59,6 +59,14 @@ namespace hungrybee
         {
             if(menusRunning)
             {
+                h_game.h_AudioManager.PlayMenuMusic();
+                // Check if the menu music is running and if not then run it
+                if (!h_game.h_AudioManager.menuMusicPlaying)
+                {
+                    MediaPlayer.Play(h_game.h_AudioManager.menuMusic);
+                    h_game.h_AudioManager.menuMusicPlaying = true;
+                }
+
                 KeyboardState keybState = Keyboard.GetState();
 
                 foreach (menuWindow currentMenu in menuList)
@@ -75,6 +83,7 @@ namespace hungrybee
         #region MenuInput()
         private void MenuInput(KeyboardState currentKeybState)
         {
+
             menuWindow newActive = activeMenu.ProcessInput(lastKeybState, currentKeybState);
 
             if (newActive == gameStart)
@@ -105,6 +114,7 @@ namespace hungrybee
             }
             else if (newActive != activeMenu)
             {
+                h_game.h_AudioManager.CueSound(soundType.MENU_ENTER);
                 newActive.WakeUp();
                 activeMenu = newActive;
             }
@@ -121,7 +131,7 @@ namespace hungrybee
         #endregion
 
         #region LoadContent()
-        /// Update()
+        /// LoadContent()
         /// ***********************************************************************
         public void LoadContent()
         {
@@ -130,27 +140,50 @@ namespace hungrybee
             menusRunning = true;
 
             SpriteFont menuFont = h_game.Content.Load<SpriteFont>(h_game.h_GameSettings.menuFont);
-            Texture2D backgroundImage = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBG);
-            Texture2D bg = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBG2);
+            Texture2D mainMenuImage = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBG);
+            Texture2D optionsMenuImage = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBG2);
             spriteBatch = new SpriteBatch(h_game.GraphicsDevice);
 
             // Dummy menuWindows to run external commands
-            gameStart = new menuWindow(h_game, null, null, null);
-            gameExit = new menuWindow(h_game, null, null, null);
+            gameStart = new menuWindow(h_game, null, null, null, null);
+            gameExit = new menuWindow(h_game, null, null, null, null);
 
-            mainMenu = new menuWindow(h_game, menuFont, "Main Menu", backgroundImage);
-            menuWindow optionsMenu = new menuWindow(h_game, menuFont, "Options Menu", backgroundImage);
-            menuList.Add(mainMenu);
-            menuList.Add(optionsMenu);
+            // Create the main menu
+            menuWindowPlacement mainMenuPlacement = new menuWindowPlacement();
+            mainMenuPlacement.titleFontScale = 0.94f;
+            mainMenuPlacement.itemFontScale = 0.5f;
+            mainMenuPlacement.itemFontOffsetFromLeft = 0.1f;
+            mainMenuPlacement.titleFontOffsetFromLeft = 0.1f;
+            mainMenuPlacement.itemFontOffsetFromTop = 0.5f;
+            mainMenuPlacement.titleFontOffsetFromTop = 0.4f;
+            mainMenuPlacement.itemFontSpacing = 0.1f;
+            mainMenu = new menuWindow(h_game, menuFont, "HuNGrY BeE!", mainMenuImage, mainMenuPlacement);
 
-            mainMenu.AddMenuItem("New Game", gameStart);
-            mainMenu.AddMenuItem("Options", optionsMenu);
-            mainMenu.AddMenuItem("Exit Game", gameExit);
+            // Create the Options menu
+            menuWindowPlacement optionsMenuPlacement = new menuWindowPlacement();
+            optionsMenuPlacement.titleFontScale = 0.94f;
+            optionsMenuPlacement.itemFontScale = 0.4f;
+            optionsMenuPlacement.itemFontOffsetFromLeft = 0.1f;
+            optionsMenuPlacement.titleFontOffsetFromLeft = 0.1f;
+            optionsMenuPlacement.itemFontOffsetFromTop = 0.5f;
+            optionsMenuPlacement.titleFontOffsetFromTop = 0.4f;
+            optionsMenuPlacement.itemFontSpacing = 0.08f;
+            menuWindow optionsMenu = new menuWindow(h_game, menuFont, "oPtiOns", optionsMenuImage, optionsMenuPlacement);
 
+            //  Add main menu items
+            mainMenu.AddMenuItem("nEw GAmE", gameStart);
+            mainMenu.AddMenuItem("oPtiOns", optionsMenu);
+            mainMenu.AddMenuItem("eXit gaMe", gameExit);
+
+            // Add options menu items
             optionsMenu.AddMenuItem("Change controls", mainMenu);
             optionsMenu.AddMenuItem("Change graphics setting", mainMenu);
             optionsMenu.AddMenuItem("Change sound setting", mainMenu);
             optionsMenu.AddMenuItem("Back to Main menu", mainMenu);
+
+            // Add menus to the menu list
+            menuList.Add(mainMenu);
+            menuList.Add(optionsMenu);
 
             activeMenu = mainMenu;
             mainMenu.WakeUp();

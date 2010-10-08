@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Sections>
+  <WaveBank Name="hungrybeeWaveBank">Wave Bank
+{
+    Name = hungrybeeWaveBank;
+    Xbox File = Xbox\hungrybeeWaveBank.xwb;
+    Windows File = Win\hungrybeeWaveBank.xwb;
+    Xbox Bank Path Edited = 0;
+    Windows Bank Path Edited = 0;
+    Seek Tables = 1;
+    Compression Preset Name = &lt;none&gt;;
+    Bank Last Revised Low = 938369034;
+    Bank Last Revised High = 30107303;
+
+    Wave
+    {
+        Name = effect;
+        File = effect.wav;
+        Build Settings Last Modified Low = 3787578206;
+        Build Settings Last Modified High = 30107287;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 1;
+            Sampling Rate = 22050;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 51026;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 3137113344;
+            Last Modified High = 29940286;
+        }
+    }
+
+    Wave
+    {
+        Name = laughcartoon;
+        File = laughcartoon.wav;
+        Build Settings Last Modified Low = 312894724;
+        Build Settings Last Modified High = 30107296;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 1;
+            Sampling Rate = 11025;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 16068;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 123963918;
+            Last Modified High = 30107296;
+        }
+    }
+
+    Wave
+    {
+        Name = bee;
+        File = bee.wav;
+        Build Settings Last Modified Low = 1500192634;
+        Build Settings Last Modified High = 30107296;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 1;
+            Sampling Rate = 8000;
+            Bits Per Sample = 0;
+            Play Region Offset = 44;
+            Play Region Length = 9151;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 1360664653;
+            Last Modified High = 30107296;
+        }
+    }
+
+    Wave
+    {
+        Name = menuBeepUpDown;
+        File = menuBeepUpDown.wav;
+        Build Settings Last Modified Low = 1690771896;
+        Build Settings Last Modified High = 30107297;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 2;
+            Sampling Rate = 44100;
+            Bits Per Sample = 1;
+            Play Region Offset = 66;
+            Play Region Length = 151704;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 1322998784;
+            Last Modified High = 30037396;
+        }
+    }
+
+    Wave
+    {
+        Name = menuBeepEnter;
+        File = menuBeepEnter.wav;
+        Build Settings Last Modified Low = 1690771896;
+        Build Settings Last Modified High = 30107297;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 2;
+            Sampling Rate = 44100;
+            Bits Per Sample = 1;
+            Play Region Offset = 66;
+            Play Region Length = 149940;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 1322998784;
+            Last Modified High = 30037396;
+        }
+    }
+
+    Wave
+    {
+        Name = jump;
+        File = jump.wav;
+        Build Settings Last Modified Low = 687496323;
+        Build Settings Last Modified High = 30107302;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 1;
+            Sampling Rate = 22050;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 82752;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 433581800;
+            Last Modified High = 30107302;
+        }
+    }
+
+    Wave
+    {
+        Name = gameStart;
+        File = gameStart.wav;
+        Build Settings Last Modified Low = 2786546381;
+        Build Settings Last Modified High = 30107302;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 1;
+            Sampling Rate = 11025;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 184576;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 682484398;
+            Last Modified High = 30107303;
+        }
+    }
+}
+
+</WaveBank>
+</Sections>

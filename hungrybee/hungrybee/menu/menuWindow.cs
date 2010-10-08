@@ -18,6 +18,19 @@ namespace hungrybee
 {
     public enum windowState { Starting, Active, Ending, Inactive }
 
+    #region class menuWindowPlacement
+    public class menuWindowPlacement
+    {
+        public float titleFontScale;          // FontScales are defined in 800x600 window and then scaled up/down if window size is larger / smaller
+        public float itemFontScale;
+        public float itemFontOffsetFromLeft;  // Percentage of window width
+        public float titleFontOffsetFromLeft; // Percentage of window width
+        public float itemFontOffsetFromTop;   // Percentage of window height
+        public float titleFontOffsetFromTop;  // Percentage of window height
+        public float itemFontSpacing;         // Percentage of window height
+    }
+    #endregion
+
     /// <summary>
     /// ***********************************************************************
     /// **                           MenuWindow                              **
@@ -56,29 +69,57 @@ namespace hungrybee
         private string menuTitle;
         private Texture2D backgroundImage;
 
-        // Placement Settings
-        float titleFontScale;
-        float itemFontScale;
+        // Placement Settings - calculated values
+        Rectangle backgroundImageSource;
+        float backgroundImageScale;
+        float itemSpacing;
+        Vector2 itemPosition; // of the first item
+        Vector2 titlePosition;
+        float titleFontScaleWindow;
+        float itemFontScaleWindow;
 
         #endregion
 
         #region Constructor - MenuWindow(SpriteFont spriteFont, string menuTitle, Texture2D backgroundImage)
-        public menuWindow(game game, SpriteFont spriteFont, string menuTitle, Texture2D backgroundImage)
+        public menuWindow(game game, SpriteFont spriteFont, string menuTitle, Texture2D backgroundImage, menuWindowPlacement placement)
         {
             h_game = game;
 
             itemList = new List<MenuItem>();
-            changeSpan = TimeSpan.FromMilliseconds(800);
+            changeSpan = TimeSpan.FromSeconds(h_game.h_GameSettings.menuTransitionTime);
             selectedItem = 0;
             changeProgress = 0;
             windowState = windowState.Inactive;
 
-            titleFontScale = 1.0f;
-            itemFontScale = 0.5f;
-
             this.spriteFont = spriteFont;
             this.menuTitle = menuTitle;
             this.backgroundImage = backgroundImage;
+
+            if (backgroundImage != null) // it's null for dummy menus
+            {
+                // Calculate the source background image so that the aspect ratio isn't messed up
+                float imageAspectRatio = (float)backgroundImage.Width / (float)backgroundImage.Height;
+                float windowAspectRatio = (float)h_game.h_GameSettings.xWindowSize / (float)h_game.h_GameSettings.yWindowSize;
+
+                if (imageAspectRatio > windowAspectRatio) // image needs to be cropped in the x direction
+                    backgroundImageSource = new Rectangle(0, 0, (int)Math.Floor(windowAspectRatio * backgroundImage.Height), backgroundImage.Height);
+                else
+                    backgroundImageSource = new Rectangle(0, 0, backgroundImage.Width, (int)Math.Floor(backgroundImage.Width / windowAspectRatio));
+            
+                // Calculate the scale to fill the window
+                backgroundImageScale = (float)h_game.h_GameSettings.xWindowSize / backgroundImageSource.Width + 0.005f; // Add 5% scale to make sure there are no black boarders
+
+                itemPosition = new Vector2(placement.itemFontOffsetFromLeft * ((float)h_game.h_GameSettings.xWindowSize),
+                                           placement.itemFontOffsetFromTop * ((float)h_game.h_GameSettings.yWindowSize));
+                titlePosition = new Vector2(placement.titleFontOffsetFromLeft * ((float)h_game.h_GameSettings.xWindowSize),
+                                            placement.titleFontOffsetFromTop * ((float)h_game.h_GameSettings.yWindowSize));
+                itemSpacing = placement.itemFontSpacing * ((float)h_game.h_GameSettings.yWindowSize);
+
+                float xScale = ((float)h_game.h_GameSettings.xWindowSize) / 800.0f;
+                float yScale = ((float)h_game.h_GameSettings.yWindowSize) / 600.0f;
+                titleFontScaleWindow = placement.titleFontScale * Math.Min(xScale, yScale) ;
+                itemFontScaleWindow = placement.itemFontScale * Math.Min(xScale, yScale);
+            }
         }
         #endregion
 
@@ -117,6 +158,7 @@ namespace hungrybee
         #region ProcessInput()
         public menuWindow ProcessInput(KeyboardState lastKeybState, KeyboardState currentKeybState)
         {
+            int startSelectedItem = selectedItem;
             if (lastKeybState.IsKeyUp(Keys.Down) && currentKeybState.IsKeyDown(Keys.Down))
                 selectedItem++;
 
@@ -128,6 +170,9 @@ namespace hungrybee
 
             if (selectedItem >= itemList.Count)
                 selectedItem = itemList.Count - 1;
+
+            if (selectedItem != startSelectedItem)
+                h_game.h_AudioManager.CueSound(soundType.MENU_UPDOWN);
 
             if ((lastKeybState.IsKeyUp(Keys.Enter) && currentKeybState.IsKeyDown(Keys.Enter)))
             {
@@ -151,8 +196,7 @@ namespace hungrybee
 
             float smoothedProgress = MathHelper.SmoothStep(0, 1, (float)changeProgress);
 
-            int verPosition = 300;
-            float horPosition = 300;
+            float horPositionOffset = 0;
             float alphaValue;
             float bgLayerDepth;
             Color bgColor;
@@ -160,13 +204,13 @@ namespace hungrybee
             switch (windowState)
             {
                 case windowState.Starting:
-                    horPosition -= 200 * (1.0f - (float)smoothedProgress);
+                    horPositionOffset -= 200 * (1.0f - (float)smoothedProgress);
                     alphaValue = smoothedProgress;
                     bgLayerDepth = 0.5f;
                     bgColor = new Color(new Vector4(1, 1, 1, alphaValue));
                     break;
                 case windowState.Ending:
-                    horPosition += 200 * (float)smoothedProgress;
+                    horPositionOffset += 200 * (float)smoothedProgress;
                     alphaValue = 1.0f - smoothedProgress;
                     bgLayerDepth = 1;
                     bgColor = Color.White;
@@ -179,12 +223,34 @@ namespace hungrybee
             }
 
             Color titleColor = new Color(new Vector4(1, 1, 1, alphaValue));
-            spriteBatch.Draw(backgroundImage, new Vector2(), null, bgColor, 0, Vector2.Zero, 1, SpriteEffects.None, bgLayerDepth);
-            spriteBatch.DrawString(spriteFont, menuTitle, new Vector2(horPosition, 200), titleColor, 0, Vector2.Zero, titleFontScale, SpriteEffects.None, 0);
 
+            // Draw the background
+            spriteBatch.Draw(backgroundImage,               // Texture2D texturE
+                             Vector2.Zero,                  // Vector2 position (from top-left)
+                             backgroundImageSource,         // Rectangle sourceRectangle
+                             bgColor,                       // Color color
+                             0,                             // float rotation
+                             Vector2.Zero,                  // Vector2 origin
+                             backgroundImageScale,          // float scale
+                             SpriteEffects.None,            // SpriteEffects effects
+                             bgLayerDepth);                 // float layerDepth
+            
+            // Draw the menu title
+            Vector2 curTitlePostition = titlePosition + new Vector2(horPositionOffset, 0.0f);
+            spriteBatch.DrawString(spriteFont,                          // SpriteFont spriteFont
+                                   menuTitle,                           // string text
+                                   curTitlePostition,                   // Vector2 position
+                                   titleColor,                          // Color color
+                                   0,                                   // float rotation
+                                   Vector2.Zero,                        // Vector2 origin
+                                   titleFontScaleWindow,                // float scale
+                                   SpriteEffects.None,                  // SpriteEffects effects
+                                   0);                                  // float layerDepth
+
+            Vector2 curItemPostition = itemPosition + new Vector2(horPositionOffset, 0.0f);
             for (int itemID = 0; itemID < itemList.Count; itemID++)
             {
-                Vector2 itemPostition = new Vector2(horPosition, verPosition);
+                curItemPostition += new Vector2(0.0f, itemSpacing);
                 Color itemColor = Color.White;
 
                 if (itemID == selectedItem)
@@ -192,8 +258,15 @@ namespace hungrybee
                 else
                     itemColor = new Color(new Vector4(1, 1, 1, alphaValue));
 
-                spriteBatch.DrawString(spriteFont, itemList[itemID].itemText, itemPostition, itemColor, 0, Vector2.Zero, itemFontScale, SpriteEffects.None, 0);
-                verPosition += 30;
+                spriteBatch.DrawString(spriteFont,                      // SpriteFont spriteFont
+                                       itemList[itemID].itemText,       // string text
+                                       curItemPostition,                // Vector2 position
+                                       itemColor,                       // Color color
+                                       0,                               // float rotation
+                                       Vector2.Zero,                    // Vector2 origin
+                                       itemFontScaleWindow,             // float scale
+                                       SpriteEffects.None,              // SpriteEffects effects
+                                       0);                              // float layerDepth
             }
         }
         #endregion

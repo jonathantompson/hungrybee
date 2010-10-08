@@ -1,16 +1,17 @@
 //,   ***** RENDERING *****
-xWindowSize,800
-yWindowSize,600
-skyPlaneTextureFile,clouds
+xWindowSize,1280
+yWindowSize,1024
+skyPlaneTextureFile,.\images\clouds
 skyPlaneScale,1.75
 renderSettingsIndex,0
-cartoonEffectFile,CartoonEffect
-postprocessEffectFile,PostprocessEffect
-fontFile,hudArialFont
-sketchTextureFile,SketchTexture
-beeFaceTextureFile,bee-cartoon_COMBINDED_transparent
+cartoonEffectFile,.\effects\CartoonEffect
+postprocessEffectFile,.\effects\PostprocessEffect
+fontFile,.\fonts\hudArialFont
+sketchTextureFile,.\images\SketchTexture
+beeFaceTextureFile,.\images\bee-cartoon_COMBINDED_transparent
 beeFaceTextureWidth,564
 beeFaceTextureHeight,180
+heightMapTextureFile,.\images\Grass
 
 //,   **** GAME OBJECTS ***
 startingGameObjectCapacity,64
@@ -52,6 +53,10 @@ playerVelocity,5
 playerJumpMomentum,6
 
 //,   ******* MENU ********
-menuFont,Graffiti
-menuBG,menuBG
-menuBG2,menuBG2
+menuFont,.\fonts\Graffiti
+menuBG,.\images\menuBG
+menuBG2,.\images\menuBG2
+menuTransitionTime,0.3
+
+//,   ******* AUDIO *******
+musicVolume,0.2
