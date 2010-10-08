@@ -80,6 +80,8 @@ namespace hungrybee
 
                 if (numFriends <= 0)
                     FinishLevel();
+                else if (numPlayers <= 0)
+                    FinishLevelDeath();
                 else
                 {
                     // enumerate through each element in the list and update them
@@ -175,8 +177,8 @@ namespace hungrybee
         }  
         #endregion
 
-        #region FinishLevel(int level)
-        /// StartLevel - Just start the new game
+        #region FinishLevel() - All the Bee's collected --> Finish level and move on to the next
+        /// FinishLevel - All the Bee's collected --> Finish level and move on to the next
         /// ***********************************************************************
         public void FinishLevel()
         {
@@ -190,10 +192,23 @@ namespace hungrybee
             }
             else
             {
-                ClearLevel();
                 h_game.h_PhysicsManager.PauseGame();
+                ClearLevel();
                 h_game.h_Menu.EnterMainMenu();
             }
+        }
+        #endregion
+
+        #region FinishLevelDeath() - Player has died, go back to main menu
+        /// FinishLevelDeath - Player has died, go back to main menu
+        /// ***********************************************************************
+        public void FinishLevelDeath()
+        {
+            h_game.h_AudioManager.CueSound(soundType.GAME_END_DEATH);
+            // Clear the level and go back to the main menu
+            h_game.h_PhysicsManager.PauseGame();
+            ClearLevel();
+            h_game.h_Menu.EnterMainMenu();
         }
         #endregion
 

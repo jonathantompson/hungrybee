@@ -16,7 +16,7 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace hungrybee
 {
-    public enum soundType { PLAYER_HURT, ENEMY_KILLED, FRIEND_COLLECTED, GAME_START, JUMP, GAME_END, MENU_UPDOWN, MENU_ENTER }
+    public enum soundType { PLAYER_HURT, ENEMY_KILLED, FRIEND_COLLECTED, GAME_START, JUMP, GAME_END, MENU_UPDOWN, MENU_ENTER, GAME_END_DEATH }
 
     /// <summary>
     /// ***********************************************************************
@@ -126,6 +126,9 @@ namespace hungrybee
                     soundBank.PlayCue("jump");
                     break;
                 case soundType.GAME_END:
+                    soundBank.PlayCue("effect");
+                    break;
+                case soundType.GAME_END_DEATH:
                     soundBank.PlayCue("effect");
                     break;
                 case soundType.MENU_UPDOWN:

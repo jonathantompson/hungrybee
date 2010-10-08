@@ -32,6 +32,14 @@ namespace hungrybee
         public float playerHealth;
         public bool  jumping;
 
+        bool playerDead;
+        protected float playerDeathSequenceStart;
+        protected float playerDeathSequenceEnd;
+        protected float playerDeathSequenceScale;
+        protected Vector3 playerDeathStartPos;
+        protected Quaternion playerDeathStartOrient;
+        protected float playerDeathSinOmega;
+
         public force forcePlayerInput;
 
         #endregion
@@ -63,6 +71,10 @@ namespace hungrybee
             base.forceList.Add(forcePlayerInput);
             // Add gravity
             base.forceList.Add(new forceGravity(new Vector3(0.0f, -h_game.h_GameSettings.gravity, 0.0f)));
+            playerDead = false;
+
+            playerDeathStartPos = new Vector3();
+            playerDeathStartOrient = new Quaternion();
         }
         #endregion
 
@@ -71,6 +83,26 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
+            
+            if(playerDead)
+            {
+                if ((float)gameTime.TotalGameTime.TotalSeconds > (playerDeathSequenceEnd))
+                    base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
+                else
+                {
+                    float deltaT = (float)gameTime.TotalGameTime.TotalSeconds - playerDeathSequenceStart;
+                    // Shrink the model over time
+                    base.modelScaleToNormalizeSize = playerDeathSequenceScale / (1.0f + base.h_game.h_GameSettings.playerDeathSequenceScaleRateIncrease * deltaT);
+                    // Add a linear velocity in the Z direction
+                    base.state.pos.Z = base.prevState.pos.Z = playerDeathStartPos.Z + h_game.h_GameSettings.playerDeathZVelocity * ((float)gameTime.TotalGameTime.TotalSeconds - playerDeathSequenceStart);
+                    // Constant position in the X direction
+                    base.state.pos.X = base.prevState.pos.X = playerDeathStartPos.X;
+                    // Position in y direction follows a sine wave
+                    // Third order polynomial  : f(x) = -x^3 / 6 - x^2 / 2
+                    base.state.pos.Y = playerDeathStartPos.Y + deltaT * deltaT * (-deltaT / 6.0f - 1.0f / 2.0f) * h_game.h_GameSettings.playerDeathYAmplitude;
+                }
+            }
+
             // Update the base
             base.Update(gameTime);
 
@@ -143,6 +175,17 @@ namespace hungrybee
         {
             playerHealth = playerHealth - base.h_game.h_GameSettings.enemyHealthImpact;
             h_game.h_AudioManager.CueSound(soundType.PLAYER_HURT);
+            if (playerHealth <= 0.0f)
+            {
+                base.movable = false;
+                base.collidable = false;
+                playerDead = true;
+                playerDeathSequenceStart = state.time;
+                playerDeathSequenceEnd = playerDeathSequenceStart + base.h_game.h_GameSettings.playerDeathSequenceDuration;
+                playerDeathSequenceScale = base.modelScaleToNormalizeSize;
+                playerDeathStartPos = state.pos;
+                playerDeathStartOrient = state.orient;
+            }
         }
         #endregion
     }

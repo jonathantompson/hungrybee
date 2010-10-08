@@ -62,6 +62,11 @@ namespace hungrybee
         public float    friendSequenceScaleRateIncrease;
         public float    friendSequenceDuration;
         public float    friendSequenceAngularVelocity;
+        public float    playerDeathSequenceScaleRateIncrease;
+        public float    playerDeathSequenceDuration;
+        public float    playerDeathZVelocity;
+        public float    playerDeathYAmplitude;
+        public float    playerDeathSequenceAngularVelocity;
 
         // Physics
         public int      forceListCapacity;
@@ -148,13 +153,18 @@ namespace hungrybee
             beeFaceTextureHeight = 180;
             friendSequenceScaleRateIncrease = 10.0f;
             friendSequenceDuration = 0.2f;
-            friendSequenceAngularVelocity = 6.2831853071f; // 2*pi rad / sec
+            friendSequenceAngularVelocity = 9.4247780f; // 3*pi rad / sec
             menuFont = ".\\fonts\\Graffiti";
             menuBG = "menuBG";
             menuBG2 = "menuBG2";
             menuTransitionTime = 0.3f;
             heightMapTextureFile = ".\\images\\Grass";
             musicVolume = 0.5f;
+            playerDeathSequenceScaleRateIncrease = 10.0f;
+            playerDeathSequenceDuration = 1.0f;
+            playerDeathZVelocity = 5.0f;
+            playerDeathYAmplitude = 3.0f;
+            playerDeathSequenceAngularVelocity = 9.4247780f;
 
             //// ************************************
             //// *** 2. INSERT MORE SETTINGS HERE ***
@@ -353,6 +363,21 @@ namespace hungrybee
                        case "musicVolume":
                             this.musicVolume = float.Parse(curToken[1]);
                             break;
+                       case "playerDeathSequenceScaleRateIncrease":
+                            this.playerDeathSequenceScaleRateIncrease = float.Parse(curToken[1]);
+                            break;
+                       case "playerDeathSequenceDuration":
+                            this.playerDeathSequenceDuration = float.Parse(curToken[1]);
+                            break;
+                       case "playerDeathZVelocity":
+                            this.playerDeathZVelocity = float.Parse(curToken[1]);
+                            break;
+                       case "playerDeathYAmplitude":
+                            this.playerDeathYAmplitude = float.Parse(curToken[1]);
+                            break;
+                       case "playerDeathSequenceAngularVelocity":
+                            this.playerDeathSequenceAngularVelocity = float.Parse(curToken[1]);
+                            break;
                        case "//": // Comment
                             break;
                        case "": // Empty line
@@ -429,6 +454,11 @@ namespace hungrybee
             writer.WriteNextToken("menuTransitionTime", this.menuTransitionTime);
             writer.WriteNextToken("heightMapTextureFile", this.heightMapTextureFile);
             writer.WriteNextToken("musicVolume", this.musicVolume);
+            writer.WriteNextToken("playerDeathSequenceScaleRateIncrease", this.playerDeathSequenceScaleRateIncrease);
+            writer.WriteNextToken("playerDeathSequenceDuration", this.playerDeathSequenceDuration);
+            writer.WriteNextToken("playerDeathZVelocity", this.playerDeathZVelocity);
+            writer.WriteNextToken("playerDeathYAmplitude", this.playerDeathYAmplitude);
+            writer.WriteNextToken("playerDeathSequenceAngularVelocity", this.playerDeathSequenceAngularVelocity);
 
             //// ************************************
             //// *** 4. INSERT MORE SETTINGS HERE ***

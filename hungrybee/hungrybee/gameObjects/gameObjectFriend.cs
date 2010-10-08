@@ -72,10 +72,9 @@ namespace hungrybee
                     
                     // Also spin the model about the y-axis around the player
                     float angle = (base.h_game.h_GameSettings.friendSequenceAngularVelocity * ((float)gameTime.TotalGameTime.TotalSeconds - friendCapturedSequenceStart)) % (2.0f * (float)Math.PI);
-                    prevState.pos = capturingPlayer.prevState.pos + Vector3.Transform(displacementToPlayer, Matrix.CreateFromAxisAngle(rotAxis,angle));
-                    state.pos = prevState.pos;
+                    state.pos = prevState.pos = capturingPlayer.prevState.pos + Vector3.Transform(displacementToPlayer, Matrix.CreateFromAxisAngle(rotAxis, angle));
                  }
-            } // if (deathSequence)
+            } // if (friendCaptured)
         }
         #endregion
          

@@ -239,22 +239,34 @@ namespace hungrybee
             // HACK CODE --> Some models have VertexPositionNormalTexture and some have VertexPositionNormal
             // --> Check sizeInBytes and hope that we get the correct vertex declaration...  Works on the limited models for this project
             // but might not work in future for other models
-            if (sizeInBytes == 24)
+            switch(sizeInBytes)
             {
-                VertexPositionNormal[] verticesPosNormal = new VertexPositionNormal[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
-                mesh.VertexBuffer.GetData<VertexPositionNormal>(verticesPosNormal);
-                vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
-                for (int i = 0; i < mesh.VertexBuffer.SizeInBytes / sizeInBytes; i++)
-                {
-                    vertices[i].Position = verticesPosNormal[i].Position;
-                    vertices[i].Normal = verticesPosNormal[i].Normal;
-                    vertices[i].TextureCoordinate = Vector2.Zero;
-                }
-            }
-            else
-            {
-                vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
-                mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+                case 24: // Position normal texture
+                    VertexPositionNormal[] verticesPosNormal = new VertexPositionNormal[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                    mesh.VertexBuffer.GetData<VertexPositionNormal>(verticesPosNormal);
+                    vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                    for (int i = 0; i < mesh.VertexBuffer.SizeInBytes / sizeInBytes; i++)
+                    {
+                        vertices[i].Position = verticesPosNormal[i].Position;
+                        vertices[i].Normal = verticesPosNormal[i].Normal;
+                        vertices[i].TextureCoordinate = Vector2.Zero;
+                    }
+                break;
+                case 32: // Position normal texture
+                    vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                    mesh.VertexBuffer.GetData<VertexPositionNormalTexture>(vertices);
+                    break;
+                case 36: // Position normal texture color
+                    VertexPositionNormalTextureColor[] vert = new VertexPositionNormalTextureColor[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                    mesh.VertexBuffer.GetData<VertexPositionNormalTextureColor>(vert);
+                    vertices = new VertexPositionNormalTexture[mesh.VertexBuffer.SizeInBytes / sizeInBytes];
+                    for (int i = 0; i < mesh.VertexBuffer.SizeInBytes / sizeInBytes; i++)
+                    {
+                        vertices[i].Position = vert[i].Position;
+                        vertices[i].Normal = vert[i].Normal;
+                        vertices[i].TextureCoordinate = vert[i].Texture;
+                    }
+                    break;
             }
         }
         #endregion

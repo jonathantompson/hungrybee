@@ -14,6 +14,7 @@ STUFF I HAVE TO DO
 - Profile performance: http://www.gamedev.net/community/forums/topic.asp?topic_id=474249
 - Don't update bounding boxes for objects that cannot be moved (but do it once on startup)
 - Sometimes the framerate is good, and sometimes it's slow.  Debug why.
+- Fix the bee's wings --> Why don't they render?
 
 STUFF I WOULD LIKE TO DO IF I HAVE TIME
 - Add intro when gameObjectManager.StartNewGame() is called

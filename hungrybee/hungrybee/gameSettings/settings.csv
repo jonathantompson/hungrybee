@@ -27,12 +27,17 @@ EPSILON,1E-08
 //,   ***** GAME PLAY *****
 enemyCollisionAngleTollerence,0.5235988
 enemySequenceDuration,0.2
-enemyHealthImpact,25
+enemyHealthImpact,33.34
 enemyPlayerCollisionVelocity,2
 enemySequenceScaleRateIncrease,10
 friendSequenceScaleRateIncrease,30
 friendSequenceDuration,0.75
 friendSequenceAngularVelocity,9.4247780
+playerDeathSequenceDuration,2.0
+playerDeathSequenceScaleRateIncrease,2
+playerDeathZVelocity,5
+playerDeathYAmplitude,3
+playerDeathSequenceAngularVelocity,9.4247780
 
 //,   ****** PHYSICS ******
 forceListCapacity,4
@@ -59,4 +64,4 @@ menuBG2,.\images\menuBG2
 menuTransitionTime,0.3
 
 //,   ******* AUDIO *******
-musicVolume,0.2
+musicVolume,0

@@ -68,4 +68,37 @@ namespace hungrybee
         #endregion
 
     }
+    /// <summary>
+    /// ***********************************************************************
+    /// **                      VertexPositionNormal                         **
+    /// ** Vertex class with Position and Normal info                        **
+    /// ***********************************************************************
+    public struct VertexPositionNormalTextureColor
+    {
+        #region Local and Static Variables
+        public Vector3 Position;
+        public Vector3 Normal;
+        public Vector2 Texture;
+        public Color   Color;
+        public static readonly int SizeInBytes = sizeof(float) * 9;
+        public static readonly VertexElement[] VertexElements = 
+            {
+                 new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Position, 0 ),
+                 new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Normal, 0 ),
+                 new VertexElement( 0, 0, VertexElementFormat.Vector2, VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0 ),
+                 new VertexElement( 0, 0, VertexElementFormat.Color, VertexElementMethod.Default, VertexElementUsage.Color, 0 )
+            };
+        #endregion
+
+        #region Constructor - VertexPosition(Vector3 position)
+        public VertexPositionNormalTextureColor(Vector3 position, Vector3 normal, Vector2 texture, Color color)
+        {
+            this.Position = position;
+            this.Normal = normal;
+            this.Texture = texture;
+            this.Color = color;
+        }
+        #endregion
+
+    }
 }

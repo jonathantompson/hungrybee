@@ -5,13 +5,25 @@
 //, NOTE: MUST HAVE AT LEAST 1 PLAYER, AND 1 HEIGHTMAP (AND ONLY 1 OF EACH)
 
 //,player, modelfile, bType, scale, [Pos.x, Pos.y, Pos.z]
+<<<<<<< .mine
+player,.\models\abeja,SPHERE,1,0,1.0,0,0,0
+=======
 player,Ship,SPHERE,1,0,1.0,0,0,0
+>>>>>>> .r45
 
 //,enemy, modelfile, bType, texturesEnabled, vertexColorEnabled, scale, [Pos.x, Pos.y, Pos.z], [Mom.x, Mom.y, Mom.z]
+<<<<<<< .mine
+enemy,.\models\bird,SPHERE,0,1,1.0,3,0,0,0,0,0
+=======
 enemy,bird,SPHERE,0,1,1.0,3,0,0,0,0,0
+>>>>>>> .r45
 
 //,friend, modelfile, bType, scale, [Pos.x, Pos.y, Pos.z], [Mom.x, Mom.y, Mom.z]
+<<<<<<< .mine
+friend,.\models\small_bee,SPHERE,0,1,1.0,-3,0,0,0,0,0
+=======
 friend,small_bee,SPHERE,0,1,1.0,-3,0,0,0,0,0
+>>>>>>> .r45
 
 //,phantom,  bType[AABB], [Min.x, Min.y, Min.z], [Max.x, Max.y, Max.z], pType, ([:F.x, :F.y, :F.z], :player_react, :npc_react) <-- Only for SOFT_BOUNDRY
 //,phantom,  bType[SPHERE], [Pos.x, Pos.y, Pos.z], Radius
