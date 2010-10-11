@@ -2,109 +2,6 @@
 <XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline" xmlns:Graphics="Microsoft.Xna.Framework.Graphics" xmlns:Processors="Microsoft.Xna.Framework.Content.Pipeline.Processors">
   <Asset Type="Pipeline:BuildItemCollection">
     <Item>
-      <Source>fonts\Graffiti.bmp</Source>
-      <Name>fonts\Graffiti</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>FontTextureProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\Graffiti.xnb</Output>
-      <Time>2010-10-07T22:28:38.1294307-04:00</Time>
-    </Item>
-    <Item>
-      <Source>models\ShipDiffuse.tga</Source>
-      <Name>models\ShipDiffuse</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse.xnb</Output>
-      <Time>2010-09-07T19:20:29.6971351-04:00</Time>
-    </Item>
-    <Item>
-      <Source>fonts\hudArialFont.spritefont</Source>
-      <Name>fonts\hudArialFont</Name>
-      <Importer>FontDescriptionImporter</Importer>
-      <Processor>FontDescriptionProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\hudArialFont.xnb</Output>
-      <Time>2008-01-02T12:59:18-05:00</Time>
-    </Item>
-    <Item>
-      <Source>models\bird.fbx</Source>
-      <Name>models\bird</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>ModelProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\bird.xnb</Output>
-      <Time>2010-10-07T18:59:05.3473087-04:00</Time>
-      <Dependency>
-        <Key>obj\x86\Release\models\bird_0.xml</Key>
-        <Value>2010-10-07T23:39:11.5405679-04:00</Value>
-      </Dependency>
-    </Item>
-    <Item>
-      <Source>models\Ship.fbx</Source>
-      <Name>models\Ship</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>ModelProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\Ship.xnb</Output>
-      <Time>2010-09-07T19:20:29.6931349-04:00</Time>
-      <Dependency>
-        <Key>obj\x86\Release\models\Ship_0.xml</Key>
-        <Value>2010-10-07T23:39:13.6096863-04:00</Value>
-      </Dependency>
-      <Request>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Request>
-    </Item>
-    <Item>
-      <Source>models\small_bee.FBX</Source>
-      <Name>models\small_bee</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>ModelProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\small_bee.xnb</Output>
-      <Time>2010-10-07T18:59:05.3693099-04:00</Time>
-      <Dependency>
-        <Key>obj\x86\Release\models\small_bee_0.xml</Key>
-        <Value>2010-10-07T23:39:18.2839536-04:00</Value>
-      </Dependency>
-    </Item>
-    <Item>
-      <Source>models\bird.fbx</Source>
-      <Importer>FbxImporter</Importer>
-      <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\bird_0.xml</Output>
-      <Time>2010-10-07T18:59:05.3473087-04:00</Time>
-    </Item>
-    <Item>
-      <Source>models\Ship.fbx</Source>
-      <Importer>FbxImporter</Importer>
-      <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\Ship_0.xml</Output>
-      <Time>2010-09-07T19:20:29.6931349-04:00</Time>
-    </Item>
-    <Item>
-      <Source>models\ShipDiffuse.tga</Source>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-      <Parameters>
-        <Data Key="ColorKeyColor" Type="Graphics:Color">FFFF00FF</Data>
-        <Data Key="ColorKeyEnabled" Type="bool">true</Data>
-        <Data Key="TextureFormat" Type="Processors:TextureProcessorOutputFormat">DxtCompressed</Data>
-        <Data Key="GenerateMipmaps" Type="bool">true</Data>
-        <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
-      </Parameters>
-      <Options>None</Options>
-      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Output>
-      <Time>2010-09-07T19:20:29.6971351-04:00</Time>
-    </Item>
-    <Item>
-      <Source>models\small_bee.FBX</Source>
-      <Importer>FbxImporter</Importer>
-      <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\small_bee_0.xml</Output>
-      <Time>2010-10-07T18:59:05.3693099-04:00</Time>
-    </Item>
-    <Item>
       <Source>images\clouds.jpg</Source>
       <Name>images\clouds</Name>
       <Importer>TextureImporter</Importer>
@@ -159,6 +56,15 @@
       <Time>2010-10-07T20:47:07.1550469-04:00</Time>
     </Item>
     <Item>
+      <Source>fonts\Graffiti.bmp</Source>
+      <Name>fonts\Graffiti</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>FontTextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\Graffiti.xnb</Output>
+      <Time>2010-10-07T22:28:38.1294307-04:00</Time>
+    </Item>
+    <Item>
       <Source>images\SketchTexture.bmp</Source>
       <Name>images\SketchTexture</Name>
       <Importer>TextureImporter</Importer>
@@ -166,6 +72,15 @@
       <Options>None</Options>
       <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\SketchTexture.xnb</Output>
       <Time>2010-09-07T19:20:29.6861345-04:00</Time>
+    </Item>
+    <Item>
+      <Source>fonts\hudArialFont.spritefont</Source>
+      <Name>fonts\hudArialFont</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\hudArialFont.xnb</Output>
+      <Time>2008-01-02T12:59:18-05:00</Time>
     </Item>
     <Item>
       <Source>effects\PostprocessEffect.Fx</Source>
@@ -195,6 +110,60 @@
       <Time>2010-10-07T18:59:05.3513089-04:00</Time>
     </Item>
     <Item>
+      <Source>models\bird.fbx</Source>
+      <Name>models\bird</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\bird.xnb</Output>
+      <Time>2010-10-07T18:59:05.3473087-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\bird_0.xml</Key>
+        <Value>2010-10-08T20:05:18.2499938-04:00</Value>
+      </Dependency>
+    </Item>
+    <Item>
+      <Source>models\Ship.fbx</Source>
+      <Name>models\Ship</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\Ship.xnb</Output>
+      <Time>2010-09-07T19:20:29.6931349-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\Ship_0.xml</Key>
+        <Value>2010-10-08T20:05:20.3651148-04:00</Value>
+      </Dependency>
+      <Request>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Request>
+    </Item>
+    <Item>
+      <Source>models\small_bee.FBX</Source>
+      <Name>models\small_bee</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\small_bee.xnb</Output>
+      <Time>2010-10-07T18:59:05.3693099-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\small_bee_0.xml</Key>
+        <Value>2010-10-08T20:05:25.0763843-04:00</Value>
+      </Dependency>
+    </Item>
+    <Item>
+      <Source>models\abeja.fbx</Source>
+      <Name>models\abeja</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\abeja.xnb</Output>
+      <Time>2010-10-08T20:01:21.0724281-04:00</Time>
+      <Dependency>
+        <Key>obj\x86\Release\models\abeja_0.xml</Key>
+        <Value>2010-10-08T20:05:27.7405367-04:00</Value>
+      </Dependency>
+      <Request>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\abeja_grp_0.xnb</Request>
+    </Item>
+    <Item>
       <Source>audio\menuMusic.mp3</Source>
       <Name>audio\menuMusic</Name>
       <Importer>Mp3Importer</Importer>
@@ -203,6 +172,64 @@
       <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\audio\menuMusic.xnb</Output>
       <Extra>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\audio\menuMusic.wma</Extra>
       <Time>2010-10-08T00:45:21.7186491-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\bird.fbx</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\bird_0.xml</Output>
+      <Time>2010-10-07T18:59:05.3473087-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\Ship.fbx</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\Ship_0.xml</Output>
+      <Time>2010-09-07T19:20:29.6931349-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\ShipDiffuse.tga</Source>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Parameters>
+        <Data Key="ColorKeyColor" Type="Graphics:Color">FFFF00FF</Data>
+        <Data Key="ColorKeyEnabled" Type="bool">true</Data>
+        <Data Key="TextureFormat" Type="Processors:TextureProcessorOutputFormat">DxtCompressed</Data>
+        <Data Key="GenerateMipmaps" Type="bool">true</Data>
+        <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
+      </Parameters>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Output>
+      <Time>2010-09-07T19:20:29.6971351-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\small_bee.FBX</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\small_bee_0.xml</Output>
+      <Time>2010-10-07T18:59:05.3693099-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\abeja.fbx</Source>
+      <Importer>FbxImporter</Importer>
+      <Options>IntermediateFile, DontCacheImportedData</Options>
+      <Output>obj\x86\Release\models\abeja_0.xml</Output>
+      <Time>2010-10-08T20:01:21.0724281-04:00</Time>
+    </Item>
+    <Item>
+      <Source>models\abeja_grp.png</Source>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Parameters>
+        <Data Key="ColorKeyColor" Type="Graphics:Color">FFFF00FF</Data>
+        <Data Key="ColorKeyEnabled" Type="bool">true</Data>
+        <Data Key="TextureFormat" Type="Processors:TextureProcessorOutputFormat">DxtCompressed</Data>
+        <Data Key="GenerateMipmaps" Type="bool">true</Data>
+        <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
+      </Parameters>
+      <Options>None</Options>
+      <Output>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\abeja_grp_0.xnb</Output>
+      <Time>2010-10-08T20:01:21.0844287-04:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>

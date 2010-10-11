@@ -5,7 +5,7 @@
 //, NOTE: MUST HAVE AT LEAST 1 PLAYER, AND 1 HEIGHTMAP (AND ONLY 1 OF EACH)
 
 //,player, modelfile, bType, scale, [Pos.x, Pos.y, Pos.z]
-player,.\models\Ship,SPHERE,1,0,1.0,0,0,0
+player,.\models\abeja,SPHERE,1,0,1.0,0,0,0
 
 //,enemy, modelfile, bType, texturesEnabled, vertexColorEnabled, scale, [Pos.x, Pos.y, Pos.z], [Mom.x, Mom.y, Mom.z]
 enemy,.\models\bird,SPHERE,0,1,1.0,3,0,0,0,0,0
