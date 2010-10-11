@@ -15,12 +15,9 @@ Content\models\Ship.xnb
 Content\models\small_bee.xnb
 Content\models\abeja.xnb
 Content\audio\menuMusic.xnb
+Content\audio\menuMusic.wma
 Content\models\ShipDiffuse_0.xnb
 Content\models\abeja_grp_0.xnb
-Content\audio\menuMusic.wma
 Content\audio\hungrybeeAudio.xgs
 Content\audio\hungrybeeWaveBank.xwb
 Content\audio\hungrybeeSoundBank.xsb
-gameSettings\Level_1.csv
-gameSettings\Level_2.csv
-gameSettings\settings.csv

@@ -7,7 +7,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\clouds.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\clouds.xnb</Output>
       <Time>2010-10-08T09:09:32.0410263-04:00</Time>
     </Item>
     <Item>
@@ -16,7 +16,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\heightmap.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\heightmap.xnb</Output>
       <Time>2010-10-08T09:09:31.9629018-04:00</Time>
     </Item>
     <Item>
@@ -25,7 +25,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\Grass.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\Grass.xnb</Output>
       <Time>2010-10-08T09:09:32.0254014-04:00</Time>
     </Item>
     <Item>
@@ -34,7 +34,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\bee-cartoon_COMBINDED_transparent.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\bee-cartoon_COMBINDED_transparent.xnb</Output>
       <Time>2010-10-08T09:09:31.9941516-04:00</Time>
     </Item>
     <Item>
@@ -43,7 +43,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\menuBG.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\menuBG.xnb</Output>
       <Time>2010-10-08T09:09:32.0722761-04:00</Time>
     </Item>
     <Item>
@@ -52,7 +52,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\menuBG2.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\menuBG2.xnb</Output>
       <Time>2010-10-08T09:09:32.1035259-04:00</Time>
     </Item>
     <Item>
@@ -61,7 +61,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>FontTextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\Graffiti.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\fonts\Graffiti.xnb</Output>
       <Time>2010-10-08T09:09:34.119138-04:00</Time>
     </Item>
     <Item>
@@ -70,7 +70,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\images\SketchTexture.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\images\SketchTexture.xnb</Output>
       <Time>2010-10-08T09:09:31.9472769-04:00</Time>
     </Item>
     <Item>
@@ -79,7 +79,7 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\fonts\hudArialFont.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\fonts\hudArialFont.xnb</Output>
       <Time>2010-10-08T09:09:34.1347629-04:00</Time>
     </Item>
     <Item>
@@ -88,7 +88,7 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\effects\PostprocessEffect.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\effects\PostprocessEffect.xnb</Output>
       <Time>2010-10-08T09:09:01.0724745-04:00</Time>
     </Item>
     <Item>
@@ -97,7 +97,7 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\effects\CartoonEffect.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\effects\CartoonEffect.xnb</Output>
       <Time>2010-10-08T09:09:01.0724745-04:00</Time>
     </Item>
     <Item>
@@ -106,7 +106,7 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\effects\menuPostProcessing.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\effects\menuPostProcessing.xnb</Output>
       <Time>2010-10-08T09:09:01.0568496-04:00</Time>
     </Item>
     <Item>
@@ -115,11 +115,11 @@
       <Importer>FbxImporter</Importer>
       <Processor>ModelProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\bird.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\bird.xnb</Output>
       <Time>2010-10-08T09:09:14.6036379-04:00</Time>
       <Dependency>
-        <Key>obj\x86\Release\models\bird_0.xml</Key>
-        <Value>2010-10-11T14:14:51.2391819-04:00</Value>
+        <Key>obj\x86\Debug\models\bird_0.xml</Key>
+        <Value>2010-10-11T13:58:30.8235816-04:00</Value>
       </Dependency>
     </Item>
     <Item>
@@ -128,13 +128,13 @@
       <Importer>FbxImporter</Importer>
       <Processor>ModelProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\Ship.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\Ship.xnb</Output>
       <Time>2010-10-08T09:09:14.4630138-04:00</Time>
       <Dependency>
-        <Key>obj\x86\Release\models\Ship_0.xml</Key>
-        <Value>2010-10-11T14:14:54.3172872-04:00</Value>
+        <Key>obj\x86\Debug\models\Ship_0.xml</Key>
+        <Value>2010-10-11T13:58:33.9016869-04:00</Value>
       </Dependency>
-      <Request>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Request>
+      <Request>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\ShipDiffuse_0.xnb</Request>
     </Item>
     <Item>
       <Source>models\small_bee.FBX</Source>
@@ -142,11 +142,11 @@
       <Importer>FbxImporter</Importer>
       <Processor>ModelProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\small_bee.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\small_bee.xnb</Output>
       <Time>2010-10-08T09:09:14.0098917-04:00</Time>
       <Dependency>
-        <Key>obj\x86\Release\models\small_bee_0.xml</Key>
-        <Value>2010-10-11T14:15:05.4109662-04:00</Value>
+        <Key>obj\x86\Debug\models\small_bee_0.xml</Key>
+        <Value>2010-10-11T13:58:46.3234824-04:00</Value>
       </Dependency>
     </Item>
     <Item>
@@ -155,13 +155,13 @@
       <Importer>FbxImporter</Importer>
       <Processor>ModelProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\abeja.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\abeja.xnb</Output>
       <Time>2010-10-08T16:39:48.3524958-04:00</Time>
       <Dependency>
-        <Key>obj\x86\Release\models\abeja_0.xml</Key>
-        <Value>2010-10-11T14:15:10.6453077-04:00</Value>
+        <Key>obj\x86\Debug\models\abeja_0.xml</Key>
+        <Value>2010-10-11T13:58:51.2453259-04:00</Value>
       </Dependency>
-      <Request>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\abeja_grp_0.xnb</Request>
+      <Request>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\abeja_grp_0.xnb</Request>
     </Item>
     <Item>
       <Source>audio\menuMusic.mp3</Source>
@@ -169,22 +169,22 @@
       <Importer>Mp3Importer</Importer>
       <Processor>SongProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\audio\menuMusic.xnb</Output>
-      <Extra>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\audio\menuMusic.wma</Extra>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\audio\menuMusic.xnb</Output>
+      <Extra>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\audio\menuMusic.wma</Extra>
       <Time>2010-10-08T09:09:07.8536811-04:00</Time>
     </Item>
     <Item>
       <Source>models\bird.fbx</Source>
       <Importer>FbxImporter</Importer>
       <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\bird_0.xml</Output>
+      <Output>obj\x86\Debug\models\bird_0.xml</Output>
       <Time>2010-10-08T09:09:14.6036379-04:00</Time>
     </Item>
     <Item>
       <Source>models\Ship.fbx</Source>
       <Importer>FbxImporter</Importer>
       <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\Ship_0.xml</Output>
+      <Output>obj\x86\Debug\models\Ship_0.xml</Output>
       <Time>2010-10-08T09:09:14.4630138-04:00</Time>
     </Item>
     <Item>
@@ -199,21 +199,21 @@
         <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
       </Parameters>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\ShipDiffuse_0.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\ShipDiffuse_0.xnb</Output>
       <Time>2010-10-08T09:09:14.4942636-04:00</Time>
     </Item>
     <Item>
       <Source>models\small_bee.FBX</Source>
       <Importer>FbxImporter</Importer>
       <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\small_bee_0.xml</Output>
+      <Output>obj\x86\Debug\models\small_bee_0.xml</Output>
       <Time>2010-10-08T09:09:14.0098917-04:00</Time>
     </Item>
     <Item>
       <Source>models\abeja.fbx</Source>
       <Importer>FbxImporter</Importer>
       <Options>IntermediateFile, DontCacheImportedData</Options>
-      <Output>obj\x86\Release\models\abeja_0.xml</Output>
+      <Output>obj\x86\Debug\models\abeja_0.xml</Output>
       <Time>2010-10-08T16:39:48.3524958-04:00</Time>
     </Item>
     <Item>
@@ -228,18 +228,18 @@
         <Data Key="ResizeToPowerOfTwo" Type="bool">false</Data>
       </Parameters>
       <Options>None</Options>
-      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\models\abeja_grp_0.xnb</Output>
+      <Output>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\models\abeja_grp_0.xnb</Output>
       <Time>2010-10-08T15:17:30.7122219-04:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
       <TargetPlatform>Windows</TargetPlatform>
-      <BuildConfiguration>Release</BuildConfiguration>
-      <CompressContent>true</CompressContent>
+      <BuildConfiguration>Debug</BuildConfiguration>
+      <CompressContent>false</CompressContent>
       <RootDirectory>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\</RootDirectory>
       <LoggerRootDirectory>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\obj\x86\Release\</IntermediateDirectory>
-      <OutputDirectory>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Release\Content\</OutputDirectory>
+      <IntermediateDirectory>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\bin\x86\Debug\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>

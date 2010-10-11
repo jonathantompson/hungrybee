@@ -288,6 +288,30 @@ namespace hungrybee
             return this.WriteNextToken(ref curToken);
         }
         #endregion
+
+        #region WriteNewLine()
+        /// WriteNewLine: Write a newline character
+        /// **********************************************************************
+        public bool WriteNewLine()
+        {
+            // Try writing the next line
+            try
+            {
+                writer.WriteLine("");
+            }
+            catch (Exception ex_in)
+            {
+                open = false;
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine("csvHandleWrite::WriteNextToken(): The file " + fileName + " could not be written"); System.Diagnostics.Debug.Flush();
+#endif
+                System.Exception ex_out = new System.Exception("csvHandleWrite::WriteNextToken(): Couldn't write to file: " + ex_in.ToString());
+                throw ex_out;
+            }
+
+            return true;
+        }
+        #endregion
     }
 
 }

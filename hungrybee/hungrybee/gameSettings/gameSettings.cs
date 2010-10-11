@@ -27,7 +27,7 @@ namespace hungrybee
     {
         #region Local Variables
 
-        // Rendering
+        //    ***** RENDERING *****
         public int      xWindowSize;
         public int      yWindowSize;
         public string   skyPlaneTextureFile;
@@ -35,25 +35,26 @@ namespace hungrybee
         private int     renderSettingsIndex;
         public string   cartoonEffectFile;
         public string   postprocessEffectFile;
-        public string   fontFile;
+        public string   fontFPSFile;
         public string   sketchTextureFile;
         public string   beeFaceTextureFile;
         public int      beeFaceTextureWidth;
         public int      beeFaceTextureHeight;
         public string   heightMapTextureFile;
+        public bool     renderFPS;
 
-        // Game Objects
+        //    **** GAME OBJECTS ***
         public int      startingGameObjectCapacity;
 
-        // Camera
+        //    ******* CAMERA ******
         public float    cameraSpeed;
         public float    cameraRunningMult;
         public float    cameraRotationSpeed;
 
-        // Misc
+        //    ******** MISC *******
         public float    EPSILON;
 
-        // Game Play Settings
+        //    ***** GAME PLAY *****
         public float    enemyCollisionAngleTollerence;
         public float    enemySequenceDuration;
         public float    enemyHealthImpact;
@@ -62,13 +63,16 @@ namespace hungrybee
         public float    friendSequenceScaleRateIncrease;
         public float    friendSequenceDuration;
         public float    friendSequenceAngularVelocity;
-        public float    playerDeathSequenceScaleRateIncrease;
         public float    playerDeathSequenceDuration;
+        public float    playerDeathSequenceScaleRateIncrease;
         public float    playerDeathZVelocity;
         public float    playerDeathYAmplitude;
-        public float    playerDeathSequenceAngularVelocity;
+        public float    playerDeathYFuncTScale;
+        public float    floatingAngularVel;
+        public float    floatingAmplitude;
+        public float    levelTransitionTime;
 
-        // Physics
+        //    ****** PHYSICS ******
         public int      forceListCapacity;
         public int      physicsObjectsStartingCapacity;
         public float    gravity;
@@ -78,7 +82,7 @@ namespace hungrybee
         public bool     limitXYCollisionResponce;
         public float    coeffRestitution;
 
-        // Movement
+        //    ****** MOVEMENT *****
         public float    NPCTimeToOrient;
         public float    playerTimeToOrient;
         public float    playerTimeToAccelerate;
@@ -86,13 +90,13 @@ namespace hungrybee
         public float    playerVelocity;
         public float    playerJumpMomentum;
 
-        // Menu
+        //    ******* MENU ********
         public string   menuFont;
         public string   menuBG;
-        public string   menuBG2;
+        public string   menuBGOptions;
         public float    menuTransitionTime;
 
-        // Audio
+        //    ******* AUDIO *******
         public float    musicVolume;
 
         public static Vector3 collisionMask = new Vector3();
@@ -103,10 +107,6 @@ namespace hungrybee
                                                  new renderSettings("Cartoon and Shading", true, true, 0.5f, 0.5f, true, true, 0.01f, 0.3f, 0.1f),
                                                  new renderSettings("Nothing", false, false, 0, 0, false, false, 0, 0, 0)};  
 
-        //// ************************************
-        //// *** 1. INSERT MORE SETTINGS HERE ***
-        //// ************************************
-
         #endregion
 
         #region Constructor - gameSettings(game game)
@@ -115,60 +115,77 @@ namespace hungrybee
         /// ***********************************************************************
         public gameSettings(game game) : base(game)  
         {
-            xWindowSize = 800; 
-            yWindowSize = 600;
-            skyPlaneTextureFile = "clouds";
+            //   ***** RENDERING *****
+            xWindowSize = 1280;
+            yWindowSize = 1024;
+            skyPlaneTextureFile = ".\\images\\clouds";
             skyPlaneScale = 1.75f;
             renderSettingsIndex = 0;
+            cartoonEffectFile = ".\\effects\\CartoonEffect";
+            postprocessEffectFile = ".\\effects\\PostprocessEffect";
+            fontFPSFile = ".\\fonts\\hudArialFont";
+            sketchTextureFile = ".\\images\\SketchTexture";
+            beeFaceTextureFile = ".\\images\\bee-cartoon_COMBINDED_transparent";
+            beeFaceTextureWidth = 564;
+            beeFaceTextureHeight = 180;
+            heightMapTextureFile = ".\\images\\Grass";
+            renderFPS = true;
+
+            //   **** GAME OBJECTS ***
             startingGameObjectCapacity = 64;
-            cartoonEffectFile = "CartoonEffect";
-            postprocessEffectFile = "PostprocessEffect";
-            fontFile = "hudArialFont";
-            sketchTextureFile = "SketchTexture";
+
+            //   ******* CAMERA ******
             cameraSpeed = 0.1f;
-            cameraRunningMult = 4.0f;
+            cameraRunningMult = 4;
             cameraRotationSpeed = 0.002f;
+
+            //   ******** MISC *******
             EPSILON = 0.00000001f;
+
+            //   ***** GAME PLAY *****
+            enemyCollisionAngleTollerence = 0.5235988f;
+            enemySequenceDuration = 0.2f;
+            enemyHealthImpact = 33.34f;
+            enemyPlayerCollisionVelocity = 2;
+            enemySequenceScaleRateIncrease = 10;
+            friendSequenceScaleRateIncrease = 30;
+            friendSequenceDuration = 0.75f;
+            friendSequenceAngularVelocity = 9.4247780f;
+            playerDeathSequenceDuration = 1.0f;
+            playerDeathSequenceScaleRateIncrease = 2;
+            playerDeathZVelocity = 5;
+            playerDeathYAmplitude = 1;
+            playerDeathYFuncTScale = 3f;
+            floatingAngularVel = 6.283185f; // 2PI per sec
+            floatingAmplitude = 0.05f;
+            levelTransitionTime = 1.5f;
+
+            //   ****** PHYSICS ******
             forceListCapacity = 4;
             physicsObjectsStartingCapacity = 64;
             gravity = 9.81f;
-            renderBoundingObjects = true;
+            renderBoundingObjects = false;
             pauseOnCollision = false;
             renderCollisions = false;
             limitXYCollisionResponce = true;
             coeffRestitution = 0.2f;
+
+            //   ****** MOVEMENT *****
             NPCTimeToOrient = 0.2f;
             playerTimeToOrient = 0.2f;
             playerTimeToAccelerate = 0.2f;
-            playerMaxAcceleration = 10.0f;
-            playerVelocity = 5.0f;
-            playerJumpMomentum = 6.0f;
-            enemyCollisionAngleTollerence = 0.52359877f; // 30deg
-            enemySequenceDuration = 0.2f;
-            enemyHealthImpact = 25.0f;
-            enemyPlayerCollisionVelocity = 2.0f;
-            enemySequenceScaleRateIncrease = 10.0f;
-            beeFaceTextureFile = "bee-cartoon_COMBINDED_transparent";
-            beeFaceTextureWidth = 564;
-            beeFaceTextureHeight = 180;
-            friendSequenceScaleRateIncrease = 10.0f;
-            friendSequenceDuration = 0.2f;
-            friendSequenceAngularVelocity = 9.4247780f; // 3*pi rad / sec
-            menuFont = ".\\fonts\\Graffiti";
-            menuBG = "menuBG";
-            menuBG2 = "menuBG2";
-            menuTransitionTime = 0.3f;
-            heightMapTextureFile = ".\\images\\Grass";
-            musicVolume = 0.5f;
-            playerDeathSequenceScaleRateIncrease = 10.0f;
-            playerDeathSequenceDuration = 1.0f;
-            playerDeathZVelocity = 5.0f;
-            playerDeathYAmplitude = 3.0f;
-            playerDeathSequenceAngularVelocity = 9.4247780f;
+            playerMaxAcceleration = 10;
+            playerVelocity = 5;
+            playerJumpMomentum = 6;
 
-            //// ************************************
-            //// *** 2. INSERT MORE SETTINGS HERE ***
-            //// ************************************
+            //   ******* MENU ********
+            menuFont = ".\\fonts\\Graffiti";
+            menuBG = ".\\images\\menuBG";
+            menuBGOptions = ".\\images\\menuBG2";
+            menuTransitionTime = 0.3f;
+
+            //   ******* AUDIO *******
+            musicVolume = 0.2f;
 
             h_game = (game)game;
         }
@@ -228,6 +245,7 @@ namespace hungrybee
                         throw new Exception("gameSettings::ReadSettings(): Corrupt settings.csv, expecting 2 to elements per token");
                     switch (curToken[0])
                     {
+                        //    ***** RENDERING *****
                         case "xWindowSize":
                             this.xWindowSize = Convert.ToInt32(curToken[1]);
                             break;
@@ -243,21 +261,40 @@ namespace hungrybee
                         case "renderSettingsIndex":
                             this.renderSettingsIndex = Convert.ToInt32(curToken[1]);
                             break;
-                        case "startingGameObjectCapacity":
-                            this.startingGameObjectCapacity = Convert.ToInt32(curToken[1]);
-                            break;
                         case "cartoonEffectFile":
                             this.cartoonEffectFile = curToken[1];
                             break;
                         case "postprocessEffectFile":
                             this.postprocessEffectFile = curToken[1];
                             break;
-                        case "fontFile":
-                            this.fontFile = curToken[1];
+                        case "fontFPSFile":
+                            this.fontFPSFile = curToken[1];
                             break;
                         case "sketchTextureFile":
                             this.sketchTextureFile = curToken[1];
                             break;
+                        case "beeFaceTextureFile":
+                            this.beeFaceTextureFile = curToken[1];
+                            break;
+                        case "beeFaceTextureWidth":
+                            this.beeFaceTextureWidth = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "beeFaceTextureHeight":
+                            this.beeFaceTextureHeight = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "heightMapTextureFile":
+                            this.heightMapTextureFile = curToken[1];
+                            break;
+                        case "renderFPS":
+                            this.renderFPS = Convert.ToInt32(curToken[1]) == 1;
+                            break;
+
+                        //   **** GAME OBJECTS ***
+                        case "startingGameObjectCapacity":
+                            this.startingGameObjectCapacity = Convert.ToInt32(curToken[1]);
+                            break;
+
+                        //   ******* CAMERA ******
                         case "cameraSpeed":
                             this.cameraSpeed =float.Parse(curToken[1]);
                             break;
@@ -267,17 +304,71 @@ namespace hungrybee
                         case "cameraRotationSpeed":
                             this.cameraRotationSpeed = float.Parse(curToken[1]);
                             break;
+
+                        //   ******** MISC *******
                         case "EPSILON":
                             this.EPSILON = float.Parse(curToken[1]);
                             break;
+
+                        //   ***** GAME PLAY *****
+                        case "enemyCollisionAngleTollerence":
+                            this.enemyCollisionAngleTollerence = float.Parse(curToken[1]);
+                            break;
+                        case "enemySequenceDuration":
+                            this.enemySequenceDuration = float.Parse(curToken[1]);
+                            break;
+                        case "enemyHealthImpact":
+                            this.enemyHealthImpact = float.Parse(curToken[1]);
+                            break;
+                        case "enemyPlayerCollisionVelocity":
+                            this.enemyPlayerCollisionVelocity = float.Parse(curToken[1]);
+                            break;
+                        case "enemySequenceScaleRateIncrease":
+                            this.enemySequenceScaleRateIncrease = float.Parse(curToken[1]);
+                            break;
+                        case "friendSequenceScaleRateIncrease":
+                            this.friendSequenceScaleRateIncrease = float.Parse(curToken[1]);
+                            break;
+                        case "friendSequenceDuration":
+                            this.friendSequenceDuration = float.Parse(curToken[1]);
+                            break;
+                        case "friendSequenceAngularVelocity":
+                            this.friendSequenceAngularVelocity = float.Parse(curToken[1]);
+                            break;
+                        case "playerDeathSequenceDuration":
+                            this.playerDeathSequenceDuration = float.Parse(curToken[1]);
+                            break;   
+                        case "playerDeathSequenceScaleRateIncrease":
+                            this.playerDeathSequenceScaleRateIncrease = float.Parse(curToken[1]);
+                            break;
+                        case "playerDeathZVelocity":
+                            this.playerDeathZVelocity = float.Parse(curToken[1]);
+                            break;
+                        case "playerDeathYAmplitude":
+                            this.playerDeathYAmplitude = float.Parse(curToken[1]);
+                            break;
+                        case "playerDeathYFuncTScale":
+                            this.playerDeathYFuncTScale = float.Parse(curToken[1]);
+                            break;
+                        case "floatingAngularVel":
+                            this.floatingAngularVel = float.Parse(curToken[1]);
+                            break;
+                        case "floatingAmplitude":
+                            this.floatingAmplitude = float.Parse(curToken[1]);
+                            break;
+                        case "levelTransitionTime":
+                            this.levelTransitionTime = float.Parse(curToken[1]);
+                            break;
+                            
+                        //   ****** PHYSICS ******
                         case "forceListCapacity":
                             this.forceListCapacity = Convert.ToInt32(curToken[1]);
                             break;
-                        case "gravity":
-                            this.gravity = float.Parse(curToken[1]);
-                            break;
                         case "physicsObjectsStartingCapacity":
                             this.physicsObjectsStartingCapacity = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "gravity":
+                            this.gravity = float.Parse(curToken[1]);
                             break;
                         case "renderBoundingObjects":
                             this.renderBoundingObjects = Convert.ToInt32(curToken[1]) == 1;
@@ -294,6 +385,8 @@ namespace hungrybee
                         case "coeffRestitution":
                             this.coeffRestitution = float.Parse(curToken[1]);
                             break;
+
+                        //   ****** MOVEMENT *****
                         case "NPCTimeToOrient":
                             this.NPCTimeToOrient = float.Parse(curToken[1]);
                             break;
@@ -312,81 +405,32 @@ namespace hungrybee
                         case "playerJumpMomentum":
                             this.playerJumpMomentum = float.Parse(curToken[1]);
                             break;
-                        case "enemyCollisionAngleTollerence":
-                            this.enemyCollisionAngleTollerence = float.Parse(curToken[1]);
-                            break;
-                        case "enemySequenceDuration":
-                            this.enemySequenceDuration = float.Parse(curToken[1]);
-                            break;
-                       case "enemyHealthImpact":
-                            this.enemyHealthImpact = float.Parse(curToken[1]);
-                            break;
-                       case "enemyPlayerCollisionVelocity":
-                            this.enemyPlayerCollisionVelocity = float.Parse(curToken[1]);
-                            break;
-                       case "enemySequenceScaleRateIncrease":
-                            this.enemySequenceScaleRateIncrease = float.Parse(curToken[1]);
-                            break;
-                       case "beeFaceTextureFile":
-                            this.beeFaceTextureFile = curToken[1];
-                            break;
-                       case "beeFaceTextureWidth":
-                            this.beeFaceTextureWidth = Convert.ToInt32(curToken[1]);
-                            break;
-                       case "beeFaceTextureHeight":
-                            this.beeFaceTextureHeight = Convert.ToInt32(curToken[1]);
-                            break;
-                       case "friendSequenceScaleRateIncrease":
-                            this.friendSequenceScaleRateIncrease = float.Parse(curToken[1]);
-                            break;
-                       case "friendSequenceDuration":
-                            this.friendSequenceDuration = float.Parse(curToken[1]);
-                            break;
-                       case "friendSequenceAngularVelocity":
-                            this.friendSequenceAngularVelocity = float.Parse(curToken[1]);
-                            break;
+
+                        //   ******* MENU ********
                        case "menuFont":
                             this.menuFont = curToken[1];
                             break;
                        case "menuBG":
                             this.menuBG = curToken[1];
                             break;
-                       case "menuBG2":
-                            this.menuBG2 = curToken[1];
+                       case "menuBGOptions":
+                            this.menuBGOptions = curToken[1];
                             break;
                        case "menuTransitionTime":
                             this.menuTransitionTime = float.Parse(curToken[1]);
                             break;
-                       case "heightMapTextureFile":
-                            this.heightMapTextureFile = curToken[1];
-                            break;
+
+                       //   ******* AUDIO *******
                        case "musicVolume":
                             this.musicVolume = float.Parse(curToken[1]);
                             break;
-                       case "playerDeathSequenceScaleRateIncrease":
-                            this.playerDeathSequenceScaleRateIncrease = float.Parse(curToken[1]);
-                            break;
-                       case "playerDeathSequenceDuration":
-                            this.playerDeathSequenceDuration = float.Parse(curToken[1]);
-                            break;
-                       case "playerDeathZVelocity":
-                            this.playerDeathZVelocity = float.Parse(curToken[1]);
-                            break;
-                       case "playerDeathYAmplitude":
-                            this.playerDeathYAmplitude = float.Parse(curToken[1]);
-                            break;
-                       case "playerDeathSequenceAngularVelocity":
-                            this.playerDeathSequenceAngularVelocity = float.Parse(curToken[1]);
-                            break;
+
+                       //   ******* FORMATTING *******
                        case "//": // Comment
                             break;
                        case "": // Empty line
                             break;
                            
-                        //// ************************************
-                        //// *** 3. INSERT MORE SETTINGS HERE ***
-                        //// ************************************
-
                         default:
                             throw new Exception("gameSettings::ReadSettings(): Corrupt settings.csv, setting " + curToken[0] + " is not recognised");
                     }
@@ -408,21 +452,58 @@ namespace hungrybee
         private void WriteSettings()
         {
             csvHandleWrite writer = new csvHandleWrite(".\\gameSettings\\settings.csv");
-            
+
+            writer.WriteNextToken("//", "   ***** RENDERING *****");
             writer.WriteNextToken("xWindowSize", this.xWindowSize);
             writer.WriteNextToken("yWindowSize", this.yWindowSize);
             writer.WriteNextToken("skyPlaneTextureFile", this.skyPlaneTextureFile);
             writer.WriteNextToken("skyPlaneScale", this.skyPlaneScale);
             writer.WriteNextToken("renderSettingsIndex", this.renderSettingsIndex);
-            writer.WriteNextToken("startingGameObjectCapacity", this.startingGameObjectCapacity);
             writer.WriteNextToken("cartoonEffectFile", this.cartoonEffectFile);
             writer.WriteNextToken("postprocessEffectFile", this.postprocessEffectFile);
-            writer.WriteNextToken("fontFile", this.fontFile);
+            writer.WriteNextToken("fontFPSFile", this.fontFPSFile);
             writer.WriteNextToken("sketchTextureFile", this.sketchTextureFile);
+            writer.WriteNextToken("beeFaceTextureFile", this.beeFaceTextureFile);
+            writer.WriteNextToken("beeFaceTextureWidth", this.beeFaceTextureWidth);
+            writer.WriteNextToken("beeFaceTextureHeight", this.beeFaceTextureHeight);
+            writer.WriteNextToken("heightMapTextureFile", this.heightMapTextureFile);
+            writer.WriteNextToken("renderFPS", this.renderFPS ? (int)1 : (int)0);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   **** GAME OBJECTS ***");
+            writer.WriteNextToken("startingGameObjectCapacity", this.startingGameObjectCapacity);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   ******* CAMERA ******");
             writer.WriteNextToken("cameraSpeed", this.cameraSpeed);
             writer.WriteNextToken("cameraRunningMult", this.cameraRunningMult);
             writer.WriteNextToken("cameraRotationSpeed", this.cameraRotationSpeed);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   ******** MISC *******");
             writer.WriteNextToken("EPSILON", this.EPSILON);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   ***** GAME PLAY *****");
+            writer.WriteNextToken("enemyCollisionAngleTollerence", this.enemyCollisionAngleTollerence);
+            writer.WriteNextToken("enemySequenceDuration", this.enemySequenceDuration);
+            writer.WriteNextToken("enemyHealthImpact", this.enemyHealthImpact);
+            writer.WriteNextToken("enemyPlayerCollisionVelocity", this.enemyPlayerCollisionVelocity);
+            writer.WriteNextToken("enemySequenceScaleRateIncrease", this.enemySequenceScaleRateIncrease);
+            writer.WriteNextToken("friendSequenceScaleRateIncrease", this.friendSequenceScaleRateIncrease);
+            writer.WriteNextToken("friendSequenceDuration", this.friendSequenceDuration);
+            writer.WriteNextToken("friendSequenceAngularVelocity", this.friendSequenceAngularVelocity);
+            writer.WriteNextToken("playerDeathSequenceDuration", this.playerDeathSequenceDuration);
+            writer.WriteNextToken("playerDeathSequenceScaleRateIncrease", this.playerDeathSequenceScaleRateIncrease);
+            writer.WriteNextToken("playerDeathZVelocity", this.playerDeathZVelocity);
+            writer.WriteNextToken("playerDeathYAmplitude", this.playerDeathYAmplitude);
+            writer.WriteNextToken("playerDeathYFuncTScale", this.playerDeathYFuncTScale);
+            writer.WriteNextToken("floatingAngularVel", this.floatingAngularVel);
+            writer.WriteNextToken("floatingAmplitude", this.floatingAmplitude);
+            writer.WriteNextToken("levelTransitionTime", this.levelTransitionTime);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   ****** PHYSICS ******");
             writer.WriteNextToken("forceListCapacity", this.forceListCapacity);
             writer.WriteNextToken("physicsObjectsStartingCapacity", this.physicsObjectsStartingCapacity);
             writer.WriteNextToken("gravity", this.gravity);
@@ -431,38 +512,27 @@ namespace hungrybee
             writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
             writer.WriteNextToken("limitXYCollisionResponce", this.limitXYCollisionResponce ? (int)1 : (int)0);
             writer.WriteNextToken("coeffRestitution", this.coeffRestitution);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   ****** MOVEMENT *****");
             writer.WriteNextToken("NPCTimeToOrient", this.NPCTimeToOrient);
             writer.WriteNextToken("playerTimeToOrient", this.playerTimeToOrient);
             writer.WriteNextToken("playerTimeToAccelerate", this.playerTimeToAccelerate);
             writer.WriteNextToken("playerMaxAcceleration", this.playerMaxAcceleration);
             writer.WriteNextToken("playerVelocity", this.playerVelocity);
             writer.WriteNextToken("playerJumpMomentum", this.playerJumpMomentum);
-            writer.WriteNextToken("enemyCollisionAngleTollerence", this.enemyCollisionAngleTollerence);
-            writer.WriteNextToken("enemySequenceDuration", this.enemySequenceDuration);
-            writer.WriteNextToken("enemyHealthImpact", this.enemyHealthImpact);
-            writer.WriteNextToken("enemyPlayerCollisionVelocity", this.enemyPlayerCollisionVelocity);
-            writer.WriteNextToken("enemySequenceScaleRateIncrease", this.enemySequenceScaleRateIncrease);
-            writer.WriteNextToken("beeFaceTextureFile", this.beeFaceTextureFile);
-            writer.WriteNextToken("beeFaceTextureWidth", this.beeFaceTextureWidth);
-            writer.WriteNextToken("beeFaceTextureHeight", this.beeFaceTextureHeight);
-            writer.WriteNextToken("friendSequenceScaleRateIncrease", this.friendSequenceScaleRateIncrease);
-            writer.WriteNextToken("friendSequenceDuration", this.friendSequenceDuration);
-            writer.WriteNextToken("friendSequenceAngularVelocity", this.friendSequenceAngularVelocity);
+            writer.WriteNewLine();
+
+            writer.WriteNextToken("//", "   ******* MENU ********");
             writer.WriteNextToken("menuFont", this.menuFont);
             writer.WriteNextToken("menuBG", this.menuBG);
-            writer.WriteNextToken("menuBG2", this.menuBG2);
+            writer.WriteNextToken("menuBGOptions", this.menuBGOptions);
             writer.WriteNextToken("menuTransitionTime", this.menuTransitionTime);
-            writer.WriteNextToken("heightMapTextureFile", this.heightMapTextureFile);
-            writer.WriteNextToken("musicVolume", this.musicVolume);
-            writer.WriteNextToken("playerDeathSequenceScaleRateIncrease", this.playerDeathSequenceScaleRateIncrease);
-            writer.WriteNextToken("playerDeathSequenceDuration", this.playerDeathSequenceDuration);
-            writer.WriteNextToken("playerDeathZVelocity", this.playerDeathZVelocity);
-            writer.WriteNextToken("playerDeathYAmplitude", this.playerDeathYAmplitude);
-            writer.WriteNextToken("playerDeathSequenceAngularVelocity", this.playerDeathSequenceAngularVelocity);
+            writer.WriteNewLine();
 
-            //// ************************************
-            //// *** 4. INSERT MORE SETTINGS HERE ***
-            //// ************************************
+            writer.WriteNextToken("//", "   ******* AUDIO *******");
+            writer.WriteNextToken("musicVolume", this.musicVolume);
+            writer.WriteNewLine();
 
             writer.Close(); // Destructor would do this anyway once out of scope, but just to be safe.
         }

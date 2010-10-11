@@ -1,17 +1,49 @@
+//,   ***** RENDERING *****
 xWindowSize,1280
 yWindowSize,1024
 skyPlaneTextureFile,.\images\clouds
 skyPlaneScale,1.75
 renderSettingsIndex,0
-startingGameObjectCapacity,64
 cartoonEffectFile,.\effects\CartoonEffect
 postprocessEffectFile,.\effects\PostprocessEffect
-fontFile,.\fonts\hudArialFont
+fontFPSFile,.\fonts\hudArialFont
 sketchTextureFile,.\images\SketchTexture
+beeFaceTextureFile,.\images\bee-cartoon_COMBINDED_transparent
+beeFaceTextureWidth,564
+beeFaceTextureHeight,180
+heightMapTextureFile,.\images\Grass
+renderFPS,1
+
+//,   **** GAME OBJECTS ***
+startingGameObjectCapacity,64
+
+//,   ******* CAMERA ******
 cameraSpeed,0.1
 cameraRunningMult,4
 cameraRotationSpeed,0.002
+
+//,   ******** MISC *******
 EPSILON,1E-08
+
+//,   ***** GAME PLAY *****
+enemyCollisionAngleTollerence,0.5235988
+enemySequenceDuration,0.2
+enemyHealthImpact,33.34
+enemyPlayerCollisionVelocity,2
+enemySequenceScaleRateIncrease,10
+friendSequenceScaleRateIncrease,30
+friendSequenceDuration,0.75
+friendSequenceAngularVelocity,9.424778
+playerDeathSequenceDuration,1
+playerDeathSequenceScaleRateIncrease,2
+playerDeathZVelocity,5
+playerDeathYAmplitude,1
+playerDeathYFuncTScale,3
+floatingAngularVel,6.283185
+floatingAmplitude,0.05
+levelTransitionTime,1
+
+//,   ****** PHYSICS ******
 forceListCapacity,4
 physicsObjectsStartingCapacity,64
 gravity,9.81
@@ -20,31 +52,21 @@ pauseOnCollision,0
 renderCollisions,0
 limitXYCollisionResponce,1
 coeffRestitution,0.2
+
+//,   ****** MOVEMENT *****
 NPCTimeToOrient,0.2
 playerTimeToOrient,0.2
 playerTimeToAccelerate,0.2
 playerMaxAcceleration,10
 playerVelocity,5
 playerJumpMomentum,6
-enemyCollisionAngleTollerence,0.5235988
-enemySequenceDuration,0.2
-enemyHealthImpact,33.34
-enemyPlayerCollisionVelocity,2
-enemySequenceScaleRateIncrease,10
-beeFaceTextureFile,.\images\bee-cartoon_COMBINDED_transparent
-beeFaceTextureWidth,564
-beeFaceTextureHeight,180
-friendSequenceScaleRateIncrease,30
-friendSequenceDuration,0.75
-friendSequenceAngularVelocity,9.424778
+
+//,   ******* MENU ********
 menuFont,.\fonts\Graffiti
 menuBG,.\images\menuBG
-menuBG2,.\images\menuBG2
+menuBGOptions,.\images\menuBG2
 menuTransitionTime,0.3
-heightMapTextureFile,.\images\Grass
+
+//,   ******* AUDIO *******
 musicVolume,0.2
-playerDeathSequenceScaleRateIncrease,2
-playerDeathSequenceDuration,2
-playerDeathZVelocity,5
-playerDeathYAmplitude,3
-playerDeathSequenceAngularVelocity,9.424778
+

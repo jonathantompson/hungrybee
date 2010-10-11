@@ -41,6 +41,12 @@ namespace hungrybee
         public Object boundingObj;
         public Vector3 boundingObjCenter;
 
+        // Floating animation
+        public float floatingPhase;
+        public float floatingAngularVel;
+        public float floatingAmplitude;
+        public float floatingOffset;
+
         public BoundingBox sweepAndPruneAABB;
         public Vector3 AABB_min, AABB_max;
         public bool dirtyAABB; // Flag for collision detection to avoid computing translated aabb twice
@@ -81,6 +87,10 @@ namespace hungrybee
             dirtyAABB = true;
             textureEnabled = true;
             vertexColorEnabled = false;
+            floatingPhase = 0.0f;
+            floatingAngularVel = 0.0f;
+            floatingAmplitude = 0.0f;
+            floatingOffset = 0.0f;
         }
         #endregion
 
@@ -104,6 +114,10 @@ namespace hungrybee
             resting = false;
             textureEnabled = _textureEnabled;
             vertexColorEnabled = _vertexColorEnabled;
+            floatingPhase = 0.0f;
+            floatingAngularVel = 0.0f;
+            floatingAmplitude = 0.0f;
+            floatingOffset = 0.0f;
         }
         #endregion
 
@@ -112,7 +126,12 @@ namespace hungrybee
         /// ***********************************************************************
         public virtual void Update(GameTime gameTime)
         {
-            // Nothing to update
+            if (!h_game.h_PhysicsManager.gamePaused)
+            {
+                // Update the floating offset animation
+                floatingPhase += floatingAngularVel * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                floatingOffset = (float)Math.Sin(floatingPhase) * floatingAmplitude + floatingAmplitude; // Want offset to go from 0 --> floatingAmplitude (to avoid going through floor)
+            }
         }
         #endregion
 
@@ -164,6 +183,12 @@ namespace hungrybee
 
             // Make sure both starting states are equal
             rboState.CopyAtoB(ref state, ref prevState);   
+
+            // Make the phase that the objects float at random
+            Random rand = new Random(); // Seed off the time
+            floatingPhase = (float)rand.NextDouble() * 2.0f * (float)Math.PI; // 0 --> 2PI
+            floatingAngularVel = (0.5f + 0.5f * (float)rand.NextDouble()) * h_game.h_GameSettings.floatingAngularVel; // floatingAngularVel/2 --> floatingAngularVel
+            floatingAmplitude = (0.5f + 0.5f * (float)rand.NextDouble()) * h_game.h_GameSettings.floatingAmplitude; // floatingAmplitude/2 --> floatingAmplitude
         }
         #endregion
 
@@ -190,7 +215,7 @@ namespace hungrybee
 
             drawState.scale = Interp(prevState.scale, state.scale, percentInterp);
             drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
-            drawState.pos = Interp(prevState.pos, state.pos, percentInterp);
+            drawState.pos = Interp(prevState.pos, state.pos, percentInterp) + new Vector3(0.0f, floatingOffset, 0.0f);
             model.Root.Transform = Matrix.CreateTranslation(modelOffsetToCenterOnSphere) * 
                                    CreateScale(drawState.scale) *
                                    Matrix.CreateFromQuaternion(drawState.orient) *

@@ -17,6 +17,8 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace hungrybee
 {
+    public enum levelTransitionType { NO_TRANSITION, LEVEL_STARTING, LEVEL_ENDING_DEATH, LEVEL_ENDING_WIN }; 
+
     /// <summary>
     /// ***********************************************************************
     /// **                          gameObjectManager                        **
@@ -41,6 +43,10 @@ namespace hungrybee
         static float frustrumBoundBoxThickness = 2.0f;
         static float frustrumBoundBoxDepth = 20.0f;
         static float EPSILON = 0.00001f;
+
+        // Variables to transition from level to level
+        levelTransitionType levelTransition;
+        float levelTransitionCounter;
 
         #endregion
 
@@ -73,22 +79,66 @@ namespace hungrybee
         /// ***********************************************************************
         public override void Update(GameTime gameTime)
         {
-            if (!h_game.h_Menu.menusRunning && !h_game.h_PhysicsManager.gamePaused)
+            if (levelTransition != levelTransitionType.NO_TRANSITION)
             {
-                // Remove all objects on the remove list
-                ProcessRemovals();
+                levelTransitionCounter += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-                if (numFriends <= 0)
-                    FinishLevel();
-                else if (numPlayers <= 0)
-                    FinishLevelDeath();
-                else
+                if (levelTransitionCounter > h_game.h_GameSettings.levelTransitionTime)
                 {
-                    // enumerate through each element in the list and update them
-                    List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
-                    while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+                    // THE TRANSITION IS OVER, SO NOW DO SOMETHING
+                    switch (levelTransition)
                     {
-                        ListEnum.Current.Update(gameTime);
+                        case levelTransitionType.LEVEL_STARTING:
+                            h_game.h_Hud.HideOverlay();
+                            levelTransition = levelTransitionType.NO_TRANSITION;
+                            h_game.h_PhysicsManager.UnpauseGame();
+                            h_game.h_AudioManager.CueSound(soundType.GAME_START);
+                            h_game.h_AudioManager.PlayGameMusic();
+                            break;
+                        case levelTransitionType.LEVEL_ENDING_DEATH:
+                            ClearLevel();
+                            levelTransition = levelTransitionType.NO_TRANSITION;
+                            h_game.h_Menu.EnterMainMenu();
+                            break;
+                        case levelTransitionType.LEVEL_ENDING_WIN:
+                            // See if another level exists and if it does then load it...
+                            if (File.Exists(GetLevelFilename(loadedLevel + 1)))
+                            {
+                                // Load in the object descriptions from the csv file for the next level
+                                StartLevel(loadedLevel + 1);
+                            }
+                            // Otherwise end the game
+                            else
+                            {
+                                ClearLevel();
+                                levelTransition = levelTransitionType.NO_TRANSITION;
+                                h_game.h_Menu.EnterMainMenu();
+                            }
+                            break;
+                        default:
+                            throw new Exception("gameObjectManager::Update() - Unrecognised Level transition");
+                    }
+                }
+            }
+            else
+            {
+                if (!h_game.h_Menu.menusRunning && !h_game.h_PhysicsManager.gamePaused)
+                {
+                    // Remove all objects on the remove list
+                    ProcessRemovals();
+
+                    if (numFriends <= 0)
+                        FinishLevel();
+                    else if (numPlayers <= 0)
+                        FinishLevelDeath();
+                    else
+                    {
+                        // enumerate through each element in the list and update them
+                        List<gameObject>.Enumerator ListEnum = h_GameObjects.GetEnumerator();
+                        while (ListEnum.MoveNext()) // Initially, the enumerator is positioned before the first element in the collection. Returns false if gone to far
+                        {
+                            ListEnum.Current.Update(gameTime);
+                        }
                     }
                 }
             }
@@ -170,32 +220,25 @@ namespace hungrybee
         public void StartLevel(int level)
         {
             // Load in the object descriptions from the csv file for the first level
-            loadedLevel = LoadLevel(1);
-            h_game.h_PhysicsManager.UnpauseGame();
-            h_game.h_AudioManager.CueSound(soundType.GAME_START);
-            h_game.h_AudioManager.PlayGameMusic();
+            loadedLevel = LoadLevel(level);
+            h_game.h_Hud.SetOverlay(String.Format("LeVEl {0}", level));
+            h_game.h_Hud.ShowOverlay();
+            levelTransition = levelTransitionType.LEVEL_STARTING;
+            levelTransitionCounter = 0.0f;
         }  
         #endregion
 
-        #region FinishLevel() - All the Bee's collected --> Finish level and move on to the next
+        #region FinishLevel() - All the Bee's collected --> Finish level and move on to the next if it exists
         /// FinishLevel - All the Bee's collected --> Finish level and move on to the next
         /// ***********************************************************************
         public void FinishLevel()
         {
             h_game.h_AudioManager.CueSound(soundType.GAME_END);
-            // See if another level exists and it does then load it...
-            if (File.Exists(GetLevelFilename(loadedLevel + 1)))
-            {
-                // Load in the object descriptions from the csv file for the next level
-                loadedLevel = LoadLevel(loadedLevel + 1);
-                h_game.h_PhysicsManager.UnpauseGame();
-            }
-            else
-            {
-                h_game.h_PhysicsManager.PauseGame();
-                ClearLevel();
-                h_game.h_Menu.EnterMainMenu();
-            }
+            levelTransition = levelTransitionType.LEVEL_ENDING_WIN;
+            levelTransitionCounter = 0.0f;
+            h_game.h_Hud.SetOverlay("YaY!");
+            h_game.h_Hud.ShowOverlay();
+            h_game.h_PhysicsManager.PauseGame();
         }
         #endregion
 
@@ -204,11 +247,12 @@ namespace hungrybee
         /// ***********************************************************************
         public void FinishLevelDeath()
         {
-            h_game.h_AudioManager.CueSound(soundType.GAME_END_DEATH);
-            // Clear the level and go back to the main menu
+            h_game.h_Hud.SetOverlay("DAM THOSE BIRDS!");
+            h_game.h_Hud.ShowOverlay();
             h_game.h_PhysicsManager.PauseGame();
-            ClearLevel();
-            h_game.h_Menu.EnterMainMenu();
+            h_game.h_AudioManager.CueSound(soundType.GAME_END_DEATH);
+            levelTransition = levelTransitionType.LEVEL_ENDING_DEATH;
+            levelTransitionCounter = 0.0f;
         }
         #endregion
 

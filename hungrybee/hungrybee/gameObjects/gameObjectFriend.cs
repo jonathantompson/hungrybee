@@ -30,8 +30,7 @@ namespace hungrybee
         #region Local Variables
 
         bool friendCaptured;
-        protected float friendCapturedSequenceStart;
-        protected float friendCapturedSequenceEnd;
+        protected float friendCapturedSequenceTime;
         protected float friendCapturedSequenceScale;
         protected gameObject capturingPlayer;
         Vector3 displacementToPlayer;
@@ -61,17 +60,19 @@ namespace hungrybee
             // Update the base
             base.Update(gameTime);
 
-            if (friendCaptured)
+            if (friendCaptured && !h_game.h_PhysicsManager.gamePaused)
             {
-                if ((float)gameTime.TotalGameTime.TotalSeconds > (friendCapturedSequenceEnd))
+                friendCapturedSequenceTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if (friendCapturedSequenceTime > base.h_game.h_GameSettings.friendSequenceDuration)
                     base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
                 else
                 {
                     // Shrink the model over time
-                    base.modelScaleToNormalizeSize = friendCapturedSequenceScale / (1.0f + base.h_game.h_GameSettings.friendSequenceScaleRateIncrease * ((float)gameTime.TotalGameTime.TotalSeconds - friendCapturedSequenceStart));
+                    base.modelScaleToNormalizeSize = friendCapturedSequenceScale / (1.0f + base.h_game.h_GameSettings.friendSequenceScaleRateIncrease * friendCapturedSequenceTime);
                     
                     // Also spin the model about the y-axis around the player
-                    float angle = (base.h_game.h_GameSettings.friendSequenceAngularVelocity * ((float)gameTime.TotalGameTime.TotalSeconds - friendCapturedSequenceStart)) % (2.0f * (float)Math.PI);
+                    float angle = (base.h_game.h_GameSettings.friendSequenceAngularVelocity * friendCapturedSequenceTime) % (2.0f * (float)Math.PI);
                     state.pos = prevState.pos = capturingPlayer.prevState.pos + Vector3.Transform(displacementToPlayer, Matrix.CreateFromAxisAngle(rotAxis, angle));
                  }
             } // if (friendCaptured)
@@ -85,8 +86,7 @@ namespace hungrybee
         {
             friendCaptured = true;
             capturingPlayer = player;
-            friendCapturedSequenceStart = state.time;
-            friendCapturedSequenceEnd = friendCapturedSequenceStart + base.h_game.h_GameSettings.friendSequenceDuration;
+            friendCapturedSequenceTime = 0.0f;
             friendCapturedSequenceScale = base.modelScaleToNormalizeSize;
             displacementToPlayer = state.pos - capturingPlayer.state.pos;
             rotAxis = Vector3.Cross(displacementToPlayer, Vector3.Backward);

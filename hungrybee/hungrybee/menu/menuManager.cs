@@ -141,7 +141,7 @@ namespace hungrybee
 
             SpriteFont menuFont = h_game.Content.Load<SpriteFont>(h_game.h_GameSettings.menuFont);
             Texture2D mainMenuImage = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBG);
-            Texture2D optionsMenuImage = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBG2);
+            Texture2D optionsMenuImage = h_game.Content.Load<Texture2D>(h_game.h_GameSettings.menuBGOptions);
             spriteBatch = new SpriteBatch(h_game.GraphicsDevice);
 
             // Dummy menuWindows to run external commands

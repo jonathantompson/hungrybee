@@ -30,8 +30,7 @@ namespace hungrybee
         #region Local Variables
 
         protected bool deathSequence;
-        protected float deathSequenceStart;
-        protected float deathSequenceEnd;
+        protected float deathSequenceTime;
         protected float deathSequenceScale;
 
         #endregion
@@ -56,13 +55,14 @@ namespace hungrybee
             // Update the base
             base.Update(gameTime);
 
-            if (deathSequence)
+            if (deathSequence && !h_game.h_PhysicsManager.gamePaused)
             {
-                if ((float)gameTime.TotalGameTime.TotalSeconds > (deathSequenceEnd))
+                deathSequenceTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (deathSequenceTime > base.h_game.h_GameSettings.enemySequenceDuration)
                     base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
                 else
                 {
-                    base.modelScaleToNormalizeSize = deathSequenceScale / (1.0f + base.h_game.h_GameSettings.enemySequenceScaleRateIncrease * ((float)gameTime.TotalGameTime.TotalSeconds - deathSequenceStart));
+                    base.modelScaleToNormalizeSize = deathSequenceScale / (1.0f + base.h_game.h_GameSettings.enemySequenceScaleRateIncrease * deathSequenceTime);
                 }
             }// if (deathSequence)
         }
@@ -73,8 +73,7 @@ namespace hungrybee
         {
             base.collidable = false;
             deathSequence = true;
-            deathSequenceStart = state.time;
-            deathSequenceEnd = deathSequenceStart + base.h_game.h_GameSettings.enemySequenceDuration;
+            deathSequenceTime = 0.0f;
             deathSequenceScale = base.modelScaleToNormalizeSize;
             h_game.h_AudioManager.CueSound(soundType.ENEMY_KILLED);
         }

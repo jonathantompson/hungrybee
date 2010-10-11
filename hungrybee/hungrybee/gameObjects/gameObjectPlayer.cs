@@ -33,12 +33,10 @@ namespace hungrybee
         public bool  jumping;
 
         bool playerDead;
-        protected float playerDeathSequenceStart;
-        protected float playerDeathSequenceEnd;
+        protected float playerDeathSequenceTime;
         protected float playerDeathSequenceScale;
         protected Vector3 playerDeathStartPos;
         protected Quaternion playerDeathStartOrient;
-        protected float playerDeathSinOmega;
 
         public force forcePlayerInput;
 
@@ -84,27 +82,30 @@ namespace hungrybee
         public override void Update(GameTime gameTime)
         {
             
-            if(playerDead)
+            if(playerDead && !h_game.h_PhysicsManager.gamePaused)
             {
-                if ((float)gameTime.TotalGameTime.TotalSeconds > (playerDeathSequenceEnd))
+                playerDeathSequenceTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (playerDeathSequenceTime > base.h_game.h_GameSettings.playerDeathSequenceDuration)
                     base.h_game.h_GameObjectManager.h_GameObjectsRemoveList.Add(this);
                 else
                 {
-                    float deltaT = (float)gameTime.TotalGameTime.TotalSeconds - playerDeathSequenceStart;
+                    float deltaT = playerDeathSequenceTime;
                     // Shrink the model over time
                     base.modelScaleToNormalizeSize = playerDeathSequenceScale / (1.0f + base.h_game.h_GameSettings.playerDeathSequenceScaleRateIncrease * deltaT);
 
                     Vector3 offset = new Vector3();
-                    
                     // Add a linear velocity in the Z direction
-                    offset.Z = playerDeathStartPos.Z + h_game.h_GameSettings.playerDeathZVelocity * ((float)gameTime.TotalGameTime.TotalSeconds - playerDeathSequenceStart);
+                    offset.Z = h_game.h_GameSettings.playerDeathZVelocity * deltaT;
                     // Constant position in the X direction
-                    offset.X = playerDeathStartPos.X;
-                    // Position in y direction follows a sine wave
-                    // Third order polynomial  : f(x) = -x^3 / 6 - x^2 / 2
-                    base.state.pos.Y = playerDeathStartPos.Y + deltaT * deltaT * (-deltaT / 6.0f - 1.0f / 2.0f) * h_game.h_GameSettings.playerDeathYAmplitude;
+                    offset.X = 0.0f;
+                    // Position in y direction follows a polynomial function: see "playerDeathSequence.xls" for more info
+                    // Offset = (k1*T^3 + k2*T) * yAmp
+                    // Offset = (T * (k2 + T^2*k1)) * yAmp             --> Few multiplications
+                    deltaT = deltaT * h_game.h_GameSettings.playerDeathYFuncTScale; // Speeds up the sequence a little
+                    offset.Y = deltaT * (1.5f - 0.5f * deltaT * deltaT) * h_game.h_GameSettings.playerDeathYAmplitude;
 
-                    base.state.pos = base.prevState.pos = offset;
+                    base.state.pos = playerDeathStartPos + offset;
+                    base.prevState.pos = base.state.pos;
                 }
             }
 
@@ -185,8 +186,7 @@ namespace hungrybee
                 base.movable = false;
                 base.collidable = false;
                 playerDead = true;
-                playerDeathSequenceStart = state.time;
-                playerDeathSequenceEnd = playerDeathSequenceStart + base.h_game.h_GameSettings.playerDeathSequenceDuration;
+                playerDeathSequenceTime = 0.0f;
                 playerDeathSequenceScale = base.modelScaleToNormalizeSize;
                 playerDeathStartPos = state.pos;
                 playerDeathStartOrient = state.orient;
