@@ -1,6 +1,6 @@
 //,   ***** RENDERING *****
-xWindowSize,1280
-yWindowSize,1024
+xWindowSize,640
+yWindowSize,480
 skyPlaneTextureFile,.\images\clouds
 skyPlaneScale,1.75
 renderSettingsIndex,0
@@ -13,6 +13,8 @@ beeFaceTextureWidth,564
 beeFaceTextureHeight,180
 heightMapTextureFile,.\images\Grass
 renderFPS,1
+renderBoundingObjects,0
+renderCollisions,0
 
 //,   **** GAME OBJECTS ***
 startingGameObjectCapacity,64
@@ -41,15 +43,15 @@ playerDeathYAmplitude,1
 playerDeathYFuncTScale,3
 floatingAngularVel,6.283185
 floatingAmplitude,0.05
-levelTransitionTime,1
+levelTransitionTime,1.5
+startingLevel,1
+skipMenu,0
 
 //,   ****** PHYSICS ******
 forceListCapacity,4
 physicsObjectsStartingCapacity,64
 gravity,9.81
-renderBoundingObjects,0
 pauseOnCollision,0
-renderCollisions,0
 limitXYCollisionResponce,1
 coeffRestitution,0.2
 

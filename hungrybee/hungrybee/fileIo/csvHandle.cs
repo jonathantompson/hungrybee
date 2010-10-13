@@ -135,6 +135,10 @@ namespace hungrybee
                     tokenArray.Add(curToken.ToString());
                     curToken.Length = 0;  // Fastest way of clearing a string builder
                 }
+                else if (line[i] == ' ')
+                {
+                    // Do nothing for blank spaces
+                }
                 else
                     curToken.Append(line[i]);
             }

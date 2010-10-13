@@ -176,6 +176,10 @@
     <None Include="gameSettings\Level_2.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="gameSettings\Level_3.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="gameSettings\Level_blank.csv" />
     <None Include="gameSettings\settings.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

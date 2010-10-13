@@ -42,6 +42,8 @@ namespace hungrybee
         public int      beeFaceTextureHeight;
         public string   heightMapTextureFile;
         public bool     renderFPS;
+        public bool     renderBoundingObjects;
+        public bool     renderCollisions;
 
         //    **** GAME OBJECTS ***
         public int      startingGameObjectCapacity;
@@ -71,14 +73,14 @@ namespace hungrybee
         public float    floatingAngularVel;
         public float    floatingAmplitude;
         public float    levelTransitionTime;
+        public int      startingLevel;
+        public bool     skipMenu;
 
         //    ****** PHYSICS ******
         public int      forceListCapacity;
         public int      physicsObjectsStartingCapacity;
         public float    gravity;
-        public bool     renderBoundingObjects;
         public bool     pauseOnCollision;
-        public bool     renderCollisions;
         public bool     limitXYCollisionResponce;
         public float    coeffRestitution;
 
@@ -130,6 +132,8 @@ namespace hungrybee
             beeFaceTextureHeight = 180;
             heightMapTextureFile = ".\\images\\Grass";
             renderFPS = true;
+            renderBoundingObjects = false;
+            renderCollisions = false;
 
             //   **** GAME OBJECTS ***
             startingGameObjectCapacity = 64;
@@ -159,14 +163,14 @@ namespace hungrybee
             floatingAngularVel = 6.283185f; // 2PI per sec
             floatingAmplitude = 0.05f;
             levelTransitionTime = 1.5f;
+            startingLevel = 1;
+            skipMenu = false;
 
             //   ****** PHYSICS ******
             forceListCapacity = 4;
             physicsObjectsStartingCapacity = 64;
             gravity = 9.81f;
-            renderBoundingObjects = false;
             pauseOnCollision = false;
-            renderCollisions = false;
             limitXYCollisionResponce = true;
             coeffRestitution = 0.2f;
 
@@ -288,6 +292,12 @@ namespace hungrybee
                         case "renderFPS":
                             this.renderFPS = Convert.ToInt32(curToken[1]) == 1;
                             break;
+                        case "renderBoundingObjects":
+                            this.renderBoundingObjects = Convert.ToInt32(curToken[1]) == 1;
+                            break;
+                        case "renderCollisions":
+                            this.renderCollisions = Convert.ToInt32(curToken[1]) == 1;
+                            break;
 
                         //   **** GAME OBJECTS ***
                         case "startingGameObjectCapacity":
@@ -359,7 +369,13 @@ namespace hungrybee
                         case "levelTransitionTime":
                             this.levelTransitionTime = float.Parse(curToken[1]);
                             break;
-                            
+                        case "startingLevel":
+                            this.startingLevel = Convert.ToInt32(curToken[1]);
+                            break;
+                        case "skipMenu":
+                            this.skipMenu = Convert.ToInt32(curToken[1]) == 1;
+                            break;
+
                         //   ****** PHYSICS ******
                         case "forceListCapacity":
                             this.forceListCapacity = Convert.ToInt32(curToken[1]);
@@ -370,14 +386,8 @@ namespace hungrybee
                         case "gravity":
                             this.gravity = float.Parse(curToken[1]);
                             break;
-                        case "renderBoundingObjects":
-                            this.renderBoundingObjects = Convert.ToInt32(curToken[1]) == 1;
-                            break;
                         case "pauseOnCollision":
                             this.pauseOnCollision = Convert.ToInt32(curToken[1]) == 1;
-                            break;
-                        case "renderCollisions":
-                            this.renderCollisions = Convert.ToInt32(curToken[1]) == 1;
                             break;
                         case "limitXYCollisionResponce":
                             this.limitXYCollisionResponce = Convert.ToInt32(curToken[1]) == 1;
@@ -468,6 +478,8 @@ namespace hungrybee
             writer.WriteNextToken("beeFaceTextureHeight", this.beeFaceTextureHeight);
             writer.WriteNextToken("heightMapTextureFile", this.heightMapTextureFile);
             writer.WriteNextToken("renderFPS", this.renderFPS ? (int)1 : (int)0);
+            writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0);
+            writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
             writer.WriteNewLine();
 
             writer.WriteNextToken("//", "   **** GAME OBJECTS ***");
@@ -501,15 +513,15 @@ namespace hungrybee
             writer.WriteNextToken("floatingAngularVel", this.floatingAngularVel);
             writer.WriteNextToken("floatingAmplitude", this.floatingAmplitude);
             writer.WriteNextToken("levelTransitionTime", this.levelTransitionTime);
+            writer.WriteNextToken("startingLevel", this.startingLevel);
+            writer.WriteNextToken("skipMenu", this.skipMenu ? (int)1 : (int)0 );
             writer.WriteNewLine();
-
+            
             writer.WriteNextToken("//", "   ****** PHYSICS ******");
             writer.WriteNextToken("forceListCapacity", this.forceListCapacity);
             writer.WriteNextToken("physicsObjectsStartingCapacity", this.physicsObjectsStartingCapacity);
             writer.WriteNextToken("gravity", this.gravity);
-            writer.WriteNextToken("renderBoundingObjects", this.renderBoundingObjects ? (int)1 : (int)0 );
             writer.WriteNextToken("pauseOnCollision", this.pauseOnCollision ? (int)1 : (int)0);
-            writer.WriteNextToken("renderCollisions", this.renderCollisions ? (int)1 : (int)0);
             writer.WriteNextToken("limitXYCollisionResponce", this.limitXYCollisionResponce ? (int)1 : (int)0);
             writer.WriteNextToken("coeffRestitution", this.coeffRestitution);
             writer.WriteNewLine();

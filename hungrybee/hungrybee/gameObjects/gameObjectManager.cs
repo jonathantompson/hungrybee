@@ -17,7 +17,7 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace hungrybee
 {
-    public enum levelTransitionType { NO_TRANSITION, LEVEL_STARTING, LEVEL_ENDING_DEATH, LEVEL_ENDING_WIN }; 
+    public enum levelTransitionType { NO_TRANSITION, LEVEL_STARTING, SAVE_BEE_FRIENDS, LEVEL_ENDING_DEATH, LEVEL_ENDING_WIN }; 
 
     /// <summary>
     /// ***********************************************************************
@@ -89,6 +89,11 @@ namespace hungrybee
                     switch (levelTransition)
                     {
                         case levelTransitionType.LEVEL_STARTING:
+                            levelTransition = levelTransitionType.SAVE_BEE_FRIENDS;
+                            h_game.h_Hud.SetOverlay("sAVe YoUR BeE fRIeNds!");
+                            levelTransitionCounter = 0.0f; // Only half transition
+                            break;
+                        case levelTransitionType.SAVE_BEE_FRIENDS:
                             h_game.h_Hud.HideOverlay();
                             levelTransition = levelTransitionType.NO_TRANSITION;
                             h_game.h_PhysicsManager.UnpauseGame();
@@ -380,7 +385,7 @@ namespace hungrybee
         protected gameObject SpawnPlayerFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (numPlayers == 0 && curToken.Count == 9)
+            if (numPlayers == 0 && curToken.Count == 13)
             {
                 // public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 _pos)
                 retObject = new gameObjectPlayer(h_game,
@@ -388,7 +393,8 @@ namespace hungrybee
                                                  GetBoundingObjTypeFromString(curToken[2]),
                                                  int.Parse(curToken[3]) == 1, int.Parse(curToken[4]) == 1,
                                                  float.Parse(curToken[5]),
-                                                 new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])));
+                                                 new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])),
+                                                 new Quaternion(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11]), float.Parse(curToken[12])));
                 numPlayers += 1;
                 player = retObject;
             }
@@ -422,7 +428,7 @@ namespace hungrybee
         protected gameObject SpawnEnemyFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (curToken.Count == 12)
+            if (curToken.Count == 16)
             {
                 // public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 startingPos, Vector3 startingMom)
                 retObject = new gameObjectEnemy(h_game,
@@ -431,7 +437,8 @@ namespace hungrybee
                                                 int.Parse(curToken[3]) == 1, int.Parse(curToken[4]) == 1,
                                                 float.Parse(curToken[5]),
                                                 new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])),
-                                                new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])));
+                                                new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])),
+                                                new Quaternion(float.Parse(curToken[12]), float.Parse(curToken[13]), float.Parse(curToken[14]), float.Parse(curToken[15])));
                 numEnemys += 1;
                 enemyList.Add(retObject);
             }
@@ -445,7 +452,7 @@ namespace hungrybee
         protected gameObject SpawnFriendFromToken(ref List<string> curToken, int levelNumber)
         {
             gameObject retObject = null;
-            if (curToken.Count == 12)
+            if (curToken.Count == 16)
             {
                 // public gameObjectFriend(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 startingPos, Vector3 startingMom)
                 retObject = new gameObjectFriend(h_game,
@@ -454,7 +461,8 @@ namespace hungrybee
                                                 int.Parse(curToken[3]) == 1, int.Parse(curToken[4]) == 1,
                                                 float.Parse(curToken[5]),
                                                 new Vector3(float.Parse(curToken[6]), float.Parse(curToken[7]), float.Parse(curToken[8])),
-                                                new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])));
+                                                new Vector3(float.Parse(curToken[9]), float.Parse(curToken[10]), float.Parse(curToken[11])),
+                                                new Quaternion(float.Parse(curToken[12]), float.Parse(curToken[13]), float.Parse(curToken[14]), float.Parse(curToken[15])));
                 numFriends += 1;
                 friendList.Add(retObject);
             }

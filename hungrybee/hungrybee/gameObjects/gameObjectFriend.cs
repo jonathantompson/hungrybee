@@ -41,14 +41,21 @@ namespace hungrybee
         #region Constructor - gameObjectFriend(game game, string modelfile, float scale)
         /// Constructor - gameObjectFriend(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectFriend(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, float _scale, Vector3 startingPos, Vector3 startingMom)
-            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled, _scale, startingPos, startingMom)
+        public gameObjectFriend(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled,
+                                float _scale, Vector3 startingPos, Vector3 startingMom, Quaternion startingOrient)
+            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled)
         {
             // Nothing to do yet
             friendCaptured = false;
             displacementToPlayer = new Vector3();
             rotAxis = new Vector3();
             capturingPlayer = null;
+
+            // Set starting RBO state
+            state.scale = prevState.scale = new Vector3(_scale, _scale, _scale);
+            state.pos = prevState.pos = startingPos;
+            state.linearMom = prevState.linearMom = startingMom;
+            state.orient = prevState.orient = startingOrient;
         }
         #endregion
 

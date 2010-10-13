@@ -89,7 +89,7 @@ namespace hungrybee
             if (newActive == gameStart)
             {
                 //set level to easy
-                h_game.h_GameObjectManager.StartLevel(1);
+                h_game.h_GameObjectManager.StartLevel(h_game.h_GameSettings.startingLevel);
                 menusRunning = false;
                 activeMenu = newActive;
             }
@@ -185,8 +185,15 @@ namespace hungrybee
             menuList.Add(mainMenu);
             menuList.Add(optionsMenu);
 
-            activeMenu = mainMenu;
-            mainMenu.WakeUp();
+            if (h_game.h_GameSettings.skipMenu)
+            {
+                activeMenu = gameStart;
+            }
+            else
+            {
+                activeMenu = mainMenu;
+                mainMenu.WakeUp();
+            }
 
         }
         #endregion

@@ -16,7 +16,7 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace hungrybee
 {
-    public enum soundType { PLAYER_HURT, ENEMY_KILLED, FRIEND_COLLECTED, GAME_START, JUMP, GAME_END, MENU_UPDOWN, MENU_ENTER, GAME_END_DEATH }
+    public enum soundType { PLAYER_HURT, ENEMY_KILLED, FRIEND_COLLECTED, GAME_START, JUMP, GAME_END, MENU_UPDOWN, MENU_ENTER, GAME_END_DEATH, PLAYER_FALLING }
 
     /// <summary>
     /// ***********************************************************************
@@ -108,28 +108,34 @@ namespace hungrybee
         {
             // Some good sound sources 
             // http://www.opengameart.org/
+            // http://www.freesound.org/
             switch (sound)
             {
                 case soundType.PLAYER_HURT:
-                    soundBank.PlayCue("laughcartoon");
+                    //soundBank.PlayCue("laughcartoon");
+                    soundBank.PlayCue("bird_squark");
                     break;
                 case soundType.ENEMY_KILLED:
-                    soundBank.PlayCue("effect");
+                    soundBank.PlayCue("pop");
                     break;
                 case soundType.FRIEND_COLLECTED:
-                    soundBank.PlayCue("bee");
+                    soundBank.PlayCue("wow");
                     break;
                 case soundType.GAME_START:
                     soundBank.PlayCue("gameStart");
                     break;
                 case soundType.JUMP:
-                    soundBank.PlayCue("jump");
+                    //soundBank.PlayCue("jump_boing");
+                    soundBank.PlayCue("grunt_upPitch");
                     break;
                 case soundType.GAME_END:
-                    soundBank.PlayCue("effect");
+                    soundBank.PlayCue("weee");
                     break;
                 case soundType.GAME_END_DEATH:
-                    soundBank.PlayCue("effect");
+                    soundBank.PlayCue("Death_sound");
+                    break;
+                case soundType.PLAYER_FALLING:
+                    soundBank.PlayCue("ohh");
                     break;
                 case soundType.MENU_UPDOWN:
                     soundBank.PlayCue("menuBeepUpDown");

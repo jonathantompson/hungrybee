@@ -214,7 +214,7 @@ namespace hungrybee
             percentInterp = 1.0f;
 
             drawState.scale = Interp(prevState.scale, state.scale, percentInterp);
-            drawState.orient = Quaternion.Slerp(prevState.orient, state.orient, percentInterp);
+            drawState.orient = Quaternion.Normalize(Quaternion.Slerp(prevState.orient, state.orient, percentInterp));
             drawState.pos = Interp(prevState.pos, state.pos, percentInterp) + new Vector3(0.0f, floatingOffset, 0.0f);
             model.Root.Transform = Matrix.CreateTranslation(modelOffsetToCenterOnSphere) * 
                                    CreateScale(drawState.scale) *

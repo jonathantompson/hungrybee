@@ -39,7 +39,7 @@ namespace hungrybee
         TimeSpan elapsedTime;
         bool drawOverlay;
 
-        static float OVERLAY_OFFSET_FROM_WINDOW = 0.2f;
+        static float OVERLAY_OFFSET_FROM_WINDOW = 0.1f;
 
         #endregion
 

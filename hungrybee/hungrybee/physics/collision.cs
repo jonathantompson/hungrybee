@@ -46,7 +46,7 @@ namespace hungrybee
         protected static float term1 = 1.0f, term2 = 1.0f, term3 = 1.0f, term4 = 1.0f;
         protected static float j;
         protected static float V_COLLIDING_THRESHOLD = 0.001f;
-        protected static float IMPULSE_TO_PREVENT_RESTING = 1.0f;
+        protected static float IMPULSE_TO_PREVENT_RESTING = 2.0f;
         protected static Matrix zeroMat = new Matrix(0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
                                                      0.0f, 0.0f, 0.0f, 0.0f,
@@ -124,7 +124,7 @@ namespace hungrybee
             {
                 temp = GetVelForCollidingContact(ref obj1State, ref obj2State);
                 obj1State.linearVel = Vector3.Normalize(obj1State.linearVel);
-                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj1State.linearVel + temp;
+                obj1State.linearVel = -((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * Vector3.Normalize(obj1State.linearVel) + temp;
                 oldVelocity = obj2State.linearVel;
                 obj2State.linearVel = Vector3.Zero; // Zero out the enemy velocity
                 ((gameObject)obj2).movable = false; // Set enemy to non-movable
@@ -133,7 +133,7 @@ namespace hungrybee
             {
                 temp = GetVelForCollidingContact(ref obj1State, ref obj2State);
                 obj2State.linearVel = Vector3.Normalize(obj2State.linearVel);
-                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * obj2State.linearVel + temp;
+                obj2State.linearVel = -((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * Vector3.Normalize(obj2State.linearVel) + temp;
                 oldVelocity = obj1State.linearVel;
                 obj1State.linearVel = Vector3.Zero; // Zero out the enemy velocity
                 ((gameObject)obj1).movable = false; // Set enemy to non-movable

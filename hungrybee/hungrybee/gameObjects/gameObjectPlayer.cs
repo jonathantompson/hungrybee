@@ -45,17 +45,19 @@ namespace hungrybee
         #region Constructor - gameObjectPlayer(game game, string modelfile, float scale)
         /// Constructor - gameObjectPlayer(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, 
-                                float _scale, Vector3 _pos)
+        public gameObjectPlayer(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled,
+                                float _scale, Vector3 _pos, Quaternion startingOrient)
             : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled)
         {
-            state.scale = new Vector3(_scale, _scale, _scale);
             playerHealth = 100.0f;
             base.movable = true;
             base.collidable = true;
-            base.state.pos = _pos;
-            base.prevState.pos = _pos;
             jumping = false;
+
+            // Set starting RBO state
+            state.scale = prevState.scale = new Vector3(_scale, _scale, _scale);
+            state.pos = prevState.pos = _pos;
+            state.orient = prevState.orient = startingOrient;
 
             // Setup the force structures to describe movement
             forcePlayerInput = new forcePlayerInput(Vector3.Zero,                                  // Starting Velocity
@@ -180,9 +182,9 @@ namespace hungrybee
         public void HurtPlayer()
         {
             playerHealth = playerHealth - base.h_game.h_GameSettings.enemyHealthImpact;
-            h_game.h_AudioManager.CueSound(soundType.PLAYER_HURT);
             if (playerHealth <= 0.0f)
             {
+                h_game.h_AudioManager.CueSound(soundType.PLAYER_FALLING);
                 base.movable = false;
                 base.collidable = false;
                 playerDead = true;
@@ -190,6 +192,10 @@ namespace hungrybee
                 playerDeathSequenceScale = base.modelScaleToNormalizeSize;
                 playerDeathStartPos = state.pos;
                 playerDeathStartOrient = state.orient;
+            }
+            else
+            {
+                h_game.h_AudioManager.CueSound(soundType.PLAYER_HURT);
             }
         }
         #endregion

@@ -85,7 +85,7 @@ namespace hungrybee
             numCollidableObjects = 0;
             numObjects = 0;
             intersection = false;
-            gamePaused = false;
+            gamePaused = true;
         }
         #endregion
 
