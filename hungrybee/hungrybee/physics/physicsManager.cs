@@ -448,7 +448,14 @@ namespace hungrybee
                 switch (contactType)
                 {
                     case 0:                         // COLLIDING CONTACT
+
+                        // If one of the collisions is with a player, stop the accelerations due to user input for a set time period
+                        if (obj1 is gameObjectPlayer && !(obj2 is gameObjectHeightMap))
+                            ((gameObjectPlayer)obj1).StopPlayerInput();
+                        if (obj2 is gameObjectPlayer && !(obj1 is gameObjectHeightMap))
+                            ((gameObjectPlayer)obj2).StopPlayerInput();
                         break;
+
                     case 1:                         // RESTING CONTACT
                         ProcessRestingContact(ref curCol, ref obj1, ref obj2);
                         break;

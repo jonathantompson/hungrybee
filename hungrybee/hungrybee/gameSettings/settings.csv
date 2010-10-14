@@ -1,8 +1,8 @@
 //,   ***** RENDERING *****
-xWindowSize,640
-yWindowSize,480
+xWindowSize,1280
+yWindowSize,720
 skyPlaneTextureFile,.\images\clouds
-skyPlaneScale,1.75
+skyPlaneScale,2.5
 renderSettingsIndex,0
 cartoonEffectFile,.\effects\CartoonEffect
 postprocessEffectFile,.\effects\PostprocessEffect
@@ -31,7 +31,7 @@ EPSILON,1E-08
 enemyCollisionAngleTollerence,0.5235988
 enemySequenceDuration,0.2
 enemyHealthImpact,33.34
-enemyPlayerCollisionVelocity,2
+enemyPlayerCollisionVelocity,7.5
 enemySequenceScaleRateIncrease,10
 friendSequenceScaleRateIncrease,30
 friendSequenceDuration,0.75
@@ -61,7 +61,8 @@ playerTimeToOrient,0.2
 playerTimeToAccelerate,0.2
 playerMaxAcceleration,10
 playerVelocity,5
-playerJumpMomentum,6
+playerJumpMomentum,7
+playerCollisionPause,0.1
 
 //,   ******* MENU ********
 menuFont,.\fonts\Graffiti

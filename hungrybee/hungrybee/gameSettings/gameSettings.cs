@@ -91,6 +91,7 @@ namespace hungrybee
         public float    playerMaxAcceleration;
         public float    playerVelocity;
         public float    playerJumpMomentum;
+        public float    playerCollisionPause;
 
         //    ******* MENU ********
         public string   menuFont;
@@ -181,6 +182,7 @@ namespace hungrybee
             playerMaxAcceleration = 10;
             playerVelocity = 5;
             playerJumpMomentum = 6;
+            playerCollisionPause = 0.25f;
 
             //   ******* MENU ********
             menuFont = ".\\fonts\\Graffiti";
@@ -415,6 +417,9 @@ namespace hungrybee
                         case "playerJumpMomentum":
                             this.playerJumpMomentum = float.Parse(curToken[1]);
                             break;
+                        case "playerCollisionPause":
+                            this.playerCollisionPause = float.Parse(curToken[1]);
+                            break;
 
                         //   ******* MENU ********
                        case "menuFont":
@@ -533,6 +538,7 @@ namespace hungrybee
             writer.WriteNextToken("playerMaxAcceleration", this.playerMaxAcceleration);
             writer.WriteNextToken("playerVelocity", this.playerVelocity);
             writer.WriteNextToken("playerJumpMomentum", this.playerJumpMomentum);
+            writer.WriteNextToken("playerCollisionPause", this.playerCollisionPause);
             writer.WriteNewLine();
 
             writer.WriteNextToken("//", "   ******* MENU ********");

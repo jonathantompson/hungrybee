@@ -3,7 +3,7 @@
   <Asset Type="Graphics:NodeContent">
     <Name>blend_root</Name>
     <Identity>
-      <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+      <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
       <SourceTool>FbxImporter</SourceTool>
     </Identity>
     <Transform>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</Transform>
@@ -93,7 +93,7 @@
     <Resource ID="#Resource1" Type="Graphics:BasicMaterialContent">
       <Name>Material.3.2__abeja_grp.png</Name>
       <Identity>
-        <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+        <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
         <SourceTool>FbxImporter</SourceTool>
       </Identity>
       <OpaqueData>
@@ -114,7 +114,7 @@
     <Resource ID="#Resource2" Type="Graphics:BasicMaterialContent">
       <Name>Transluc</Name>
       <Identity>
-        <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+        <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
         <SourceTool>FbxImporter</SourceTool>
       </Identity>
       <OpaqueData>
@@ -127,7 +127,7 @@
     <Resource ID="#Resource3" Type="Graphics:BasicMaterialContent">
       <Name>FrontCol</Name>
       <Identity>
-        <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+        <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
         <SourceTool>FbxImporter</SourceTool>
       </Identity>
       <OpaqueData>
@@ -140,7 +140,7 @@
     <Resource ID="#Resource4" Type="Graphics:BasicMaterialContent">
       <Name>_Black_</Name>
       <Identity>
-        <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+        <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
         <SourceTool>FbxImporter</SourceTool>
       </Identity>
       <OpaqueData>
@@ -153,7 +153,7 @@
     <Resource ID="#Resource5" Type="Graphics:BasicMaterialContent">
       <Name>Material.001__abeja_grp.png</Name>
       <Identity>
-        <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+        <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
         <SourceTool>FbxImporter</SourceTool>
       </Identity>
       <OpaqueData>
@@ -174,7 +174,7 @@
     <Resource ID="#Resource6" Type="Graphics:BasicMaterialContent">
       <Name>Material.3__abeja_grp.png</Name>
       <Identity>
-        <SourceFilename>C:\Documents and Settings\tompson\Desktop\BACKUP PROGRAMMING REVIEW\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
+        <SourceFilename>C:\Users\IggyMenou\Documents\Programming Review\hungrybee\hungrybee\hungrybee\Content\models\abeja.fbx</SourceFilename>
         <SourceTool>FbxImporter</SourceTool>
       </Identity>
       <OpaqueData>

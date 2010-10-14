@@ -122,18 +122,14 @@ namespace hungrybee
         {
             if (obj1 is gameObjectPlayer)
             {
-                temp = GetVelForCollidingContact(ref obj1State, ref obj2State);
-                obj1State.linearVel = Vector3.Normalize(obj1State.linearVel);
-                obj1State.linearVel = -((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * Vector3.Normalize(obj1State.linearVel) + temp;
+                obj1State.linearVel = ((gameObject)obj1).h_game.h_GameSettings.enemyPlayerCollisionVelocity * Vector3.Negate(Vector3.Normalize(colNorm)); // normal points from 2 to 1
                 oldVelocity = obj2State.linearVel;
                 obj2State.linearVel = Vector3.Zero; // Zero out the enemy velocity
                 ((gameObject)obj2).movable = false; // Set enemy to non-movable
             }
             else
             {
-                temp = GetVelForCollidingContact(ref obj1State, ref obj2State);
-                obj2State.linearVel = Vector3.Normalize(obj2State.linearVel);
-                obj2State.linearVel = -((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * Vector3.Normalize(obj2State.linearVel) + temp;
+                obj2State.linearVel = ((gameObject)obj2).h_game.h_GameSettings.enemyPlayerCollisionVelocity * Vector3.Normalize(colNorm); // normal points from 2 to 1
                 oldVelocity = obj1State.linearVel;
                 obj1State.linearVel = Vector3.Zero; // Zero out the enemy velocity
                 ((gameObject)obj1).movable = false; // Set enemy to non-movable

@@ -38,6 +38,9 @@ namespace hungrybee
         protected Vector3 playerDeathStartPos;
         protected Quaternion playerDeathStartOrient;
 
+        protected bool playerCollided;
+        protected float playerCollidedTime;
+
         public force forcePlayerInput;
 
         #endregion
@@ -111,11 +114,24 @@ namespace hungrybee
                 }
             }
 
+            if (playerCollided && playerCollidedTime < h_game.h_GameSettings.playerCollisionPause)
+            {
+                playerCollidedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+            else
+            {
+                // If the timer is up, add back the forces to our fource list
+                if (playerCollided)
+                {
+                    playerCollided = false;
+                    base.forceList.Add(forcePlayerInput);
+                }
+                // Get player input only if we haven't collided within h_game.h_GameSettings.playerCollisionPause
+                GetPlayerInput(gameTime);
+            }
+
             // Update the base
             base.Update(gameTime);
-
-            // Get player input
-            GetPlayerInput(gameTime);
         }
         #endregion
 
@@ -163,6 +179,20 @@ namespace hungrybee
             if (keyState.IsKeyUp(Keys.Space))
             {
                 jumping = false;
+            }
+        }
+        #endregion
+
+        #region StopPlayerInput()
+        /// GetPlayerInput() - Turn off all acceleration due to user input for a set period of time
+        /// ***********************************************************************
+        public void StopPlayerInput()
+        {
+            if (!playerCollided)
+            {
+                playerCollidedTime = 0.0f; // Reset the clock
+                playerCollided = true;
+                base.forceList.Remove(forcePlayerInput); // O(n) - but n is small so probably ok
             }
         }
         #endregion

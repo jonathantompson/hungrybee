@@ -1,8 +1,8 @@
 ﻿STUFF I SHOULD DO BEFORE ANYTHING ELSE
 - Fix starting orientation --> It sets but the desired orientation (tied to force) isn't set
-- Fix physics instability --> Stop player movement when they hit a wall.
-						  --> Find out why max iterations gets hit for no apparent reason
-						  --> Fix "collision isn't colliding" errors (happens when comming down on enemy from top left)
+- Fix physics instability --> Find out why max iterations gets hit for no apparent reason
+- Fix why you can hit enemy players from underneath
+- Add slight pause to health reduction to prevent double hits...
 
 STUFF I SHOULD DO
 - Finish options section of menu (maybe option to change diplay size and renderer type.
@@ -14,6 +14,7 @@ STUFF I SHOULD DO
 - Get better sound effects.
 
 STUFF I WOULD LIKE TO DO IF I HAVE TIME
+- PHYSICS, PHYSICS, PHYSICS! --> NEED REAL RESTING CONTACTS!!! The majority of issues with this engine arises from resting contact hacks.
 - Add Gausian blur to clouds: http://www.webdesign.org/photoshop/drawing-techniques/cartoon-clouds.12701.html
 - Fix interpolation for draw.  Interpolation works, but DRAW() is giving wierd gameTime inputs. (How does XNA handle it)
 - Fix swept sphere collision code for AABB-sphere collisions --> Glancing collisions are failing to be detected. (where velocity is nearly perpendicular to collision normal)
