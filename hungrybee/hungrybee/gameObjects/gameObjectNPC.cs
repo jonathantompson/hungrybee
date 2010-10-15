@@ -40,7 +40,7 @@ namespace hungrybee
         #region Constructor - gameObjectEnemy(game game, string modelfile, float scale)
         /// Constructor - gameObjectEnemy(game game, string modelfile, float _scale)
         /// ***********************************************************************
-        public gameObjectNPC(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled )
+        public gameObjectNPC(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, Quaternion startingOrient )
             : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled)
         {
             base.movable = true;
@@ -53,8 +53,7 @@ namespace hungrybee
             base.forceList.Add(forceGravity);
 
             // Setup the force structures to describe movement
-            forceSetOrientation = new forceSetOrientation(Quaternion.Identity, game.h_GameSettings.NPCTimeToOrient);
-            ((forceSetOrientation)forceSetOrientation).SetDesiredOrientationFromForwardVector(new Vector3(1, 0, 0)); // Player starts facing right
+            forceSetOrientation = new forceSetOrientation(startingOrient, game.h_GameSettings.NPCTimeToOrient);
 
             // Add the force structures to the forceList for enumeration at runtime
             base.forceList.Add(forceSetOrientation);

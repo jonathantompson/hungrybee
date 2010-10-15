@@ -40,7 +40,7 @@ namespace hungrybee
         /// ***********************************************************************
         public gameObjectEnemy(game game, string modelfile, boundingObjType _objType, bool textureEnabled, bool vertexColorEnabled, 
                                float _scale, Vector3 startingPos, Vector3 startingMom, Quaternion startingOrient)
-            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled)
+            : base(game, modelfile, _objType, textureEnabled, vertexColorEnabled, startingOrient)
         {
             // Nothing to do yet
             deathSequence = false;

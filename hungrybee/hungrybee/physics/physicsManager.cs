@@ -65,7 +65,7 @@ namespace hungrybee
         public static float RELEASE_RESTING_CONTACT_TOLLERANCE = 0.008f; // Distance with which to add back gravity
         public static float PUSH_UP_ON_REST = 0.005f; // Distance with which to lift object up when resting contact with floor is detected
 
-        public static float RESTING_CONTACT_TOLLERANCE = 0.00001f;
+        public static float RESTING_CONTACT_TOLLERANCE = 0.001f;
         protected static int BISECTION_MAXITERATIONS = 1000;
         protected static int MAX_PHYSICS_ITERATIONS = 10000;
 

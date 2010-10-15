@@ -19,7 +19,7 @@ renderCollisions,0
 //,   **** GAME OBJECTS ***
 startingGameObjectCapacity,64
 
-//,   ******* CAMERA ******
+//,   ****** * CAMERA ******
 cameraSpeed,0.1
 cameraRunningMult,4
 cameraRotationSpeed,0.002
@@ -71,4 +71,4 @@ menuBGOptions,.\images\menuBG2
 menuTransitionTime,0.3
 
 //,   ******* AUDIO *******
-musicVolume,0.2
+musicVolume,0.3

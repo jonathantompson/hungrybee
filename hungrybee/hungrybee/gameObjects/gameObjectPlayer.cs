@@ -72,6 +72,9 @@ namespace hungrybee
 
             // Add the force structures to the forceList for enumeration at runtime
             base.forceList.Add(forcePlayerInput);
+            // Get the forward vector from the input startingOrient
+            Vector3 startForwardVector = Vector3.Transform(Vector3.Forward, startingOrient);
+            ((forcePlayerInput)forcePlayerInput).SetDesiredOrientationFromForwardVector(startForwardVector);
             // Add gravity
             base.forceList.Add(new forceGravity(new Vector3(0.0f, -h_game.h_GameSettings.gravity, 0.0f)));
             playerDead = false;

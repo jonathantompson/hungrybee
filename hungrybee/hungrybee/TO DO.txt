@@ -1,5 +1,4 @@
 ﻿STUFF I SHOULD DO BEFORE ANYTHING ELSE
-- Fix starting orientation --> It sets but the desired orientation (tied to force) isn't set
 - Fix physics instability --> Find out why max iterations gets hit for no apparent reason
 - Fix why you can hit enemy players from underneath
 - Add slight pause to health reduction to prevent double hits...

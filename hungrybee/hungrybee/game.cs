@@ -55,6 +55,9 @@ namespace hungrybee
             h_GraphicsDeviceManager.MinimumPixelShaderProfile = ShaderProfile.PS_2_0;
             Content.RootDirectory = "Content";
 
+            base.IsFixedTimeStep = false;
+            h_GraphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
+
             // Create the GameComponent instances
             h_GameSettings = new gameSettings(this);
             h_Camera = new camera(this);
