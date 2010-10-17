@@ -120,7 +120,7 @@ namespace hungrybee
         {
             //   ***** RENDERING *****
             xWindowSize = 1280;
-            yWindowSize = 1024;
+            yWindowSize = 720;
             skyPlaneTextureFile = ".\\images\\clouds";
             skyPlaneScale = 1.75f;
             renderSettingsIndex = 0;
